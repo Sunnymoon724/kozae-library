@@ -1,0 +1,11 @@
+using MessagePack;
+using System;
+
+namespace KZLib.KZData
+{
+	[MessagePackObject]
+	public class $ClassNameProto : IProto
+	{
+$Properties
+	}
+}

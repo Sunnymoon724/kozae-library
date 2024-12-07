@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>KZTool</AssemblyName>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />
+    <PackageReference Include="ExcelDataReader" Version="3.7.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.0" />
+    <PackageReference Include="Unity3D.SDK" Version="2021.1.14.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <NoWarn>NU1701</NoWarn><!-- Unity warning -->
+  </PropertyGroup>
+
+</Project>
