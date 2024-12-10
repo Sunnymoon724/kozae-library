@@ -4,7 +4,7 @@ using System.IO;
 
 namespace KZLib.KZTool
 {
-	internal static class Utility
+	internal static partial class Utility
 	{
 		private const string EXTENSION = ".generated.cs";
 

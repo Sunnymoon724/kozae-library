@@ -1,4 +1,5 @@
-﻿
+﻿using System.Globalization;
+
 namespace KZConsole
 {
 	public class Program
@@ -11,6 +12,9 @@ namespace KZConsole
 		{
 			try
 			{
+				Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+				Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+
 				//? Create Project
 				var currentPath = Directory.GetCurrentDirectory();
 				var protoFolderPath = GetFullPath(currentPath,argumentArray[0]);
@@ -64,10 +68,7 @@ namespace KZConsole
 
 		private static bool IsFolderExist(string folderPath)
 		{
-			if(string.IsNullOrEmpty(folderPath))
-			{
-				throw new NullReferenceException("FolderPath is null");
-			}
+			Utility.IsPathExist(folderPath);
 
 			var result = Directory.Exists(folderPath);
 
@@ -83,10 +84,7 @@ namespace KZConsole
 		{
 			var path = Path.Combine(pathArray);
 
-			if(string.IsNullOrEmpty(path))
-			{
-				throw new NullReferenceException("Path is null");
-			}
+			Utility.IsPathExist(path);
 
 			return Path.GetFullPath(path);
 		}

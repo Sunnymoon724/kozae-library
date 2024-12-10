@@ -6,8 +6,7 @@ namespace KZConsole
 {
 	public class CodeGenerator(List<string> protoFilePathList,string enumFilePath)
 	{
-		// 0 -> Property / 1 -> Type / 2 -> Comment
-		private readonly int[] PROTO_INDEX_ARRAY = [0, 1, 2];
+		private readonly int[] PROTO_INDEX_ARRAY = [Global.PROTO_SCHEME_INDEX,Global.PROTO_TYPE_INDEX];
 
 		private struct EnumScheme
 		{
@@ -45,13 +44,13 @@ namespace KZConsole
 				stringBuilder.Append($"\tpublic enum {sheetName}{NewLine}");
 				stringBuilder.Append($"\t{{{NewLine}");
 
-				var index = -1;
+				var index = Global.INVALID_INDEX;
 
-				foreach(var scheme in excelReader.Deserialize<EnumScheme>(sheetName))
+				foreach(var scheme in excelReader.DeserializeGroup<EnumScheme>(sheetName,true))
 				{
 					index = int.TryParse(scheme.Value,out var number) ? number : ++index;
 
-					stringBuilder.Append($"\t\t{scheme.Key} = {index} // {scheme.Comment}{NewLine}");
+					stringBuilder.Append($"\t\t{scheme.Key} = {index}, // {scheme.Comment}{NewLine}");
 				}
 
 				stringBuilder.Append($"\t}}{NewLine}{NewLine}");
@@ -65,7 +64,7 @@ namespace KZConsole
 			stringBuilder.Length -= 2*NewLine.Length;
 
 			var enumCode = stringBuilder.ToString();
-			var enumTemplate = ReadEmbeddedResource("ProtoForge.Template.EnumTemplate.txt");
+			var enumTemplate = ReadEmbeddedResource("KZProtoGenerator.Template.EnumTemplate.txt");
 
 			enumTemplate = enumTemplate.Replace("$Enums",enumCode);
 
@@ -74,7 +73,7 @@ namespace KZConsole
 
 		private void GenerateProtoCode(ref List<string> protoCodeList)
 		{
-			var templateText = ReadEmbeddedResource("ProtoForge.Template.ProtoDataTemplate.txt");
+			var templateText = ReadEmbeddedResource("KZProtoGenerator.Template.ProtoTemplate.txt");
 			var stringBuilder = new StringBuilder();
 			var memberList = new List<string>();
 
@@ -85,21 +84,17 @@ namespace KZConsole
 					continue;
 				}
 
-				//! Generate proto
-
 				stringBuilder.Clear();
 				memberList.Clear();
 				var excelReader = new ExcelReader(protoFilePath);
 
-				var sheetName = excelReader.FirstSheetName;
-
-				// 0 -> Property / 1 -> Type / 2 -> Comment
-				var protoJaggedArray = excelReader.ExtractColumnJaggedArray(sheetName,PROTO_INDEX_ARRAY);
-				var length = protoJaggedArray[0].Length;
+				var protoJaggedArray = excelReader.ExtractRowJaggedArray(excelReader.FirstSheetName,PROTO_INDEX_ARRAY);
+				var length = protoJaggedArray[Global.PROTO_SCHEME_INDEX].Length;
+				var keyIndex = 0;
 
 				for(int i=0;i<length;i++)
 				{
-					var member = protoJaggedArray[0][i];
+					var member = protoJaggedArray[Global.PROTO_SCHEME_INDEX][i];
 
 					// remove overlap
 					if(member.StartsWith('#') || memberList.Contains(member))
@@ -107,11 +102,10 @@ namespace KZConsole
 						continue;
 					}
 
-					var type = protoJaggedArray[1][i];
-					var comment = protoJaggedArray[2][i];
+					var type = protoJaggedArray[Global.PROTO_TYPE_INDEX][i];
 
-					stringBuilder.Append($"\t\tKey({i}){NewLine}");
-					stringBuilder.Append($"\t\tpublic {type} {member} {{ get; set; }} //{comment}{NewLine}");
+					stringBuilder.Append($"\t\t[Key({keyIndex++})]{NewLine}");
+					stringBuilder.Append($"\t\tpublic {type} {member} {{ get; set; }}{NewLine}");
 
 					memberList.Add(member);
 				}
@@ -126,7 +120,7 @@ namespace KZConsole
 				var protoCode = stringBuilder.ToString();
 
 				var protoTemplate = templateText;
-				protoTemplate = protoTemplate.Replace("$ClassName",sheetName);
+				protoTemplate = protoTemplate.Replace("$ClassName",Path.GetFileNameWithoutExtension(protoFilePath));
 				protoTemplate = protoTemplate.Replace("$Properties",protoCode);
 
 				protoCodeList.Add(protoTemplate);

@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Text;
 using ExcelDataReader;
+using ExcelDataReader.Log;
 using UnityEngine;
 
 namespace KZLib.KZTool
@@ -66,10 +67,7 @@ namespace KZLib.KZTool
 		{
 			var rowCollection = GetSheet(sheetName).Rows;
 
-			if(index < 0 || index >= rowCollection.Count)
-			{
-				throw new IndexOutOfRangeException($"{index} is out of range in rowCollection. [{sheetName}]");
-			}
+			Utility.ValidRange(sheetName,index,rowCollection.Count);
 
 			// one row
 			var rowArray = rowCollection[index].ItemArray;
@@ -111,16 +109,13 @@ namespace KZLib.KZTool
 		{
 			var sheet = GetSheet(sheetName);
 
-			if(index < 0 || index >= sheet.Columns.Count)
-			{
-				throw new IndexOutOfRangeException($"{index} is out of range in columnCollection. [{sheetName}]");
-			}
+			Utility.ValidRange(sheetName,index,sheet.Columns.Count);
 
-			var columnArray = new string[sheet.Columns.Count];
-
-			for(var i=0;i<sheet.Columns.Count;i++)
+			var length = sheet.Rows.Count;
+			var columnArray = new string[length];
+			for(var i=0;i<length;i++)
 			{
-				columnArray[i] = sheet.Columns[index].ToString();
+				columnArray[i] = sheet.Rows[i][index].ToString();
 			}
 
 			return columnArray;
@@ -141,17 +136,17 @@ namespace KZLib.KZTool
 			return jaggedArray;
 		}
 
-		public IEnumerable<TData> Deserialize<TData>(string sheetName,int startRow = 1)
+		public IEnumerable<TData> DeserializeGroup<TData>(string sheetName,bool includeBlank,int startRow = 1)
 		{
 			var dataType = typeof(TData);
 
-			foreach(var result in Deserialize(sheetName,dataType,startRow))
+			foreach(var result in DeserializeGroup(sheetName,dataType,includeBlank,startRow))
 			{
 				yield return (TData) result;
 			}
 		}
 
-		public IEnumerable<object> Deserialize(string sheetName,Type dataType,int startRow = 1)
+		public IEnumerable<object> DeserializeGroup(string sheetName,Type dataType,bool includeBlank,int startRow = 1)
 		{
 			var sheet = GetSheet(sheetName);
 			var rowCollection = sheet.Rows;
@@ -171,42 +166,86 @@ namespace KZLib.KZTool
 					continue;
 				}
 
-				yield return Deserialize(sheetName,schemeArray,dataType,cellArray);
+				yield return Deserialize(schemeArray,dataType,cellArray,includeBlank);
 			}
 		}
 
-		public object Deserialize(string sheetName,string[] schemeArray,Type dataType,object[] cellArray)
+		public TData Deserialize<TData>(string[] schemeArray,object[] cellArray,bool includeBlank)
+		{
+			var dataType = typeof(TData);
+
+			return (TData) Deserialize(schemeArray,dataType,cellArray,includeBlank);
+		}
+
+		public object Deserialize(string[] schemeArray,Type dataType,object[] cellArray,bool includeBlank)
 		{
 			var instance = Activator.CreateInstance(dataType);
+			var indexList = new List<int>();
 
-			for(var i=0;i<schemeArray.Length;i++)
+			foreach(var propertyInfo in dataType.GetProperties())
 			{
-				if(i >= cellArray.Length)
+				indexList.Clear();
+				var propertyType = propertyInfo.PropertyType;
+				var propertyName = propertyInfo.Name;
+
+				for(var i=0;i<schemeArray.Length;i++)
 				{
-					break;
+					if(string.Equals(schemeArray[i],propertyName,StringComparison.Ordinal))
+					{
+						indexList.Add(i);
+					}
 				}
 
-				var cell = cellArray[i];
-
-				if(cell == null)
+				if(indexList.Count < 1)
 				{
-					continue;
+					throw new ArgumentNullException($"{propertyName} is not include in {string.Join("/",schemeArray)}");
 				}
 
-				var scheme = schemeArray[i];
-				var propertyInfo = dataType.GetProperty(scheme);
+				if(propertyType.IsArray)
+				{
+					var elementType = propertyType.GetElementType();
+					var resultArray = Array.CreateInstance(elementType,indexList.Count);
 
-				try
-				{
-					propertyInfo.SetValue(instance,ConvertData(cell.ToString(),propertyInfo.PropertyType));
+					for(var i=0;i<indexList.Count;i++)
+					{
+						var index = indexList[i];
+
+						if(index <= cellArray.Length)
+						{
+							continue;
+						}
+
+						resultArray.SetValue(GetCell(cellArray,index,propertyType,includeBlank),i);
+					}
+
+					propertyInfo.SetValue(instance,resultArray);
 				}
-				catch(Exception ex)
+				else
 				{
-					throw new Exception($"{ex.Message} [sheet : {sheetName} / scheme : {scheme} / cell : {cell}]");
+					propertyInfo.SetValue(instance,GetCell(cellArray,indexList[0],propertyType,includeBlank));
 				}
 			}
 
 			return instance;
+		}
+
+		private object GetCell(object[] cellArray,int index,Type dataType,bool includeBlank)
+		{
+			if(0 <= index && index < cellArray.Length)
+			{
+				var cellText = cellArray[index].ToString();
+
+				if(!includeBlank && string.IsNullOrEmpty(cellText))
+				{
+					throw new ArgumentException($"cell is empty in {index}. [type : {dataType}]");
+				}
+
+				return ConvertToObject(cellText,dataType);
+			}
+			else
+			{
+				throw new IndexOutOfRangeException($"{cellArray.Length} < {index}");
+			}
 		}
 
 		/// <summary>
@@ -273,48 +312,28 @@ namespace KZLib.KZTool
 			return !header.StartsWith("#") && !string.IsNullOrEmpty(header);
 		}
 
-		private object ConvertData(string cellText,Type dataType)
+		private object ConvertToObject(string cellText,Type dataType)
 		{
 			if(dataType == typeof(string))
 			{
 				return cellText.Replace("\\n",Environment.NewLine);
 			}
-			else if(dataType.IsArray)
+			else if(dataType.IsEnum)
 			{
-				var dataArray = cellText.Replace(" ","").TrimEnd('&',' ').Split('&');
-
-				if(dataArray.Length == 0)
+				if(Enum.TryParse(dataType,cellText,out var enumValue))
 				{
-					return Array.CreateInstance(dataType.GetElementType(),0);
+					return enumValue;
 				}
-
-				var elementType = dataType.GetElementType();
-				var resultArray = Array.CreateInstance(elementType,dataArray.Length);
-
-				for(var i=0;i<dataArray.Length;i++)
+				else
 				{
-					resultArray.SetValue(ConvertToObject(dataArray[i],elementType),i);
+					throw new InvalidCastException($"{cellText} is not include in {dataType.Name}.");
 				}
-
-				return resultArray;
-			}
-			else
-			{
-				return ConvertToObject(cellText,dataType);
-			}
-		}
-
-		private object ConvertToObject(string cellText,Type dataType)
-		{
-			if(dataType.IsEnum)
-			{
-				return Enum.Parse(dataType,cellText);
 			}
 			else if(dataType.Equals(typeof(Vector2)))
 			{
 				var vectorArray = cellText.Trim('(',')').Split(',');
 
-				if(vectorArray == null || vectorArray.Length != 2)
+				if(vectorArray.Length != 2)
 				{
 					throw new InvalidCastException($"{cellText} is not vector2.");
 				}
@@ -325,7 +344,7 @@ namespace KZLib.KZTool
 			{
 				var vectorArray = cellText.Trim('(',')').Split(',');
 
-				if(vectorArray == null || vectorArray.Length != 3)
+				if(vectorArray.Length != 3)
 				{
 					throw new InvalidCastException($"{cellText} is not vector3.");
 				}

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,17 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-  <EmbeddedResource Include="Template\EnumTemplate.txt" />
+    <EmbeddedResource Include="Template\ProtoTemplate.txt" />
+    <EmbeddedResource Include="Template\EnumTemplate.txt" />
   </ItemGroup>
 
 
   <ItemGroup>
+    <ProjectReference Include="../../Helper/KZData/KZData.csproj" />
     <ProjectReference Include="../../Helper/KZTool/KZTool.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MessagePack" Version="3.0.300" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.12.0" />
   </ItemGroup>
 
 </Project>
