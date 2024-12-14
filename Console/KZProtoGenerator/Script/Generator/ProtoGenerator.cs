@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using KZLib.KZTool;
 using MessagePack;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Emit;
 
 namespace KZConsole
 {
@@ -12,7 +12,7 @@ namespace KZConsole
     {
 		private readonly Dictionary<string,bool> _branchStateDict = [];
 
-		public void GenerateAllProto(List<string> protoFilePathList,List<string> codeList,string outputFolderPath)
+		public void GenerateAllProto(List<string> protoFilePathList,IEnumerable<string> codeGroup,string outputFolderPath)
 		{
 			Console.WriteLine("Generate all proto.");
 
@@ -21,7 +21,7 @@ namespace KZConsole
 			MakeBranchStateDict();
 
 			Console.WriteLine("Compile code");
-			var data = CompileCode(codeList,outputFolderPath);
+			var data = CompileCode(codeGroup);
 
 			Console.WriteLine("Convert csv file.");
 			CreateData(protoFilePathList,Assembly.Load(data),outputFolderPath);
@@ -31,7 +31,7 @@ namespace KZConsole
 		{
 			var excelReader = new ExcelReader(branchFilePath);
 
-			var sheetName = excelReader.FirstSheetName;
+			var sheetName = excelReader.FindSheetName(x=>x.Contains("Branch"));
 			var schemeArray = excelReader.ExtractRowArray(sheetName,Global.PROTO_SCHEME_INDEX);
 
 			if(schemeArray.Length == 0 || !schemeArray.Contains(branchName))
@@ -64,41 +64,37 @@ namespace KZConsole
 			}
 		}
 
-		private static byte[] CompileCode(List<string> codeList,string outputFolderPath)
+		private static byte[] CompileCode(IEnumerable<string> codeGroup)
 		{
-			var syntaxTreeGroup = codeList.Where(x => x != null).Select(x => CSharpSyntaxTree.ParseText(x));
+			var syntaxTreeGroup = codeGroup.Where(x => x != null).Select(x => CSharpSyntaxTree.ParseText(x));
+
+			var runtimeDirectory = RuntimeEnvironment.GetRuntimeDirectory();
+			var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
 			var referenceList = new List<MetadataReference>
 			{
+				MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
 				MetadataReference.CreateFromFile(typeof(MessagePackObjectAttribute).Assembly.Location),
-				MetadataReference.CreateFromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"KZData.dll")),
-				MetadataReference.CreateFromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"UnityEditor.dll")),
-				MetadataReference.CreateFromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"UnityEngine.dll")),
+				MetadataReference.CreateFromFile(Path.Combine(baseDirectory,"KZData.dll")),
+				MetadataReference.CreateFromFile(Path.Combine(baseDirectory,"UnityEngine.dll")),
 			};
 
 			referenceList.AddRange(AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)).Select(a => MetadataReference.CreateFromFile(a.Location)));
 
-			var compilation = CSharpCompilation.Create("DynamicAssembly",syntaxTreeGroup,referenceList,new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+			var compilation = CSharpCompilation.Create("KZProto",syntaxTreeGroup,referenceList,new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-			using var dllStream = new MemoryStream();
-			using var pdbStream = new MemoryStream();
+			using var memoryStream = new MemoryStream();
 
-			var result = compilation.Emit(dllStream,pdbStream,null,null,null,new EmitOptions(false,DebugInformationFormat.Pdb));
+			var result = compilation.Emit(memoryStream);
 
 			if(result.Success)
 			{
 				Console.WriteLine("Compilation succeeded.");
 				Console.WriteLine("Save dll & pdb.");
 
-				dllStream.Seek(0,SeekOrigin.Begin);
+				memoryStream.Seek(0,SeekOrigin.Begin);
 
-				WriteBytesToFile(Path.Combine(outputFolderPath,"KZProto.dll"),dllStream.ToArray());
-
-				pdbStream.Seek(0,SeekOrigin.Begin);
-
-				WriteBytesToFile(Path.Combine(outputFolderPath,"KZProto.pdb"),pdbStream.ToArray());
-
-				return dllStream.ToArray();
+				return memoryStream.ToArray();
 			}
 			else
 			{
@@ -136,77 +132,57 @@ namespace KZConsole
 
 				var excelReader = new ExcelReader(protoFilePath);
 
-				var sheetName = excelReader.FirstSheetName;
-				var schemeArray = excelReader.ExtractRowArray(sheetName,Global.PROTO_SCHEME_INDEX) ?? throw new NullReferenceException($"Scheme is not included in {fileName}");
-
-				stringBuilder.Clear();
-				stringBuilder.AppendLine(string.Join(",",schemeArray));
-
-				var dataType = assembly.GetType($"KZLib.KZData.{protoName}") ?? throw new InvalidDataException($"Invalid data in {protoName}");
-				var branchArray = excelReader.ExtractColumnArray(sheetName,Global.PROTO_BRANCH_INDEX);
-
-				for(var j=Global.PROTO_DATA_INDEX;j<branchArray.Length;j++)
+				foreach(var sheetName in excelReader.SheetNameGroup)
 				{
-					var rowArray = excelReader.ExtractRowArray(sheetName,j);
-
-					// skip # or empty
-					if(rowArray.Length == 0)
+					if(!sheetName.StartsWith('+'))
 					{
 						continue;
 					}
 
-					var branch = branchArray[j];
+					var schemeArray = excelReader.ExtractRowArray(sheetName,Global.PROTO_SCHEME_INDEX) ?? throw new NullReferenceException($"Scheme is not included in {fileName}");
 
-					if(!_branchStateDict.TryGetValue(branch,out var result))
+					stringBuilder.Clear();
+					stringBuilder.AppendLine(string.Join(",",schemeArray));
+
+					var dataType = assembly.GetType($"KZLib.KZData.{protoName}") ?? throw new InvalidDataException($"Invalid data in {protoName}");
+					var branchArray = excelReader.ExtractColumnArray(sheetName,Global.PROTO_BRANCH_INDEX);
+
+					for(var j=Global.PROTO_DATA_INDEX;j<branchArray.Length;j++)
 					{
-						throw new Exception($"{branch} not exist. [file{protoFilePath}/line:{j}]");
-					}
+						var rowArray = excelReader.ExtractRowArray(sheetName,j);
 
-					if(!result)
-					{
-						continue;
-					}
+						// skip # or empty
+						if(rowArray.Length == 0)
+						{
+							continue;
+						}
 
-					stringBuilder.AppendLine(string.Join(",",rowArray));
-					protoList.Add(excelReader.Deserialize(schemeArray,dataType,rowArray,false));
+						var branch = branchArray[j];
+
+						if(!_branchStateDict.TryGetValue(branch,out var result))
+						{
+							throw new Exception($"{branch} not exist. [file{protoFilePath}/line:{j}]");
+						}
+
+						if(!result)
+						{
+							continue;
+						}
+
+						stringBuilder.AppendLine(string.Join(",",rowArray));
+						protoList.Add(excelReader.Deserialize(schemeArray,dataType,rowArray,false));
+					}
 				}
 
 				var csvFilePath = Path.Combine(csvFolderPath,$"{fileName}.csv");
 
-				WriteTextToFile(csvFilePath,stringBuilder.ToString());
+				Utility.WriteTextToFile(csvFilePath,stringBuilder.ToString());
 
 				var bytes = MessagePackSerializer.Serialize(protoList);
 				var byteFilePath = Path.Combine(byteFolderPath,$"{fileName}.bytes");
 
-				WriteBytesToFile(byteFilePath,bytes);
+				Utility.WriteBytesToFile(byteFilePath,bytes);
 			}
-		}
-
-		/// <summary>
-		/// Create folder. (path is file ? create parent folder. : create folder)
-		/// </summary>
-		private static void CreateFolder(string path)
-		{
-			Utility.IsPathExist(path);
-
-			// Path is file ? Get parent path. : Get path
-			var folderPath = (Path.HasExtension(path) ? Path.GetDirectoryName(path) : path) ?? throw new NullReferenceException($"Parent path not exist. [{path}]");
-
-			Directory.CreateDirectory(folderPath);
-		}
-
-		private static void WriteTextToFile(string filePath,string text)
-		{
-			CreateFolder(filePath);
-
-			File.WriteAllText(filePath,text,Encoding.UTF8);
-		}
-
-		private static void WriteBytesToFile(string filePath,byte[] bytes)
-		{
-			CreateFolder(filePath);
-
-			File.WriteAllBytes(filePath,bytes);
 		}
 	}
 }

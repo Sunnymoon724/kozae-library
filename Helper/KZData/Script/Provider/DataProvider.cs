@@ -2,35 +2,60 @@ using System;
 using MessagePack;
 using MessagePack.Formatters;
 
-namespace KZLib.KZResolver
+namespace KZLib.KZData
 {
 	public static class DataProvider
 	{
 		public static IMessagePackFormatter[] FormatterArray => new IMessagePackFormatter[]
 		{
-			new VersionFormatter(),
+			new GameVersionFormatter(), new SoundVolumeFormatter(),
 		};
 
-		#region Version
-		internal class VersionFormatter : IMessagePackFormatter<Version?>
+		#region GameVersion
+		internal class GameVersionFormatter : IMessagePackFormatter<GameVersion?>
 		{
-			public void Serialize(ref MessagePackWriter writer,Version? version,MessagePackSerializerOptions options)
+			public void Serialize(ref MessagePackWriter writer,GameVersion? version,MessagePackSerializerOptions options)
 			{
 				writer.WriteArrayHeader(1);
+
 				writer.Write(version?.ToString() ?? "");
 			}
 
-			public Version Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+			public GameVersion Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
 			{
 				if(!reader.TryReadArrayHeader(out int length) || length != 1)
 				{
-					throw new InvalidOperationException($"Invalid array header. Expected length 1, but got {length}.");
+					throw new InvalidOperationException($"Reader is error. or {length} != 1");
 				}
 
-				return new Version(reader.ReadString() ?? "");
+				return new GameVersion(reader.ReadString() ?? "");
 			}
 		}
 
-		#endregion Version
+		#endregion GameVersion
+
+		#region SoundVolume
+		internal class SoundVolumeFormatter : IMessagePackFormatter<SoundVolume>
+		{
+			public void Serialize(ref MessagePackWriter writer,SoundVolume volume,MessagePackSerializerOptions options)
+			{
+				writer.WriteArrayHeader(2);
+
+				writer.Write(volume.level);
+				writer.Write(volume.mute);
+			}
+
+			public SoundVolume Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+			{
+				if(!reader.TryReadArrayHeader(out int length) || length != 2)
+				{
+					throw new InvalidOperationException($"Reader is error. or {length} != 2");
+				}
+
+				return new SoundVolume(reader.ReadSingle(),reader.ReadBoolean());
+			}
+		}
+
+		#endregion SoundVolume
 	}
 }

@@ -3,15 +3,15 @@ namespace System.Collections.Generic
 {
 	public class CircularQueue<TData> : IEnumerable<TData>,IEnumerable,IReadOnlyCollection<TData>,ICollection
 	{
-		private readonly TData[] _dataArray = Array.Empty<TData>();
-		private readonly int _capacity = 0;
-		private readonly object _syncRoot = new object();
+		private readonly TData[] m_dataArray = Array.Empty<TData>();
+		private readonly int m_capacity = 0;
+		private readonly object m_syncRoot = new object();
 
-		private int m_Front = -1;
-		private int m_Rear = -1;
+		private int m_front = -1;
+		private int m_rear = -1;
 
-		public int Size => _dataArray.Length;
-		public int Capacity => _capacity;
+		public int Size => m_dataArray.Length;
+		public int Capacity => m_capacity;
 
 		public CircularQueue(int capacity)
 		{
@@ -20,15 +20,15 @@ namespace System.Collections.Generic
 				throw new ArgumentOutOfRangeException($"The capacity is {capacity}.");
 			}
 
-			_capacity = capacity;
-			_dataArray = new TData[capacity];
+			m_capacity = capacity;
+			m_dataArray = new TData[capacity];
 		}
 
 		public CircularQueue(ICollection<TData> collection) : this(collection.Count)
 		{
-			collection.CopyTo(_dataArray,0);
+			collection.CopyTo(m_dataArray,0);
 
-			m_Rear = _capacity-1;
+			m_rear = m_capacity-1;
 		}
 
 		public void Enqueue(TData data)
@@ -38,54 +38,54 @@ namespace System.Collections.Generic
 				throw new ArgumentNullException("Data cannot be null.");
 			}
 
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
 				if(IsFull)
 				{
-					m_Front = (m_Front+1)%_capacity;
+					m_front = (m_front+1)%m_capacity;
 				}
 				else if(IsEmpty)
 				{
-					m_Front = 0;
+					m_front = 0;
 				}
 
-				m_Rear = (m_Rear+1)%_capacity;
-				_dataArray[m_Rear] = data;
+				m_rear = (m_rear+1)%m_capacity;
+				m_dataArray[m_rear] = data;
 			}
 		}
 
 		public TData Peek()
 		{
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
 				if(IsEmpty)
 				{
 					throw new ArgumentOutOfRangeException("Queue is empty.");
 				}
 
-				return _dataArray[m_Front];
+				return m_dataArray[m_front];
 			}
 		}
 
 		public TData Dequeue()
 		{
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
 				if(IsEmpty)
 				{
 					throw new ArgumentOutOfRangeException("Queue is empty.");
 				}
 
-				var data = _dataArray[m_Front];
+				var data = m_dataArray[m_front];
 
-				if(m_Front == m_Rear)
+				if(m_front == m_rear)
 				{
-					m_Front = -1;
-					m_Rear = -1;
+					m_front = -1;
+					m_rear = -1;
 				}
 				else
 				{
-					m_Front = (m_Front+1)%_capacity;
+					m_front = (m_front+1)%m_capacity;
 				}
 
 				return data;
@@ -96,46 +96,46 @@ namespace System.Collections.Generic
 		{
 			get
 			{
-				lock(_syncRoot)
+				lock(m_syncRoot)
 				{
-					return IsEmpty ? 0 : (m_Rear >= m_Front ? m_Rear-m_Front+1 : _capacity-m_Front+m_Rear+1);
+					return IsEmpty ? 0 : (m_rear >= m_front ? m_rear-m_front+1 : m_capacity-m_front+m_rear+1);
 				}
 			}
 		}
 
-		public bool IsEmpty => m_Front == -1;
-		public bool IsFull => (m_Rear+1)%_capacity == m_Front;
+		public bool IsEmpty => m_front == -1;
+		public bool IsFull => (m_rear+1)%m_capacity == m_front;
 
 		public void Clear()
 		{
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
-				m_Front = -1;
-				m_Rear = -1;
+				m_front = -1;
+				m_rear = -1;
 
-				Array.Clear(_dataArray,0,_capacity);
+				Array.Clear(m_dataArray,0,m_capacity);
 			}
 		}
 
 		public IEnumerator<TData> GetEnumerator()
 		{
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
 				if(IsEmpty)
 				{
 					yield break;
 				}
 
-				var index = m_Front;
+				var index = m_front;
 
-				while(index != m_Rear)
+				while(index != m_rear)
 				{
-					yield return _dataArray[index];
+					yield return m_dataArray[index];
 
-					index = (index+1)%_capacity;
+					index = (index+1)%m_capacity;
 				}
 
-				yield return _dataArray[index];
+				yield return m_dataArray[index];
 			}
 		}
 
@@ -151,18 +151,18 @@ namespace System.Collections.Generic
 				throw new ArgumentNullException("Data cannot be null.");
 			}
 
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
-				var index = m_Front;
+				var index = m_front;
 
 				for(var i=0;i<Count;i++)
 				{
-					if(EqualityComparer<TData>.Default.Equals(_dataArray[index],data))
+					if(EqualityComparer<TData>.Default.Equals(m_dataArray[index],data))
 					{
 						return true;
 					}
 
-					index = (index+1)%_capacity;
+					index = (index+1)%m_capacity;
 				}
 			}
 
@@ -183,20 +183,20 @@ namespace System.Collections.Generic
 
 			if(Count > 0)
 			{
-				lock(_syncRoot)
+				lock(m_syncRoot)
 				{
-					var front = m_Front;
+					var front = m_front;
 
 					for(var i=0;i<Count;i++)
 					{
-						array.SetValue(_dataArray[front],index+i);
-						front = (front+1)%_capacity;
+						array.SetValue(m_dataArray[front],index+i);
+						front = (front+1)%m_capacity;
 					}
 				}
 			}
 		}
 
 		public bool IsSynchronized => true;
-		public object SyncRoot => _syncRoot;
+		public object SyncRoot => m_syncRoot;
 	}
 }

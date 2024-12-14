@@ -5,37 +5,54 @@ namespace KZConsole
 	public class Program
 	{
 		/// <summary>
-		/// 0 -> protoFolderPath / 1 -> branchName
+		/// 0 -> protoFolderPath / 1 -> branchName / 2 -> resultFolderPath
 		/// </summary>
-		/// <param name="argumentArray"></param>
 		private static void Main(string[] argumentArray)
 		{
-			try
-			{
-				Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-				Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+			Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
 
-				//? Create Project
-				var currentPath = Directory.GetCurrentDirectory();
-				var protoFolderPath = GetFullPath(currentPath,argumentArray[0]);
+			var currentPath = Directory.GetCurrentDirectory();
+			var protoFolderPath = Utility.GetFullPath(currentPath,argumentArray[0]);
+			var outputFolderPath = Utility.GetFullPath(currentPath,"../ProtoOutput");
 
-				var protoFilePathList = new List<string>(GetExcelFilePathGroup(protoFolderPath));
+			Utility.CreateFolder(outputFolderPath);
 
-				var enumFilePath = GetFilePath(protoFilePathList,"Enum");
-				var branchFilePath = GetFilePath(protoFilePathList,"Branch");
+			var projectManager = new ProjectManager(currentPath,outputFolderPath);
 
-				var codeGenerator = new CodeGenerator(protoFilePathList,enumFilePath);
-				var codeList = codeGenerator.GenerateAllProtoCode();
+			projectManager.CreateProject();
 
-				var outputFolderPath = GetFullPath(currentPath,"../ProtoOutput");
-				var protoGenerator = new ProtoGenerator(argumentArray[1],branchFilePath);
+			var protoFilePathList = new List<string>(GetExcelFilePathGroup(protoFolderPath));
 
-				protoGenerator.GenerateAllProto(protoFilePathList,codeList,outputFolderPath);
-			}
-			catch(Exception exception)
-			{
-				Console.WriteLine($"Error: {exception.Message} / Stack Trace: {exception.StackTrace}");
-			}
+			var enumFilePath = GetFilePath(protoFilePathList,"Enum");
+			var branchFilePath = GetFilePath(protoFilePathList,"Branch");
+
+			var codeGenerator = new CodeGenerator(protoFilePathList,enumFilePath);
+			codeGenerator.GenerateAllProtoCode(projectManager.ProjectFolderPath);
+
+			var protoGenerator = new ProtoGenerator(argumentArray[1],branchFilePath);
+
+			protoGenerator.GenerateAllProto(protoFilePathList,codeGenerator.ProtoCodeGroup,outputFolderPath);
+
+			//? Build Project
+			projectManager.BuildProject();
+
+			//? Delete Project
+			projectManager.DeleteProject();
+
+			Console.WriteLine("Move dll & pdb file");
+			var resultFolderPath = argumentArray[2];
+
+			Utility.CreateFolder(resultFolderPath);
+
+			var sourceDllFilePath = Path.Combine(outputFolderPath,"KZProto.dll");
+			var sourcePdbFilePath = Path.Combine(outputFolderPath,"KZProto.pdb");
+
+			var destinationDllFilePath = Path.Combine(resultFolderPath,"KZProto.dll");
+			var destinationPdbFilePath = Path.Combine(resultFolderPath,"KZProto.pdb");
+
+			File.Move(sourceDllFilePath,destinationDllFilePath,true);
+			File.Move(sourcePdbFilePath,destinationPdbFilePath,true);
 
 			Console.WriteLine("Press enter to exit...");
 			Console.ReadLine();
@@ -43,12 +60,9 @@ namespace KZConsole
 
 		private static string GetFilePath(List<string> filePathList,string text)
 		{
-			var filePath = filePathList.Find(x => x.Contains(text));
+			var filePath = filePathList.Find(x => x.Contains(text)) ?? throw new NullReferenceException($"{text} excel file does not exist.");;
 
-			if(string.IsNullOrEmpty(filePath))
-			{
-				throw new NullReferenceException($"{text} excel file does not exist.");
-			}
+			Utility.IsPathExist(filePath);
 
 			return filePath;
 		}
@@ -78,15 +92,6 @@ namespace KZConsole
 			}
 
 			return result;
-		}
-
-		private static string GetFullPath(params string[] pathArray)
-		{
-			var path = Path.Combine(pathArray);
-
-			Utility.IsPathExist(path);
-
-			return Path.GetFullPath(path);
 		}
 	}
 }

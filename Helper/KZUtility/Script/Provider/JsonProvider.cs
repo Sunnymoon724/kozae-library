@@ -28,9 +28,9 @@ namespace KZLib.KZUtility
 		#region Color
 		private class ColorJsonConverter : JsonConverter
 		{
-			public override bool CanConvert(Type _type)
+			public override bool CanConvert(Type type)
 			{
-				return _type == typeof(Color);
+				return type == typeof(Color);
 			}
 
 			public override object? ReadJson(JsonReader reader,Type objectType,object? existingValue,JsonSerializer serializer)
@@ -74,9 +74,9 @@ namespace KZLib.KZUtility
 		#region Color32
 		private class Color32JsonConverter : JsonConverter
 		{
-			public override bool CanConvert(Type _type)
+			public override bool CanConvert(Type type)
 			{
-				return _type == typeof(Color32);
+				return type == typeof(Color32);
 			}
 
 			public override object? ReadJson(JsonReader reader,Type objectType,object? existingValue,JsonSerializer serializer)
@@ -120,9 +120,9 @@ namespace KZLib.KZUtility
 		#region Vector2
 		private class Vector2JsonConverter : JsonConverter
 		{
-			public override bool CanConvert(Type _type)
+			public override bool CanConvert(Type type)
 			{
-				return _type == typeof(Vector2);
+				return type == typeof(Vector2);
 			}
 
 			public override object? ReadJson(JsonReader reader,Type objectType,object? existingValue,JsonSerializer serializer)
@@ -162,9 +162,9 @@ namespace KZLib.KZUtility
 		#region Vector2Int
 		private class Vector2IntJsonConverter : JsonConverter
 		{
-			public override bool CanConvert(Type _type)
+			public override bool CanConvert(Type type)
 			{
-				return _type == typeof(Vector2Int);
+				return type == typeof(Vector2Int);
 			}
 
 			public override object? ReadJson(JsonReader reader,Type objectType,object? existingValue,JsonSerializer serializer)
@@ -204,9 +204,9 @@ namespace KZLib.KZUtility
 		#region Vector3
 		private class Vector3JsonConverter : JsonConverter
 		{
-			public override bool CanConvert(Type _type)
+			public override bool CanConvert(Type type)
 			{
-				return _type == typeof(Vector3);
+				return type == typeof(Vector3);
 			}
 
 			public override object? ReadJson(JsonReader reader,Type objectType,object? existingValue,JsonSerializer serializer)
@@ -248,9 +248,9 @@ namespace KZLib.KZUtility
 		#region Vector3Int
 		private class Vector3IntJsonConverter : JsonConverter
 		{
-			public override bool CanConvert(Type _type)
+			public override bool CanConvert(Type type)
 			{
-				return _type == typeof(Vector3Int);
+				return type == typeof(Vector3Int);
 			}
 
 			public override object? ReadJson(JsonReader reader,Type objectType,object? existingValue,JsonSerializer serializer)
@@ -292,9 +292,9 @@ namespace KZLib.KZUtility
 		#region Vector4
 		private class Vector4JsonConverter : JsonConverter
 		{
-			public override bool CanConvert(Type _type)
+			public override bool CanConvert(Type type)
 			{
-				return _type == typeof(Vector4);
+				return type == typeof(Vector4);
 			}
 
 			public override object? ReadJson(JsonReader reader,Type objectType,object? existingValue,JsonSerializer serializer)
@@ -338,9 +338,9 @@ namespace KZLib.KZUtility
 		#region Quaternion
 		private class QuaternionJsonConverter : JsonConverter
 		{
-			public override bool CanConvert(Type _type)
+			public override bool CanConvert(Type type)
 			{
-				return _type == typeof(Quaternion);
+				return type == typeof(Quaternion);
 			}
 
 			public override object? ReadJson(JsonReader reader,Type objectType,object? existingValue,JsonSerializer serializer)
@@ -384,9 +384,9 @@ namespace KZLib.KZUtility
 		#region Rect
 		private class RectJsonConverter : JsonConverter
 		{
-			public override bool CanConvert(Type _type)
+			public override bool CanConvert(Type type)
 			{
-				return _type == typeof(Rect);
+				return type == typeof(Rect);
 			}
 
 			public override object? ReadJson(JsonReader reader,Type objectType,object? existingValue,JsonSerializer serializer)
@@ -430,9 +430,9 @@ namespace KZLib.KZUtility
 		#region RectInt
 		private class RectIntJsonConverter : JsonConverter
 		{
-			public override bool CanConvert(Type _type)
+			public override bool CanConvert(Type type)
 			{
-				return _type == typeof(RectInt);
+				return type == typeof(RectInt);
 			}
 
 			public override object? ReadJson(JsonReader reader,Type objectType,object? existingValue,JsonSerializer serializer)

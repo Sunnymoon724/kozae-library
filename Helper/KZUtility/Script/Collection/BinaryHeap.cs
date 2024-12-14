@@ -3,8 +3,8 @@ namespace System.Collections.Generic
 {
 	public abstract class BinaryHeap<TData> : IEnumerable<TData>,IEnumerable,IReadOnlyCollection<TData>,ICollection where TData : IComparable<TData>
 	{
-		private readonly List<TData> _dataList = new List<TData>();
-		private readonly object _syncRoot = new object();
+		private readonly List<TData> m_dataList = new List<TData>();
+		private readonly object m_syncRoot = new object();
 
 		protected abstract int Compare(TData first,TData second);
 
@@ -15,12 +15,12 @@ namespace System.Collections.Generic
 				throw new ArgumentOutOfRangeException($"The capacity is {capacity}.");
 			}
 
-			_dataList = new List<TData>(capacity);
+			m_dataList = new List<TData>(capacity);
 		}
 
 		public BinaryHeap(ICollection<TData> collection) : this(collection.Count)
 		{
-			for(var i=_dataList.Count/2-1;i>=0;i--)
+			for(var i=m_dataList.Count/2-1;i>=0;i--)
 			{
 				HeapifyDown(i);
 			}
@@ -29,26 +29,26 @@ namespace System.Collections.Generic
 
 		public void Insert(TData data)
 		{
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
-				_dataList.Add(data);
-				HeapifyUp(_dataList.Count-1);
+				m_dataList.Add(data);
+				HeapifyUp(m_dataList.Count-1);
 			}
 		}
 
 		public TData ExtractTop()
 		{
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
 				if(IsEmpty)
 				{
 					throw new ArgumentOutOfRangeException("Heap is empty.");
 				}
 
-				var top = _dataList[0];
+				var top = m_dataList[0];
 
-				_dataList[0] = _dataList[^1];
-				_dataList.RemoveAt(_dataList.Count-1);
+				m_dataList[0] = m_dataList[^1];
+				m_dataList.RemoveAt(m_dataList.Count-1);
 
 				if(!IsEmpty)
 				{
@@ -61,32 +61,32 @@ namespace System.Collections.Generic
 
 		public TData Peek()
 		{
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
 				if(IsEmpty)
 				{
 					throw new ArgumentOutOfRangeException("Heap is empty.");
 				}
 
-				return _dataList[0];
+				return m_dataList[0];
 			}
 		}
 
 		public bool Remove(TData data)
 		{
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
-				var index = _dataList.IndexOf(data);
+				var index = m_dataList.IndexOf(data);
 
 				if(index == -1)
 				{
 					return false;
 				}
 
-				_dataList[index] = _dataList[^1];
-				_dataList.RemoveAt(_dataList.Count-1);
+				m_dataList[index] = m_dataList[^1];
+				m_dataList.RemoveAt(m_dataList.Count-1);
 
-				if(index < _dataList.Count)
+				if(index < m_dataList.Count)
 				{
 					HeapifyDown(index);
 					HeapifyUp(index);
@@ -102,7 +102,7 @@ namespace System.Collections.Generic
 			{
 				var parent = (index-1)/2;
 
-				if(Compare(_dataList[index],_dataList[parent]) >= 0)
+				if(Compare(m_dataList[index],m_dataList[parent]) >= 0)
 				{
 					break;
 				}
@@ -115,7 +115,7 @@ namespace System.Collections.Generic
 
 		private void HeapifyDown(int index)
 		{
-			var last = _dataList.Count-1;
+			var last = m_dataList.Count-1;
 
 			while(index <= last)
 			{
@@ -123,12 +123,12 @@ namespace System.Collections.Generic
 				var right = index*2+2;
 				var swap = index;
 
-				if(left <= last && Compare(_dataList[left],_dataList[swap]) < 0)
+				if(left <= last && Compare(m_dataList[left],m_dataList[swap]) < 0)
 				{
 					swap = left;
 				}
 
-				if(right <= last && Compare(_dataList[right],_dataList[swap]) < 0)
+				if(right <= last && Compare(m_dataList[right],m_dataList[swap]) < 0)
 				{
 					swap = right;
 				}
@@ -146,14 +146,14 @@ namespace System.Collections.Generic
 
 		private void Swap(int prev,int next)
 		{
-			(_dataList[next],_dataList[prev]) = (_dataList[prev],_dataList[next]);
+			(m_dataList[next],m_dataList[prev]) = (m_dataList[prev],m_dataList[next]);
 		}
 
 		public IEnumerator<TData> GetEnumerator()
 		{
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
-				return _dataList.GetEnumerator();
+				return m_dataList.GetEnumerator();
 			}
 		}
 
@@ -174,11 +174,11 @@ namespace System.Collections.Generic
 				throw new ArgumentOutOfRangeException($"Index {index} is out of bounds for the array.");
 			}
 
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
 				if(array is TData[] convert)
 				{
-					_dataList.CopyTo(convert,index);
+					m_dataList.CopyTo(convert,index);
 				}
 				else
 				{
@@ -194,18 +194,18 @@ namespace System.Collections.Generic
 				throw new ArgumentNullException("Data cannot be null.");
 			}
 
-			lock(_syncRoot)
+			lock(m_syncRoot)
 			{
-				return _dataList.Contains(data);
+				return m_dataList.Contains(data);
 			}
 		}
 
 		public bool IsEmpty => Count == 0;
 
-		public int Count => _dataList.Count;
+		public int Count => m_dataList.Count;
 
 		public bool IsSynchronized => true;
-		public object SyncRoot => _syncRoot;
+		public object SyncRoot => m_syncRoot;
 	}
 
 	public class MinHeap<TData> : BinaryHeap<TData> where TData : IComparable<TData>

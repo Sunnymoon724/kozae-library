@@ -1,19 +1,19 @@
 using System;
 
-namespace KZLib
+namespace KZLib.KZUtility
 {
 	#region NewAction
 	public class NewAction
 	{
-		private Action? _onAction = null;
+		private Action? m_onAction = null;
 
-		public int Count => _onAction?.GetInvocationList().Length ?? 0;
+		public int Count => m_onAction?.GetInvocationList().Length ?? 0;
 
 		public NewAction() { }
 
 		public NewAction(Action onAction)
 		{
-			_onAction = onAction;
+			m_onAction = onAction;
 		}
 
 		public void AddListener(Action onAction,bool overlap = false)
@@ -25,7 +25,7 @@ namespace KZLib
 				RemoveListener(onAction);
 			}
 
-			_onAction += onAction;
+			m_onAction += onAction;
 		}
 
 		public void SetListener(Action onAction)
@@ -55,17 +55,17 @@ namespace KZLib
 		{
 			IsValid(onAction);
 
-			_onAction -= onAction;
+			m_onAction -= onAction;
 		}
 
 		public void RemoveAllListeners()
 		{
-			_onAction = null;
+			m_onAction = null;
 		}
 
 		public void Invoke()
 		{
-			_onAction?.Invoke();
+			m_onAction?.Invoke();
 		}
 
 		private void IsValid(Action onAction)
@@ -83,15 +83,15 @@ namespace KZLib
 	#region NewAction<TObject>
 	public class NewAction<TObject>
 	{
-		private Action<TObject>? _onAction = null;
+		private Action<TObject>? m_onAction = null;
 
-		public int Count => _onAction?.GetInvocationList().Length ?? 0;
+		public int Count => m_onAction?.GetInvocationList().Length ?? 0;
 
 		public NewAction() { }
 
 		public NewAction(Action<TObject> onAction)
 		{
-			_onAction = onAction;
+			m_onAction = onAction;
 		}
 
 		public void AddListener(Action<TObject> onAction,bool overlap = false)
@@ -103,7 +103,7 @@ namespace KZLib
 				RemoveListener(onAction);
 			}
 
-			_onAction += onAction;
+			m_onAction += onAction;
 		}
 
 		public void SetListener(Action<TObject> onAction)
@@ -133,17 +133,17 @@ namespace KZLib
 		{
 			IsValid(onAction);
 
-			_onAction -= onAction;
+			m_onAction -= onAction;
 		}
 
 		public void RemoveAllListeners()
 		{
-			_onAction = null;
+			m_onAction = null;
 		}
 
 		public void Invoke(TObject _objectT)
 		{
-			_onAction?.Invoke(_objectT);
+			m_onAction?.Invoke(_objectT);
 		}
 
 		private void IsValid(Action<TObject> onAction)
@@ -161,15 +161,15 @@ namespace KZLib
 	#region NewFunc<TResult>
 	public class NewFunc<TResult>
 	{
-		private Func<TResult>? _onFunc = null;
+		private Func<TResult>? m_onFunc = null;
 
-		public int Count => _onFunc?.GetInvocationList().Length ?? 0;
+		public int Count => m_onFunc?.GetInvocationList().Length ?? 0;
 
 		public NewFunc() { }
 
 		public NewFunc(Func<TResult> onFunc)
 		{
-			_onFunc = onFunc;
+			m_onFunc = onFunc;
 		}
 
 		public void AddListener(Func<TResult> onFunc,bool overlap = false)
@@ -181,7 +181,7 @@ namespace KZLib
 				RemoveListener(onFunc);
 			}
 
-			_onFunc += onFunc;
+			m_onFunc += onFunc;
 		}
 
 		public void SetListener(Func<TResult> onFunc)
@@ -211,17 +211,17 @@ namespace KZLib
 		{
 			IsValid(onFunc);
 
-			_onFunc -= onFunc;
+			m_onFunc -= onFunc;
 		}
 
 		public void RemoveAllListeners()
 		{
-			_onFunc = null;
+			m_onFunc = null;
 		}
 
 		public TResult Invoke()
 		{
-			return _onFunc != null ? _onFunc.Invoke() : throw new NullReferenceException("Callback is null");
+			return m_onFunc != null ? m_onFunc.Invoke() : throw new NullReferenceException("Callback is null");
 		}
 
 		private void IsValid(Func<TResult> onFunc)
@@ -239,15 +239,15 @@ namespace KZLib
 	#region NewFunc<TObject,TResult>
 	public class NewFunc<TObject,TResult>
 	{
-		private Func<TObject,TResult>? _onFunc = null;
+		private Func<TObject,TResult>? m_onFunc = null;
 
-		public int Count => _onFunc?.GetInvocationList().Length ?? 0;
+		public int Count => m_onFunc?.GetInvocationList().Length ?? 0;
 
 		public NewFunc() { }
 
 		public NewFunc(Func<TObject,TResult> onFunc)
 		{
-			_onFunc = onFunc;
+			m_onFunc = onFunc;
 		}
 
 		public void AddListener(Func<TObject,TResult> onFunc,bool overlap = false)
@@ -259,7 +259,7 @@ namespace KZLib
 				RemoveListener(onFunc);
 			}
 
-			_onFunc += onFunc;
+			m_onFunc += onFunc;
 		}
 
 		public void SetListener(Func<TObject,TResult> onFunc)
@@ -289,17 +289,17 @@ namespace KZLib
 		{
 			IsValid(onFunc);
 
-			_onFunc -= onFunc;
+			m_onFunc -= onFunc;
 		}
 
 		public void RemoveAllListeners()
 		{
-			_onFunc = null;
+			m_onFunc = null;
 		}
 
 		public TResult Invoke(TObject _objectT)
 		{
-			return _onFunc != null ? _onFunc.Invoke(_objectT) : throw new NullReferenceException("Callback is null");
+			return m_onFunc != null ? m_onFunc.Invoke(_objectT) : throw new NullReferenceException("Callback is null");
 		}
 
 		private void IsValid(Func<TObject,TResult> onFunc)

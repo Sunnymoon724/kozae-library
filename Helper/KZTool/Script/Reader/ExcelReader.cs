@@ -4,41 +4,27 @@ using System.Data;
 using System.IO;
 using System.Text;
 using ExcelDataReader;
-using ExcelDataReader.Log;
 using UnityEngine;
 
 namespace KZLib.KZTool
 {
 	public class ExcelReader
 	{
-		private readonly DataSet _dataSet;
+		private readonly DataSet m_dataSet;
 
-		public ExcelReader(string _filePath)
+		public ExcelReader(string filePath)
 		{
 			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-			Utility.IsFileExist(_filePath);
+			Utility.IsFileExist(filePath);
 
-			using var stream = new FileStream(_filePath,FileMode.Open,FileAccess.Read);
+			using var stream = new FileStream(filePath,FileMode.Open,FileAccess.Read);
 			using var reader = ExcelReaderFactory.CreateReader(stream);
 
-			_dataSet = reader.AsDataSet();
+			m_dataSet = reader.AsDataSet();
 		}
 
-		private DataTableCollection TableCollection => _dataSet != null ? _dataSet.Tables : throw new NullReferenceException("DataSet is null in ExcelReader");
-
-		public string FirstSheetName
-		{
-			get
-			{
-				if(TableCollection.Count == 0)
-				{
-					throw new NullReferenceException("TableCollection count is zero");
-				}
-
-				return TableCollection[0].TableName;
-			}
-		}
+		private DataTableCollection TableCollection => m_dataSet != null ? m_dataSet.Tables : throw new NullReferenceException("DataSet is null in ExcelReader");
 
 		public IEnumerable<string> SheetNameGroup
 		{
@@ -51,6 +37,23 @@ namespace KZLib.KZTool
 					yield return collection[i].TableName;
 				}
 			}
+		}
+
+		public string FindSheetName(Func<string,bool> condition)
+		{
+			var collection = TableCollection;
+
+			for(var i=0;i<collection.Count;i++)
+			{
+				var sheetName = collection[i].TableName;
+
+				if(condition.Invoke(sheetName))
+				{
+					return sheetName;
+				}
+			}
+
+			throw new ArgumentNullException($"SheetName is not exist in condition");
 		}
 
 		private DataTable GetSheet(string sheetName)
