@@ -17,7 +17,14 @@ namespace KZLib.KZUtility
 			//! Check only one
 			if(s_instance)
 			{
-				CommonUtility.DestroyObject(gameObject);
+				if(Application.isPlaying)
+				{
+					Destroy(gameObject);
+				}
+				else
+				{
+					DestroyImmediate(gameObject);
+				}
 
 				return;
 			}
@@ -40,7 +47,14 @@ namespace KZLib.KZUtility
 
 			if(s_instance)
 			{
-				CommonUtility.DestroyObject(gameObject);
+				if(Application.isPlaying)
+				{
+					Destroy(gameObject);
+				}
+				else
+				{
+					DestroyImmediate(gameObject);
+				}
 
 				s_instance = null;
 			}
@@ -112,10 +126,10 @@ namespace KZLib.KZUtility
 
 					if(!s_instance)
 					{
-						var data = Resources.Load<TBehaviour>(typeof(TBehaviour).Name);
+						var instance = Resources.Load<TBehaviour>(typeof(TBehaviour).Name);
 
-						s_instance = CommonUtility.CopyObject(data,null);
-						s_instance.name = data.name;
+						s_instance = Instantiate(instance);
+						s_instance.name = instance.name;
 					}
 				}
 

@@ -16,7 +16,10 @@ namespace KZLib.KZTool
 		{
 			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-			Utility.IsFileExist(filePath);
+			if(!File.Exists(filePath))
+			{
+				throw new NullReferenceException($"{filePath} is not exist");
+			}
 
 			using var stream = new FileStream(filePath,FileMode.Open,FileAccess.Read);
 			using var reader = ExcelReaderFactory.CreateReader(stream);
@@ -63,6 +66,23 @@ namespace KZLib.KZTool
 			return collection.Contains(sheetName) ? collection[sheetName] : throw new NullReferenceException($"The sheet '{sheetName}' does not exist in tableCollection.");
 		}
 
+		private string[] ConvertRowToStringArray(object[] rowArray)
+		{
+			if(!IsExistRow(rowArray))
+			{
+				return Array.Empty<string>();
+			}
+
+			var cellArray = new string[rowArray.Length];
+
+			for(var i=0;i<rowArray.Length;i++)
+			{
+				cellArray[i] = rowArray[i].ToString();
+			}
+
+			return cellArray;
+		}
+
 		/// <summary>
 		/// Get data group in row
 		/// </summary>
@@ -70,24 +90,9 @@ namespace KZLib.KZTool
 		{
 			var rowCollection = GetSheet(sheetName).Rows;
 
-			Utility.ValidRange(sheetName,index,rowCollection.Count);
+			IsValidRange(sheetName,index,rowCollection.Count);
 
-			// one row
-			var rowArray = rowCollection[index].ItemArray;
-
-			if(!IsExistRow(rowArray))
-			{
-				return Array.Empty<string>();
-			}
-
-			var resultArray = new string[rowArray.Length];
-
-			for(var i=0;i<rowArray.Length;i++)
-			{
-				resultArray[i] = rowArray[i].ToString();
-			}
-
-			return resultArray;
+			return ConvertRowToStringArray(rowCollection[index].ItemArray);
 		}
 
 		/// <summary>
@@ -112,7 +117,7 @@ namespace KZLib.KZTool
 		{
 			var sheet = GetSheet(sheetName);
 
-			Utility.ValidRange(sheetName,index,sheet.Columns.Count);
+			IsValidRange(sheetName,index,sheet.Columns.Count);
 
 			var length = sheet.Rows.Count;
 			var columnArray = new string[length];
@@ -162,9 +167,9 @@ namespace KZLib.KZTool
 			// n -> last (get row)
 			for(var i=startRow;i<lastRow;i++)
 			{
-				var cellArray = rowCollection[i].ItemArray;
+				var cellArray = ConvertRowToStringArray(rowCollection[i].ItemArray);
 
-				if(!IsExistRow(cellArray))
+				if(cellArray.Length == 0)
 				{
 					continue;
 				}
@@ -173,14 +178,14 @@ namespace KZLib.KZTool
 			}
 		}
 
-		public TData Deserialize<TData>(string[] schemeArray,object[] cellArray,bool includeBlank)
+		public TData Deserialize<TData>(string[] schemeArray,string[] cellArray,bool includeBlank)
 		{
 			var dataType = typeof(TData);
 
 			return (TData) Deserialize(schemeArray,dataType,cellArray,includeBlank);
 		}
 
-		public object Deserialize(string[] schemeArray,Type dataType,object[] cellArray,bool includeBlank)
+		public object Deserialize(string[] schemeArray,Type dataType,string[] cellArray,bool includeBlank)
 		{
 			var instance = Activator.CreateInstance(dataType);
 			var indexList = new List<int>();
@@ -218,37 +223,30 @@ namespace KZLib.KZTool
 							continue;
 						}
 
-						resultArray.SetValue(GetCell(cellArray,index,propertyType,includeBlank),i);
+						resultArray.SetValue(ConvertCell(cellArray[index],index,propertyType,includeBlank),i);
 					}
 
 					propertyInfo.SetValue(instance,resultArray);
 				}
 				else
 				{
-					propertyInfo.SetValue(instance,GetCell(cellArray,indexList[0],propertyType,includeBlank));
+					var index = indexList[0];
+
+					propertyInfo.SetValue(instance,ConvertCell(cellArray[index],index,propertyType,includeBlank));
 				}
 			}
 
 			return instance;
 		}
 
-		private object GetCell(object[] cellArray,int index,Type dataType,bool includeBlank)
+		private object ConvertCell(string cell,int index,Type targetType,bool includeBlank)
 		{
-			if(0 <= index && index < cellArray.Length)
+			if (!includeBlank && string.IsNullOrEmpty(cell))
 			{
-				var cellText = cellArray[index].ToString();
-
-				if(!includeBlank && string.IsNullOrEmpty(cellText))
-				{
-					throw new ArgumentException($"cell is empty in {index}. [type : {dataType}]");
-				}
-
-				return ConvertToObject(cellText,dataType);
+				throw new ArgumentException($"cell is empty in {index}. [type : {targetType}]");
 			}
-			else
-			{
-				throw new IndexOutOfRangeException($"{cellArray.Length} < {index}");
-			}
+
+			return ConvertToObject(cell,targetType);
 		}
 
 		/// <summary>
@@ -288,7 +286,7 @@ namespace KZLib.KZTool
 					continue;
 				}
 
-				foreach(var keyword in KEY_WORD_ARRAY)
+				foreach(var keyword in s_keyword_array)
 				{
 					if(string.Equals(keyword,scheme))
 					{
@@ -315,48 +313,42 @@ namespace KZLib.KZTool
 			return !header.StartsWith("#") && !string.IsNullOrEmpty(header);
 		}
 
-		private object ConvertToObject(string cellText,Type dataType)
+		private object ConvertToObject(string cellText,Type targetType)
 		{
-			if(dataType == typeof(string))
+			if(targetType == typeof(string))
 			{
 				return cellText.Replace("\\n",Environment.NewLine);
 			}
-			else if(dataType.IsEnum)
+
+			if(targetType.IsEnum)
 			{
-				if(Enum.TryParse(dataType,cellText,out var enumValue))
+				if(Enum.TryParse(targetType,cellText,out var enumValue))
 				{
 					return enumValue;
 				}
 				else
 				{
-					throw new InvalidCastException($"{cellText} is not include in {dataType.Name}.");
+					throw new InvalidCastException($"{cellText} is not include in {targetType.Name}.");
 				}
 			}
-			else if(dataType.Equals(typeof(Vector2)))
+
+			if(targetType == typeof(Vector2) || targetType == typeof(Vector3))
 			{
 				var vectorArray = cellText.Trim('(',')').Split(',');
 
-				if(vectorArray.Length != 2)
+				if(targetType == typeof(Vector2))
 				{
-					throw new InvalidCastException($"{cellText} is not vector2.");
+					return new Vector2(float.Parse(vectorArray[0]),float.Parse(vectorArray[1]));
 				}
-
-				return new Vector2(float.Parse(vectorArray[0]),float.Parse(vectorArray[1]));
-			}
-			else if(dataType.Equals(typeof(Vector3)))
-			{
-				var vectorArray = cellText.Trim('(',')').Split(',');
-
-				if(vectorArray.Length != 3)
+				else
 				{
-					throw new InvalidCastException($"{cellText} is not vector3.");
+					return new Vector3(float.Parse(vectorArray[0]),float.Parse(vectorArray[1]),float.Parse(vectorArray[2]));
 				}
-
-				return new Vector3(float.Parse(vectorArray[0]),float.Parse(vectorArray[1]),float.Parse(vectorArray[2]));
 			}
-			else if(dataType.IsPrimitive)
+
+			if(targetType.IsPrimitive)
 			{
-				return Convert.ChangeType(cellText,dataType);
+				return Convert.ChangeType(cellText, targetType);
 			}
 
 			throw new NotSupportedException($"{cellText} is not supported.");
@@ -377,7 +369,15 @@ namespace KZLib.KZTool
 			return destination;
 		}
 
-		private string[] KEY_WORD_ARRAY => new string[]
+		private void IsValidRange(string sheetName,int index,int count)
+		{
+			if(index < 0 || index >= count)
+			{
+				throw new IndexOutOfRangeException($"{index} is out of range in {sheetName}");
+			}
+		}
+
+		private static readonly string[] s_keyword_array = new string[]
 		{
 			"abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", 
 			"class", "const", "continue", "decimal", "default", "delegate", "do", "double", "else", "enum",

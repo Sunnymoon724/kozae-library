@@ -34,8 +34,12 @@ namespace KZConsole
 
 			protoGenerator.GenerateAllProto(protoFilePathList,codeGenerator.ProtoCodeGroup,outputFolderPath);
 
+			Console.WriteLine("Build project");
+
 			//? Build Project
 			projectManager.BuildProject();
+
+			Console.WriteLine("Delete project");
 
 			//? Delete Project
 			projectManager.DeleteProject();

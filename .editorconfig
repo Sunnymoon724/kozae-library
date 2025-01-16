@@ -5,3 +5,6 @@ dotnet_style_namespace_match_folder = false
 
 # IDE0251: 멤버를 'readonly'로 만들기
 csharp_style_prefer_readonly_struct_member = false
+
+# IDE1006: 명명 스타일
+dotnet_diagnostic.IDE1006.severity = none

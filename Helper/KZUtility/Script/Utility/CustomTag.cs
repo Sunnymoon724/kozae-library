@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 /// <summary>
 /// Reference : https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/enumeration-classes-over-enum-types
@@ -10,16 +9,14 @@ namespace KZLib.KZUtility
 {
 	public abstract class CustomTag : IComparable
 	{
-		private const BindingFlags ENUMERATION_FLAG = BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly;
-
 		private readonly string m_name = string.Empty;
 
 		private static readonly Dictionary<string,CustomTag> m_cacheTagDict = new Dictionary<string,CustomTag>();
-		private static readonly object m_lock = new object();
+		private static readonly object m_syncRoot = new object();
 
 		protected CustomTag(string name)
 		{
-			lock(m_lock)
+			lock(m_syncRoot)
 			{
 				if(m_cacheTagDict.ContainsKey(name))
 				{
@@ -56,7 +53,7 @@ namespace KZLib.KZUtility
 
 		public static bool TryParse<TTag>(string name,out TTag? tag) where TTag : CustomTag
 		{
-			lock(m_lock)
+			lock(m_syncRoot)
 			{
 				if(!m_cacheTagDict.TryGetValue(name,out var result))
 				{

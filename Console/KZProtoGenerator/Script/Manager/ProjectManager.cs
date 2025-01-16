@@ -26,7 +26,7 @@ namespace KZConsole
 
 		public void CreateProject()
 		{
-			var projectText = @"<Project Sdk=""Microsoft.NET.Sdk""><PropertyGroup><TargetFramework>netstandard2.1</TargetFramework><AssemblyName>KZProto</AssemblyName></PropertyGroup><ItemGroup><PackageReference Include=""MessagePack"" Version=""3.0.300"" /></ItemGroup><ItemGroup><Reference Include=""KZData""><HintPath>.KZData.dll</HintPath></Reference></ItemGroup></Project>";
+			var projectText = @"<Project Sdk=""Microsoft.NET.Sdk""><PropertyGroup><TargetFramework>netstandard2.1</TargetFramework><AssemblyName>KZProto</AssemblyName></PropertyGroup><ItemGroup><PackageReference Include=""MessagePack"" Version=""3.1.1"" /></ItemGroup><ItemGroup><Reference Include=""KZData""><HintPath>.KZData.dll</HintPath></Reference></ItemGroup></Project>";
 
 			Utility.WriteTextToFile(m_projectFilePath,projectText);
 		}
@@ -40,19 +40,29 @@ namespace KZConsole
 			process.StartInfo.RedirectStandardError = true;
 			process.StartInfo.UseShellExecute = false;
 
-			process.Start();
-			process.WaitForExit();
+			Console.WriteLine("-Build start");
 
-			var output = process.StandardOutput.ReadToEnd();
-			var error = process.StandardError.ReadToEnd();
-
-			Console.WriteLine("Build Output:");
-			Console.WriteLine(output);
-
-			if (!string.IsNullOrEmpty(error))
+			try
 			{
-				Console.WriteLine("Build Error:");
-				Console.WriteLine(error);
+				process.Start();
+
+				var output = process.StandardOutput.ReadToEnd();
+				var error = process.StandardError.ReadToEnd();
+
+				process.WaitForExit();
+
+				Console.WriteLine("-Build Output:");
+				Console.WriteLine(output);
+
+				if(!string.IsNullOrEmpty(error))
+				{
+					Console.WriteLine("-Build Error:");
+					Console.WriteLine(error);
+				}
+			}
+			catch(Exception exception)
+			{
+				Console.WriteLine($"Error executing build: {exception.Message}");
 			}
 		}
 

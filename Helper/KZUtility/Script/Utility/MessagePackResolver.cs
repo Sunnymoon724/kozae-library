@@ -2,28 +2,49 @@ using UnityEngine;
 using System;
 using MessagePack;
 using MessagePack.Formatters;
-using MessagePack.Resolvers;
-using System.Collections.Generic;
 using KZLib.KZData;
 
 namespace KZLib.KZUtility
 {
 	/// <summary>
-	/// <br/> support Color, Color32, Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Quaternion, Rect, RectInt
+	/// Supported Color, Color32, Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Quaternion, Rect, RectInt, SoundVolume
+	/// <br/>
+	/// <b> Example </b>
+	/// <br/>
+	/// var bytes = MessagePackSerializer.Serialize(object,MessagePackSerializerOptions.Standard.WithResolver(MessagePackResolver.Instance));
+	/// <br/>
+	/// <br/>
+	/// var object = MessagePackSerializer.Deserialize(bytes,MessagePackSerializerOptions.Standard.WithResolver(MessagePackResolver.Instance));
 	/// </summary>
-	public static class MessagePackProvider
+	public class MessagePackResolver : IFormatterResolver
 	{
-		public static void SetDefaultSettings()
+		public static readonly MessagePackResolver Instance = new MessagePackResolver();
+
+		public IMessagePackFormatter<T>? GetFormatter<T>()
 		{
-			var formatterList = new List<IMessagePackFormatter>
+			var objectType = typeof(T);
+
+			return objectType.Name switch
 			{
-				new ColorFormatter()
+				nameof(Color) => new ColorFormatter() as IMessagePackFormatter<T>,
+				nameof(Color32) => new Color32Formatter() as IMessagePackFormatter<T>,
+
+				nameof(Vector2) => new Vector2Formatter() as IMessagePackFormatter<T>,
+				nameof(Vector3) => new Vector3Formatter() as IMessagePackFormatter<T>,
+				nameof(Vector4) => new Vector4Formatter() as IMessagePackFormatter<T>,
+
+				nameof(Vector2Int) => new Vector2IntFormatter() as IMessagePackFormatter<T>,
+				nameof(Vector3Int) => new Vector2IntFormatter() as IMessagePackFormatter<T>,
+
+				nameof(Quaternion) => new QuaternionFormatter() as IMessagePackFormatter<T>,
+
+				nameof(Rect) => new RectFormatter() as IMessagePackFormatter<T>,
+				nameof(RectInt) => new RectIntFormatter() as IMessagePackFormatter<T>,
+
+				nameof(SoundVolume) => new SoundVolumeFormatter() as IMessagePackFormatter<T>,
+
+				_ => throw new NotSupportedException($"NotSupported type {objectType.Name}"),
 			};
-
-			formatterList.AddRange(DataProvider.FormatterArray);
-
-			MessagePackSerializer.DefaultOptions = MessagePackSerializerOptions.Standard.WithResolver(CompositeResolver.Create(formatterList,
-			new[] { StandardResolver.Instance }));
 		}
 
 		#region Color
@@ -269,5 +290,28 @@ namespace KZLib.KZUtility
 			}
 		}
 		#endregion RectInt
+
+		#region SoundVolume
+		internal class SoundVolumeFormatter : IMessagePackFormatter<SoundVolume>
+		{
+			public void Serialize(ref MessagePackWriter writer,SoundVolume soundVolume,MessagePackSerializerOptions options)
+			{
+				writer.WriteArrayHeader(2);
+
+				writer.Write(soundVolume.level);
+				writer.Write(soundVolume.mute);
+			}
+
+			public SoundVolume Deserialize(ref MessagePackReader reader,MessagePackSerializerOptions options)
+			{
+				if(!reader.TryReadArrayHeader(out int length) || length != 2)
+				{
+					throw new InvalidOperationException($"Reader error. or {length} != 2");
+				}
+
+				return new SoundVolume(reader.ReadSingle(),reader.ReadBoolean());
+			}
+		}
+		#endregion SoundVolume
 	}
 }

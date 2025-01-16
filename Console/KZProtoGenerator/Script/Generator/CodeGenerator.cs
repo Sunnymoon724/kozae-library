@@ -6,12 +6,6 @@ namespace KZConsole
 {
 	public class CodeGenerator(List<string> m_protoFilePathList,string m_enumExcelFilePath)
 	{
-		private static readonly int[] PROTO_INDEX_ARRAY = [Global.PROTO_SCHEME_INDEX,Global.PROTO_TYPE_INDEX];
-
-		private readonly List<string> m_protoCodeList = [];
-
-		public IEnumerable<string> ProtoCodeGroup => m_protoCodeList;
-
 		private struct EnumScheme
 		{
 			public string Key { get; set; }
@@ -19,17 +13,26 @@ namespace KZConsole
 			public string Comment { get; set; }
 		}
 
+		private const int c_type_index = 1;
+		private const int c_scheme_index = 0;
+		private const int c_invalid_index = -1;
+
+		private static readonly int[] s_proto_index_array = [c_scheme_index,c_type_index];
+
+		private readonly List<string> m_protoCodeList = [];
+
+		public IEnumerable<string> ProtoCodeGroup => m_protoCodeList;
+
 		public void GenerateAllProtoCode(string outputFolderPath)
 		{
 			m_protoCodeList.Clear();
 
 			Console.WriteLine("Generate all proto code.");
-
-			Console.WriteLine("Generate enum code.");
+			Console.WriteLine("-Generate enum code.");
 
 			GenerateEnumCode(outputFolderPath);
 
-			Console.WriteLine("Generate proto code.");
+			Console.WriteLine("-Generate proto code.");
 
 			GenerateProtoCode(outputFolderPath);
 		}
@@ -44,7 +47,7 @@ namespace KZConsole
 				stringBuilder.Append($"\tpublic enum {sheetName}{Environment.NewLine}");
 				stringBuilder.Append($"\t{{{Environment.NewLine}");
 
-				var index = Global.INVALID_INDEX;
+				var index = c_invalid_index;
 
 				foreach(var scheme in excelReader.DeserializeGroup<EnumScheme>(sheetName,true))
 				{
@@ -94,13 +97,13 @@ namespace KZConsole
 				var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 				var sheetName = excelReader.FindSheetName(x=>x.StartsWith('+'));
 
-				var protoJaggedArray = excelReader.ExtractRowJaggedArray(sheetName,PROTO_INDEX_ARRAY);
-				var length = protoJaggedArray[Global.PROTO_SCHEME_INDEX].Length;
+				var protoJaggedArray = excelReader.ExtractRowJaggedArray(sheetName,s_proto_index_array);
+				var length = protoJaggedArray[c_scheme_index].Length;
 				var keyIndex = 0;
 
 				for(int i=0;i<length;i++)
 				{
-					var member = protoJaggedArray[Global.PROTO_SCHEME_INDEX][i];
+					var member = protoJaggedArray[c_scheme_index][i];
 
 					// remove overlap
 					if(member.StartsWith('#') || memberList.Contains(member))
@@ -108,7 +111,7 @@ namespace KZConsole
 						continue;
 					}
 
-					var type = protoJaggedArray[Global.PROTO_TYPE_INDEX][i];
+					var type = protoJaggedArray[c_type_index][i];
 
 					stringBuilder.Append($"\t\t[Key({keyIndex++})]{Environment.NewLine}");
 					stringBuilder.Append($"\t\tpublic {type} {member} {{ get; set; }}{Environment.NewLine}");

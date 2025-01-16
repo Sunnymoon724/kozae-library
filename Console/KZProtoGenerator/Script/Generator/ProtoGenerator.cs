@@ -10,21 +10,26 @@ namespace KZConsole
 {
 	public class ProtoGenerator(string branchName,string branchFilePath)
     {
-		private readonly Dictionary<string,bool> _branchStateDict = [];
+		private const int c_scheme_index = 0;
+		private const int c_branch_index = 1;
+		private const int c_value_index = 2;
+
+		private readonly Dictionary<string,bool> m_branchStateDict = [];
 
 		public void GenerateAllProto(List<string> protoFilePathList,IEnumerable<string> codeGroup,string outputFolderPath)
 		{
 			Console.WriteLine("Generate all proto.");
 
-			Console.WriteLine("Make branch.");
+			Console.WriteLine("-Make branch.");
 
 			MakeBranchStateDict();
 
-			Console.WriteLine("Compile code");
+			Console.WriteLine("-Compile code");
 			var data = CompileCode(codeGroup);
 
-			Console.WriteLine("Convert csv file.");
-			CreateData(protoFilePathList,Assembly.Load(data),outputFolderPath);
+			Console.WriteLine("Generate proto.");
+			Console.WriteLine("-Convert csv file.");
+			GenerateProto(protoFilePathList,Assembly.Load(data),outputFolderPath);
 		}
 
 		private void MakeBranchStateDict()
@@ -32,7 +37,7 @@ namespace KZConsole
 			var excelReader = new ExcelReader(branchFilePath);
 
 			var sheetName = excelReader.FindSheetName(x=>x.Contains("Branch"));
-			var schemeArray = excelReader.ExtractRowArray(sheetName,Global.PROTO_SCHEME_INDEX);
+			var schemeArray = excelReader.ExtractRowArray(sheetName,c_scheme_index);
 
 			if(schemeArray.Length == 0 || !schemeArray.Contains(branchName))
 			{
@@ -41,26 +46,26 @@ namespace KZConsole
 				throw new NullReferenceException($"{branchName} is not exist in {header}. [{branchFilePath}]");
 			}
 
-			_branchStateDict.Clear();
+			m_branchStateDict.Clear();
 
-			var branchJaggedArray = excelReader.ExtractColumnJaggedArray(sheetName,Global.PROTO_SCHEME_INDEX,Array.IndexOf(schemeArray,branchName));
-			var length = branchJaggedArray[Global.PROTO_SCHEME_INDEX].Length;
+			var branchJaggedArray = excelReader.ExtractColumnJaggedArray(sheetName,c_scheme_index,Array.IndexOf(schemeArray,branchName));
+			var length = branchJaggedArray[c_scheme_index].Length;
 
 			for(int i=1;i<length;i++)
 			{
-				var branch = branchJaggedArray[Global.PROTO_SCHEME_INDEX][i];
+				var branch = branchJaggedArray[c_scheme_index][i];
 
 				if(string.IsNullOrEmpty(branch))
 				{
 					continue;
 				}
 
-				if(_branchStateDict.ContainsKey(branch))
+				if(m_branchStateDict.ContainsKey(branch))
 				{
 					throw new ArgumentException($"{branch} is already exist. [overlap index = {i}]");
 				}
 
-				_branchStateDict.Add(branch,bool.Parse(branchJaggedArray[1][i]));
+				m_branchStateDict.Add(branch,bool.Parse(branchJaggedArray[1][i]));
 			}
 		}
 
@@ -89,8 +94,8 @@ namespace KZConsole
 
 			if(result.Success)
 			{
-				Console.WriteLine("Compilation succeeded.");
-				Console.WriteLine("Save dll & pdb.");
+				Console.WriteLine("-Compilation succeeded.");
+				Console.WriteLine("-Save dll & pdb.");
 
 				memoryStream.Seek(0,SeekOrigin.Begin);
 
@@ -105,14 +110,15 @@ namespace KZConsole
 					Console.Error.WriteLine(diagnostic.ToString());
 				}
 
-				throw new InvalidOperationException("Compilation failed.");
+				throw new InvalidOperationException("-Compilation failed.");
 			}
 		}
 
-		private void CreateData(List<string> protoFilePathList,Assembly assembly,string outputFolderPath)
+		private void GenerateProto(List<string> protoFilePathList,Assembly assembly,string outputFolderPath)
 		{
 			var stringBuilder = new StringBuilder();
 			var protoList = new List<object>();
+			var numberHashSet = new HashSet<int>();
 
 			var csvFolderPath = Path.Combine(outputFolderPath,"Csv");
 			var byteFolderPath = Path.Combine(outputFolderPath,"Proto");
@@ -128,7 +134,7 @@ namespace KZConsole
 					continue;
 				}
 
-				Console.WriteLine($"Create {fileName}");
+				Console.WriteLine($"-Generate {fileName}");
 
 				var excelReader = new ExcelReader(protoFilePath);
 
@@ -139,15 +145,15 @@ namespace KZConsole
 						continue;
 					}
 
-					var schemeArray = excelReader.ExtractRowArray(sheetName,Global.PROTO_SCHEME_INDEX) ?? throw new NullReferenceException($"Scheme is not included in {fileName}");
+					var schemeArray = excelReader.ExtractRowArray(sheetName,c_scheme_index) ?? throw new NullReferenceException($"Scheme is not included in {fileName}");
 
 					stringBuilder.Clear();
 					stringBuilder.AppendLine(string.Join(",",schemeArray));
 
 					var dataType = assembly.GetType($"KZLib.KZData.{protoName}") ?? throw new InvalidDataException($"Invalid data in {protoName}");
-					var branchArray = excelReader.ExtractColumnArray(sheetName,Global.PROTO_BRANCH_INDEX);
+					var branchArray = excelReader.ExtractColumnArray(sheetName,c_branch_index);
 
-					for(var j=Global.PROTO_DATA_INDEX;j<branchArray.Length;j++)
+					for(var j=c_value_index;j<branchArray.Length;j++)
 					{
 						var rowArray = excelReader.ExtractRowArray(sheetName,j);
 
@@ -159,15 +165,27 @@ namespace KZConsole
 
 						var branch = branchArray[j];
 
-						if(!_branchStateDict.TryGetValue(branch,out var result))
+						if(!m_branchStateDict.TryGetValue(branch,out var result))
 						{
-							throw new Exception($"{branch} not exist. [file{protoFilePath}/line:{j}]");
+							throw new SheetConvertException($"{branch} not exist.",protoFilePath,sheetName,j);
 						}
 
 						if(!result)
 						{
 							continue;
 						}
+
+						if(!int.TryParse(rowArray[0],out var number))
+						{
+							throw new SheetConvertException($"{rowArray[0]} is not number.",protoFilePath,sheetName,j);
+						}
+
+						if(numberHashSet.Contains(number))
+						{
+							throw new SheetConvertException($"{number} is already added.",protoFilePath,sheetName,j);
+						}
+
+						numberHashSet.Add(number);
 
 						stringBuilder.AppendLine(string.Join(",",rowArray));
 						protoList.Add(excelReader.Deserialize(schemeArray,dataType,rowArray,false));
@@ -182,6 +200,8 @@ namespace KZConsole
 				var byteFilePath = Path.Combine(byteFolderPath,$"{fileName}.bytes");
 
 				Utility.WriteBytesToFile(byteFilePath,bytes);
+
+				Console.WriteLine($"-Save {fileName} proto");
 			}
 		}
 	}
