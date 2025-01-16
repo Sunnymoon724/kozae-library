@@ -7,7 +7,7 @@ using KZLib.KZData;
 namespace KZLib.KZUtility
 {
 	/// <summary>
-	/// Supported Color, Color32, Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Quaternion, Rect, RectInt, SoundVolume
+	/// Supported Color, Color32, Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Quaternion, Rect, RectInt, SoundVolume, ScreenResolution, Route
 	/// <br/>
 	/// <b> Example </b>
 	/// <br/>
@@ -26,22 +26,25 @@ namespace KZLib.KZUtility
 
 			return objectType.Name switch
 			{
-				nameof(Color) => new ColorFormatter() as IMessagePackFormatter<T>,
-				nameof(Color32) => new Color32Formatter() as IMessagePackFormatter<T>,
+				nameof(Color)				=> new ColorFormatter() as IMessagePackFormatter<T>,
+				nameof(Color32)				=> new Color32Formatter() as IMessagePackFormatter<T>,
 
-				nameof(Vector2) => new Vector2Formatter() as IMessagePackFormatter<T>,
-				nameof(Vector3) => new Vector3Formatter() as IMessagePackFormatter<T>,
-				nameof(Vector4) => new Vector4Formatter() as IMessagePackFormatter<T>,
+				nameof(Vector2)				=> new Vector2Formatter() as IMessagePackFormatter<T>,
+				nameof(Vector3)				=> new Vector3Formatter() as IMessagePackFormatter<T>,
+				nameof(Vector4)				=> new Vector4Formatter() as IMessagePackFormatter<T>,
 
-				nameof(Vector2Int) => new Vector2IntFormatter() as IMessagePackFormatter<T>,
-				nameof(Vector3Int) => new Vector2IntFormatter() as IMessagePackFormatter<T>,
+				nameof(Vector2Int)			=> new Vector2IntFormatter() as IMessagePackFormatter<T>,
+				nameof(Vector3Int)			=> new Vector2IntFormatter() as IMessagePackFormatter<T>,
 
-				nameof(Quaternion) => new QuaternionFormatter() as IMessagePackFormatter<T>,
+				nameof(Quaternion)			=> new QuaternionFormatter() as IMessagePackFormatter<T>,
 
-				nameof(Rect) => new RectFormatter() as IMessagePackFormatter<T>,
-				nameof(RectInt) => new RectIntFormatter() as IMessagePackFormatter<T>,
+				nameof(Rect)				=> new RectFormatter() as IMessagePackFormatter<T>,
+				nameof(RectInt)				=> new RectIntFormatter() as IMessagePackFormatter<T>,
 
-				nameof(SoundVolume) => new SoundVolumeFormatter() as IMessagePackFormatter<T>,
+				nameof(SoundVolume)			=> new SoundVolumeFormatter() as IMessagePackFormatter<T>,
+				nameof(ScreenResolution)	=> new ScreenResolutionFormatter() as IMessagePackFormatter<T>,
+
+				nameof(Route)				=> new RouteFormatter() as IMessagePackFormatter<T>,
 
 				_ => throw new NotSupportedException($"NotSupported type {objectType.Name}"),
 			};
@@ -313,5 +316,51 @@ namespace KZLib.KZUtility
 			}
 		}
 		#endregion SoundVolume
+
+		#region ScreenResolution
+		internal class ScreenResolutionFormatter : IMessagePackFormatter<ScreenResolution>
+		{
+			public void Serialize(ref MessagePackWriter writer,ScreenResolution soundVolume,MessagePackSerializerOptions options)
+			{
+				writer.WriteArrayHeader(3);
+
+				writer.Write(soundVolume.width);
+				writer.Write(soundVolume.height);
+				writer.Write(soundVolume.fullscreen);
+			}
+
+			public ScreenResolution Deserialize(ref MessagePackReader reader,MessagePackSerializerOptions options)
+			{
+				if(!reader.TryReadArrayHeader(out int length) || length != 3)
+				{
+					throw new InvalidOperationException($"Reader error. or {length} != 3");
+				}
+
+				return new ScreenResolution(reader.ReadInt32(),reader.ReadInt32(),reader.ReadBoolean());
+			}
+		}
+		#endregion ScreenResolution
+
+		#region Route
+		internal class RouteFormatter : IMessagePackFormatter<Route>
+		{
+			public void Serialize(ref MessagePackWriter writer,Route soundVolume,MessagePackSerializerOptions options)
+			{
+				writer.WriteArrayHeader(1);
+
+				writer.Write(soundVolume.AbsolutePath);
+			}
+
+			public Route Deserialize(ref MessagePackReader reader,MessagePackSerializerOptions options)
+			{
+				if(!reader.TryReadArrayHeader(out int length) || length != 1)
+				{
+					throw new InvalidOperationException($"Reader error. or {length} != 3");
+				}
+
+				return new Route(reader.ReadString() ?? string.Empty);
+			}
+		}
+		#endregion Route
 	}
 }

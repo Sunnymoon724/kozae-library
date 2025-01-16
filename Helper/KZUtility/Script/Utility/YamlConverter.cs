@@ -9,7 +9,7 @@ using KZLib.KZData;
 namespace KZLib.KZUtility
 {
 	/// <summary>
-	/// Supported Color, Color32, Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Quaternion, Rect, RectInt, SoundVolume
+	/// Supported Color, Color32, Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Quaternion, Rect, RectInt, SoundVolume, ScreenResolution, Route
 	/// <br/>
 	/// <b> Example </b>
 	/// <br/>
@@ -26,12 +26,13 @@ namespace KZLib.KZUtility
 	{
 		private readonly static HashSet<Type> s_converter_hashSet = new HashSet<Type>
 		{
-			typeof(Color),		typeof(Color32),
-			typeof(Vector2),	typeof(Vector3),	typeof(Vector4),
-			typeof(Vector2Int),	typeof(Vector3Int),
+			typeof(Color),			typeof(Color32),
+			typeof(Vector2),		typeof(Vector3),			typeof(Vector4),
+			typeof(Vector2Int),		typeof(Vector3Int),
 			typeof(Quaternion),
-			typeof(Rect),		typeof(RectInt),
-			typeof(SoundVolume),
+			typeof(Rect),			typeof(RectInt),
+			typeof(SoundVolume),	typeof(ScreenResolution),
+			typeof(Route),
 		};
 
 		public bool Accepts(Type objectType)
@@ -50,22 +51,25 @@ namespace KZLib.KZUtility
 
 			return objectType.Name switch
 			{
-				nameof(Color) => new Color(GetFloat(dictionary,"r"),GetFloat(dictionary,"g"),GetFloat(dictionary,"b"),GetFloat(dictionary,"a")),
-				nameof(Color32) => new Color32(GetByte(dictionary,"r"),GetByte(dictionary,"g"),GetByte(dictionary,"b"),GetByte(dictionary,"a")),
+				nameof(Color) 				=> new Color(GetFloat(dictionary,"r"),GetFloat(dictionary,"g"),GetFloat(dictionary,"b"),GetFloat(dictionary,"a")),
+				nameof(Color32)				=> new Color32(GetByte(dictionary,"r"),GetByte(dictionary,"g"),GetByte(dictionary,"b"),GetByte(dictionary,"a")),
 
-				nameof(Vector2) => new Vector2(GetFloat(dictionary,"x"),GetFloat(dictionary,"y")),
-				nameof(Vector3) => new Vector3(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"z")),
-				nameof(Vector4) => new Vector4(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"z"),GetFloat(dictionary,"w")),
+				nameof(Vector2)				=> new Vector2(GetFloat(dictionary,"x"),GetFloat(dictionary,"y")),
+				nameof(Vector3)				=> new Vector3(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"z")),
+				nameof(Vector4)				=> new Vector4(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"z"),GetFloat(dictionary,"w")),
 
-				nameof(Vector2Int) => new Vector2Int(GetInt(dictionary,"x"),GetInt(dictionary,"y")),
-				nameof(Vector3Int) => new Vector3Int(GetInt(dictionary,"x"),GetInt(dictionary,"y"),GetInt(dictionary,"z")),
+				nameof(Vector2Int)			=> new Vector2Int(GetInt(dictionary,"x"),GetInt(dictionary,"y")),
+				nameof(Vector3Int)			=> new Vector3Int(GetInt(dictionary,"x"),GetInt(dictionary,"y"),GetInt(dictionary,"z")),
 
-				nameof(Quaternion) => new Quaternion(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"z"),GetFloat(dictionary,"w")),
+				nameof(Quaternion)			=> new Quaternion(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"z"),GetFloat(dictionary,"w")),
 
-				nameof(Rect) => new Rect(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"width"),GetFloat(dictionary,"heigh")),
-				nameof(RectInt) => new RectInt(GetInt(dictionary,"x"),GetInt(dictionary,"y"),GetInt(dictionary,"width"),GetInt(dictionary,"heigh")),
+				nameof(Rect)				=> new Rect(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"width"),GetFloat(dictionary,"heigh")),
+				nameof(RectInt)				=> new RectInt(GetInt(dictionary,"x"),GetInt(dictionary,"y"),GetInt(dictionary,"width"),GetInt(dictionary,"heigh")),
 
-				nameof(SoundVolume) => new SoundVolume(GetFloat(dictionary,"level"),GetBool(dictionary,"mute")),
+				nameof(SoundVolume)			=> new SoundVolume(GetFloat(dictionary,"level"),GetBool(dictionary,"mute")),
+				nameof(ScreenResolution)	=> new ScreenResolution(GetInt(dictionary,"width"),GetInt(dictionary,"height"),GetBool(dictionary,"fullscreen")),
+
+				nameof(Route)				=> new Route(GetString(dictionary,"AbsolutePath")),
 
 				_ => throw new NotSupportedException($"NotSupported type {objectType.Name}"),
 			};
@@ -164,6 +168,21 @@ namespace KZLib.KZUtility
 					EmitValue(emitter,new string[] { "level", "mute" },new string[] { $"{volume.level}", $"{volume.mute}" });
 				}
 				break;
+				case nameof(ScreenResolution):
+				{
+					var resolution = (ScreenResolution) value;
+
+					EmitValue(emitter,new string[] { "width", "height", "fullscreen" },new string[] { $"{resolution.width}", $"{resolution.height}", $"{resolution.fullscreen}" });
+				}
+				break;
+
+				case nameof(Route):
+				{
+					var route = (Route) value;
+
+					EmitValue(emitter,new string[] { "AbsolutePath" },new string[] { $"{route.AbsolutePath}" });
+				}
+				break;
 			}
 
 			emitter.Emit(new MappingEnd());
@@ -214,6 +233,11 @@ namespace KZLib.KZUtility
 		private byte GetByte(Dictionary<string,string> dictionary,string key)
 		{
 			return dictionary.TryGetValue(key,out var value) && byte.TryParse(value,out var result) ? result : default;
+		}
+
+		private string GetString(Dictionary<string,string> dictionary,string key)
+		{
+			return dictionary.TryGetValue(key,out var value) ? value : string.Empty;
 		}
 	}
 }
