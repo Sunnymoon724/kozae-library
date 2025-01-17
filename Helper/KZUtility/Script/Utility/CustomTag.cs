@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace KZLib.KZUtility
 {
-	public abstract class CustomTag : IComparable
+	public abstract class CustomTag : IComparable,IComparable<CustomTag>,IEquatable<CustomTag>
 	{
 		private readonly string m_name = string.Empty;
 
@@ -70,7 +70,12 @@ namespace KZLib.KZUtility
 
 		public override bool Equals(object other)
 		{
-			return other is CustomTag type && string.Equals(m_name,type.m_name,StringComparison.Ordinal);
+			return other is CustomTag tag && Equals(tag);
+		}
+
+		public bool Equals(CustomTag tag)
+		{
+			return string.Equals(m_name,tag.m_name,StringComparison.Ordinal);
 		}
 
 		public static bool operator ==(CustomTag left,CustomTag right)
@@ -99,7 +104,12 @@ namespace KZLib.KZUtility
 
 		public int CompareTo(object other)
 		{
-			return other is CustomTag type ? m_name.CompareTo(type.m_name) : -1;
+			return other is CustomTag tag ? CompareTo(tag) : throw new ArgumentException($"{other} is not a CustomTag");
+		}
+
+		public int CompareTo(CustomTag tag)
+		{
+			return m_name.CompareTo(tag.m_name);
 		}
 	}
 }
