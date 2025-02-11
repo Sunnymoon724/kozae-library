@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Template\ProtoTemplate.txt" />
-    <EmbeddedResource Include="Template\EnumTemplate.txt" />
+    <EmbeddedResource Include="Templates\ProtoTemplate.txt" />
+    <EmbeddedResource Include="Templates\EnumTemplate.txt" />
   </ItemGroup>
 
 

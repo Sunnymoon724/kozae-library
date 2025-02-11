@@ -8,6 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="MessagePack" Version="3.1.1" />
+    <PackageReference Include="Unity3D.SDK" Version="2021.1.14.1" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <NoWarn>NU1701</NoWarn><!-- Unity warning -->
+  </PropertyGroup>
 
 </Project>

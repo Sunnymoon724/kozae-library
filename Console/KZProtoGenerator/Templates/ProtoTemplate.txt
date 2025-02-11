@@ -1,0 +1,8 @@
+using MessagePack;
+using UnityEngine;
+
+namespace KZLib.KZData
+{
+$MainClass
+$SubClass
+}
