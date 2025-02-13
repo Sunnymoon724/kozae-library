@@ -7,7 +7,7 @@ namespace KZLib.KZData
 	/// <summary>
 	/// level -> 0.0 - 1.0
 	/// </summary>
-	public struct SoundVolume : IEquatable<SoundVolume>,IFormattable,IComparable,IComparable<SoundVolume>
+	public struct SoundVolume : IEquatable<SoundVolume>,IFormattable
 	{
 		public float level;
 		public bool mute;
@@ -52,7 +52,7 @@ namespace KZLib.KZData
 
 			formatProvider ??= CultureInfo.InvariantCulture;
 
-			return $"{level.ToString(format,formatProvider)} - Mute : {(mute ? "O" : "X")}";
+			return $"level : {level.ToString(format,formatProvider)}, mute : {mute}";
 		}
 
 		public override int GetHashCode()
@@ -71,144 +71,45 @@ namespace KZLib.KZData
 			return level == volume.level && mute == volume.mute;
 		}
 
-		public int CompareTo(object other)
-		{
-			if(other is SoundVolume volume)
-			{
-				return CompareTo(volume);
-			}
-
-			throw new ArgumentException($"{other} is not a SoundVolume");
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int CompareTo(SoundVolume volume)
-		{
-			return level.CompareTo(volume.level);
-		}
-
 		public void Toggle()
 		{
 			mute = !mute;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SoundVolume operator +(SoundVolume left,float right)
+		public static SoundVolume operator +(SoundVolume a,float b)
 		{
-			return new SoundVolume(left.level+right,left.mute);
+			return new SoundVolume(a.level+b,a.mute);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SoundVolume operator -(SoundVolume left,float right)
+		public static SoundVolume operator -(SoundVolume a,float b)
 		{
-			return new SoundVolume(left.level-right,left.mute);
+			return new SoundVolume(a.level-b,a.mute);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SoundVolume operator *(SoundVolume left,float right)
+		public static SoundVolume operator *(SoundVolume a,float b)
 		{
-			return new SoundVolume(left.level*right,left.mute);
+			return new SoundVolume(a.level*b,a.mute);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SoundVolume operator /(SoundVolume left,float right)
+		public static SoundVolume operator /(SoundVolume a,float b)
 		{
-			return new SoundVolume(left.level/right,left.mute);
+			return new SoundVolume(a.level/b,a.mute);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator ==(SoundVolume left,SoundVolume right)
+		public static bool operator ==(SoundVolume lhs,SoundVolume rhs)
 		{
-			return left.Equals(right);
+			return lhs.Equals(rhs);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator !=(SoundVolume left,SoundVolume right)
+		public static bool operator !=(SoundVolume lhs,SoundVolume rhs)
 		{
-			return !left.Equals(right);
-		}
-
-		public static SoundVolume Parse(string value)
-		{
-			return Parse(value,CultureInfo.InvariantCulture);
-		}
-
-		public static SoundVolume Parse(string value,IFormatProvider provider)
-		{
-			return Parse(value.AsSpan(),provider);
-		}
-
-		public static SoundVolume Parse(ReadOnlySpan<char> value)
-		{
-			return Parse(value,CultureInfo.InvariantCulture);
-		}
-
-		public static SoundVolume Parse(ReadOnlySpan<char> value,IFormatProvider provider)
-		{
-			//? $"AAA - Mute : B";
-
-			var index1 = value.IndexOf('-');
-
-			if(index1 == -1)
-			{
-				throw new FormatException($"Invalid format in {value.ToString()}");
-			}
-
-			var levelPart = value[..index1];
-
-			if(!float.TryParse(levelPart,NumberStyles.Float,provider,out var level))
-			{
-				throw new FormatException($"Invalid level format in {levelPart.ToString()}");
-			}
-
-			var index2 = value.IndexOf(':');
-
-			if(index2 == -1)
-			{
-				throw new FormatException("Invalid format for ScreenResolution.");
-			}
-
-			var mutePart = value[(index2+1)..].Trim();
-
-			if(mutePart != "O" && mutePart != "X")
-			{
-				throw new FormatException($"Invalid mute format in {mutePart.ToString()}");
-			}
-
-			var mute = mutePart == "O";
-
-			return new SoundVolume(level,mute);
-		}
-
-		public static bool TryParse(string value,out SoundVolume volume)
-		{
-			return TryParse(value,CultureInfo.InvariantCulture,out volume);
-		}
-
-		public static bool TryParse(string value,IFormatProvider provider,out SoundVolume volume)
-		{
-			return TryParse(value.AsSpan(),provider,out volume);
-		}
-
-		public static bool TryParse(ReadOnlySpan<char> value,out SoundVolume volume)
-		{
-			return TryParse(value,CultureInfo.InvariantCulture,out volume);
-		}
-
-		public static bool TryParse(ReadOnlySpan<char> value,IFormatProvider provider,out SoundVolume volume)
-		{
-			try
-			{
-				volume = Parse(value,provider);
-
-				return true;
-			}
-			catch
-			{
-				volume = default;
-
-				return false;
-			}
+			return !lhs.Equals(rhs);
 		}
 	}
 }
