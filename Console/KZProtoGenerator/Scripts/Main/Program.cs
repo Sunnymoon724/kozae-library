@@ -9,57 +9,68 @@ namespace KZConsole
 		/// </summary>
 		private static void Main(string[] argumentArray)
 		{
-			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-			Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+			try
+			{
+				Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+				Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
 
-			var currentPath = Directory.GetCurrentDirectory();
-			var protoFolderPath = Utility.GetFullPath(currentPath,argumentArray[0]);
-			var outputFolderPath = Utility.GetFullPath(currentPath,"../ProtoOutput");
+				var currentPath = Directory.GetCurrentDirectory();
+				var protoFolderPath = Utility.GetFullPath(currentPath,argumentArray[0]);
+				var outputFolderPath = Utility.GetFullPath(currentPath,"../ProtoOutput");
 
-			Utility.CreateFolder(outputFolderPath);
+				Utility.CreateFolder(outputFolderPath);
 
-			var projectManager = new ProjectManager(currentPath,outputFolderPath);
+				var projectManager = new ProjectManager(currentPath,outputFolderPath);
 
-			projectManager.CreateProject();
+				projectManager.CreateProject();
 
-			var protoFilePathList = new List<string>(GetExcelFilePathGroup(protoFolderPath));
+				var protoFilePathList = new List<string>(GetExcelFilePathGroup(protoFolderPath));
 
-			var enumFilePath = GetFilePath(protoFilePathList,"Enum");
-			var branchFilePath = GetFilePath(protoFilePathList,"Branch");
+				var enumFilePath = GetFilePath(protoFilePathList,"Enum");
+				var branchFilePath = GetFilePath(protoFilePathList,"Branch");
 
-			var codeGenerator = new CodeGenerator(protoFilePathList,enumFilePath);
-			codeGenerator.GenerateAllProtoCode(projectManager.ProjectFolderPath);
+				var codeGenerator = new CodeGenerator(protoFilePathList,enumFilePath);
+				codeGenerator.GenerateAllProtoCode(projectManager.ProjectFolderPath);
 
-			var protoGenerator = new ProtoGenerator(argumentArray[1],branchFilePath);
+				var protoGenerator = new ProtoGenerator(argumentArray[1],branchFilePath);
 
-			protoGenerator.GenerateAllProto(protoFilePathList,codeGenerator.ProtoCodeGroup,outputFolderPath);
+				protoGenerator.GenerateAllProto(protoFilePathList,codeGenerator.ProtoCodeGroup,outputFolderPath);
 
-			Console.WriteLine("Build project");
+				Console.WriteLine("Build project");
 
-			//? Build Project
-			projectManager.BuildProject();
+				//? Build Project
+				projectManager.BuildProject();
 
-			Console.WriteLine("Delete project");
+				Console.WriteLine("Delete project");
 
-			//? Delete Project
-			projectManager.DeleteProject();
+				//? Delete Project
+				projectManager.DeleteProject();
 
-			Console.WriteLine("Move dll & pdb file");
-			var resultFolderPath = argumentArray[2];
+				Console.WriteLine("Move dll & pdb file");
+				var resultFolderPath = argumentArray[2];
 
-			Utility.CreateFolder(resultFolderPath);
+				Utility.CreateFolder(resultFolderPath);
 
-			var sourceDllFilePath = Path.Combine(outputFolderPath,"KZProto.dll");
-			var sourcePdbFilePath = Path.Combine(outputFolderPath,"KZProto.pdb");
+				var sourceDllFilePath = Path.Combine(outputFolderPath,"KZProto.dll");
+				var sourcePdbFilePath = Path.Combine(outputFolderPath,"KZProto.pdb");
 
-			var destinationDllFilePath = Path.Combine(resultFolderPath,"KZProto.dll");
-			var destinationPdbFilePath = Path.Combine(resultFolderPath,"KZProto.pdb");
+				var destinationDllFilePath = Path.Combine(resultFolderPath,"KZProto.dll");
+				var destinationPdbFilePath = Path.Combine(resultFolderPath,"KZProto.pdb");
 
-			File.Move(sourceDllFilePath,destinationDllFilePath,true);
-			File.Move(sourcePdbFilePath,destinationPdbFilePath,true);
+				File.Move(sourceDllFilePath,destinationDllFilePath,true);
+				File.Move(sourcePdbFilePath,destinationPdbFilePath,true);
 
-			Console.WriteLine("Press enter to exit...");
-			Console.ReadLine();
+				Console.WriteLine("Press enter to exit...");
+				Console.ReadLine();
+			}
+			catch(Exception exception)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine($"{exception}");
+				Console.ResetColor();
+
+				Environment.Exit(1);
+			}
 		}
 
 		private static string GetFilePath(List<string> filePathList,string text)

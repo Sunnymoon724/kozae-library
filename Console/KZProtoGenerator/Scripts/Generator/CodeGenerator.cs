@@ -119,7 +119,7 @@ namespace KZConsole
 					{
 						var sheetName = Utility.RemovePlusHeader(sheetNameArray[i]);
 
-						classBuilder.Append($"{Environment.NewLine}{Environment.NewLine}{GenerateClassTemplate(excelReader,sheetNameArray[i],$"{mainSheetName}{sheetName}",protoFilePath)}");
+						classBuilder.Append($"{Environment.NewLine}{Environment.NewLine}{GenerateClassTemplate(excelReader,sheetNameArray[i],$"{sheetName}",protoFilePath)}");
 					}
 
 					subClassCode = classBuilder.ToString();
@@ -148,7 +148,7 @@ namespace KZConsole
 			var classBuilder = new StringBuilder();
 
 			classBuilder.Append($"\t[MessagePackObject]{Environment.NewLine}");
-			classBuilder.Append($"\tpublic class {className}{Environment.NewLine}");
+			classBuilder.Append($"\tpublic partial class {className}{Environment.NewLine}");
 			classBuilder.Append($"\t{{{Environment.NewLine}");
 			classBuilder.Append($"{propertyCode}{Environment.NewLine}");
 			classBuilder.Append($"\t}}");
@@ -170,7 +170,7 @@ namespace KZConsole
 				var property = schemeArray[i].Split(':')[0];
 
 				// remove overlap
-				if(string.IsNullOrEmpty(property) || property.StartsWith('#') || propertyList.Contains(property))
+				if(string.IsNullOrEmpty(property) || property.StartsWith('%') || propertyList.Contains(property))
 				{
 					continue;
 				}
@@ -178,7 +178,7 @@ namespace KZConsole
 				var type = protoJaggedArray[Global.EXCEL_TYPE_INDEX][i];
 
 				propertyBuilder.Append($"\t\t[Key({keyIndex++})]{Environment.NewLine}");
-				propertyBuilder.Append($"\t\tpublic {type} {property} {{ get; set; }}{Environment.NewLine}");
+				propertyBuilder.Append($"\t\tpublic {type} {property} {{ get; private set; }}{Environment.NewLine}");
 
 				propertyList.Add(property);
 			}

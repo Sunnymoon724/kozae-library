@@ -5,21 +5,21 @@ using UnityEngine;
 namespace KZLib.KZData
 {
 	[MessagePackObject]
-	public class MotionProto : IProto
+	public partial class MotionProto : IProto
 	{
-		[Key(0)] public int Num { get; set; }
+		[Key(0)] public int Num { get; private set; }
 
-		[Key(1)] public string StateName { get; set; }
-		[Key(2)] public MotionEvent[] EventArray { get; set; }
+		[Key(1)] public string StateName { get; private set; }
+		[Key(2)] public MotionEvent[] EventArray { get; private set; }
 	}
 
 	[MessagePackObject]
-	public class MotionEvent
+	public partial class MotionEvent
 	{
-		[Key(0)] public int Order { get; set; }
-		[Key(1)] public string EffectPath { get; set; }
-		[Key(2)] public Vector3 PositionOffset { get; set; }
-		[Key(3)] public string StartBone { get; set; }
+		[Key(0)] public int Order { get; private set; }
+		[Key(1)] public string EffectPath { get; private set; }
+		[Key(2)] public Vector3 PositionOffset { get; private set; }
+		[Key(3)] public string StartBone { get; private set; }
 	}
 }
 

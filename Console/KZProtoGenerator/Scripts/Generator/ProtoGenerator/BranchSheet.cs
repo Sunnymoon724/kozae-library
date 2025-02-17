@@ -68,7 +68,7 @@ namespace KZConsole.KZProto
 				throw new SheetConvertException($"{branch} not exist.",filePath,sheetName,line);
 			}
 
-			return !result;
+			return result;
 		}
 	}
 }

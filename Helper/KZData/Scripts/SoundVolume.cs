@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace KZLib.KZData
 {
@@ -110,6 +111,73 @@ namespace KZLib.KZData
 		public static bool operator !=(SoundVolume lhs,SoundVolume rhs)
 		{
 			return !lhs.Equals(rhs);
+		}
+
+		public static SoundVolume Parse(ReadOnlySpan<char> value)
+		{
+			return Parse(value,CultureInfo.InvariantCulture);
+		}
+
+		public static SoundVolume Parse(ReadOnlySpan<char> value,IFormatProvider provider)
+		{
+			return Parse(value.ToString(),CultureInfo.InvariantCulture);
+		}
+
+		public static SoundVolume Parse(string value)
+		{
+			return Parse(value,CultureInfo.InvariantCulture);
+		}
+
+		public static SoundVolume Parse(string value,IFormatProvider provider)
+		{
+			var levelRegex = new Regex(@"level\s*:\s*(\d+)");
+			var levelMatch = levelRegex.Match(value);
+
+			if(!levelMatch.Success || !float.TryParse(levelMatch.Groups[1].Value,NumberStyles.AllowThousands,provider,out var level))
+			{
+				throw new FormatException($"Invalid level format in '{value}'");
+			}
+
+			var muteRegex = new Regex(@"mute\s*:\s*(true|false)");
+			var muteMatch = muteRegex.Match(value);
+
+			if(!muteMatch.Success || !bool.TryParse(muteMatch.Groups[1].Value,out var mute))
+			{
+				throw new FormatException($"Invalid mute format in '{value}'");
+			}
+
+			return new SoundVolume(level,mute);
+		}
+
+		public static bool TryParse(ReadOnlySpan<char> value,out SoundVolume resolution)
+		{
+			return TryParse(value,CultureInfo.InvariantCulture,out resolution);
+		}
+
+		public static bool TryParse(ReadOnlySpan<char> value,IFormatProvider provider,out SoundVolume resolution)
+		{
+			return TryParse(value.ToString(),provider,out resolution);
+		}
+
+		public static bool TryParse(string value,out SoundVolume resolution)
+		{
+			return TryParse(value,CultureInfo.InvariantCulture,out resolution);
+		}
+
+		public static bool TryParse(string value,IFormatProvider provider,out SoundVolume resolution)
+		{
+			try
+			{
+				resolution = Parse(value,provider);
+
+				return true;
+			}
+			catch
+			{
+				resolution = default;
+
+				return false;
+			}
 		}
 	}
 }

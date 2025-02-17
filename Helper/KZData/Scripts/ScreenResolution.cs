@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace KZLib.KZData
 {
@@ -80,6 +81,73 @@ namespace KZLib.KZData
 		public static bool operator !=(ScreenResolution lhs,ScreenResolution rhs)
 		{
 			return !lhs.Equals(rhs);
+		}
+
+		public static ScreenResolution Parse(ReadOnlySpan<char> value)
+		{
+			return Parse(value,CultureInfo.InvariantCulture);
+		}
+
+		public static ScreenResolution Parse(ReadOnlySpan<char> value,IFormatProvider provider)
+		{
+			return Parse(value.ToString(),CultureInfo.InvariantCulture);
+		}
+
+		public static ScreenResolution Parse(string value)
+		{
+			return Parse(value,CultureInfo.InvariantCulture);
+		}
+
+		public static ScreenResolution Parse(string value,IFormatProvider provider)
+		{
+			var resolutionRegex = new Regex(@"resolution\s*:\s*(\d+)x(\d+)");
+			var resolutionMatch = resolutionRegex.Match(value);
+
+			if(!resolutionMatch.Success || !int.TryParse(resolutionMatch.Groups[1].Value,NumberStyles.Integer,provider,out var width) || !int.TryParse(resolutionMatch.Groups[2].Value,NumberStyles.Integer,provider,out var height))
+			{
+				throw new FormatException($"Invalid resolution format in {resolutionMatch}");
+			}
+
+			var fullscreenRegex = new Regex(@"fullscreen\s*:\s*(true|false)");
+			var fullscreenMatch = fullscreenRegex.Match(value);
+
+			if(!fullscreenMatch.Success || !bool.TryParse(fullscreenMatch.Groups[1].Value,out var fullscreen))
+			{
+				throw new FormatException($"Invalid fullscreen format in {fullscreenMatch}");
+			}
+
+			return new ScreenResolution(width,height,fullscreen);
+		}
+
+		public static bool TryParse(ReadOnlySpan<char> value,out ScreenResolution resolution)
+		{
+			return TryParse(value,CultureInfo.InvariantCulture,out resolution);
+		}
+
+		public static bool TryParse(ReadOnlySpan<char> value,IFormatProvider provider,out ScreenResolution resolution)
+		{
+			return TryParse(value.ToString(),provider,out resolution);
+		}
+
+		public static bool TryParse(string value,out ScreenResolution resolution)
+		{
+			return TryParse(value,CultureInfo.InvariantCulture,out resolution);
+		}
+
+		public static bool TryParse(string value,IFormatProvider provider,out ScreenResolution resolution)
+		{
+			try
+			{
+				resolution = Parse(value,provider);
+
+				return true;
+			}
+			catch
+			{
+				resolution = default;
+
+				return false;
+			}
 		}
 	}
 }

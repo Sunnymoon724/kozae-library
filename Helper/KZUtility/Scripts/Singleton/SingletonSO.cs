@@ -22,7 +22,7 @@ namespace KZLib.KZUtility
 
 				if(!s_instance)
 				{
-					var path = Path.Combine("ScriptableObjects",typeof(TScriptable).Name);
+					var path = Path.Combine("ScriptableObject",typeof(TScriptable).Name);
 
 					s_instance = Resources.Load<TScriptable>(path);
 				}
@@ -37,7 +37,7 @@ namespace KZLib.KZUtility
 						singleton.OnCreate();
 					}
 
-					var assetPath = Path.Combine("Assets","Resources","ScriptableObjects");
+					var assetPath = Path.Combine("Assets","Resources","ScriptableObject");
 
 					Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(),assetPath));
 

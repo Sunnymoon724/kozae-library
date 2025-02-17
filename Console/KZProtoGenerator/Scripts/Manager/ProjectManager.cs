@@ -35,7 +35,7 @@ namespace KZConsole
 			</PropertyGroup>
 			
 			<ItemGroup>
-			<PackageReference Include=""MessagePack"" Version=""3.1.1"" />
+			<PackageReference Include=""MessagePack"" Version=""3.1.3"" />
 			<PackageReference Include=""Unity3D.SDK"" Version=""2021.1.14.1"" />
 			</ItemGroup>
 			

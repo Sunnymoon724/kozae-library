@@ -39,7 +39,21 @@ namespace KZLib.KZUtility
 			if(!File.Exists(routeFilePath))
 			{
 				// add default route
-				var content = "# resources folder\ndefaultRes : Assets/Resources\n\n# addressable folder\ngameRes : Assets/GameResources\n\n# for indirect references\nworkRes : Assets/WorkResources\n\n# config folder\nconfig : Texts/Configs";
+				var content = @"
+				# resources folder\n
+				defaultRes : Assets/Resources\n\n
+
+				# addressable folder\n
+				gameRes : Assets/GameResources\n\n
+
+				# for indirect references\n
+				workRes : Assets/WorkResources\n\n
+
+				# config folder\n
+				config : Text/Config\n\n
+
+				# proto folder\n
+				proto : Text/Proto";
 
 				File.WriteAllText(routeFilePath,content.Trim());
 			}
@@ -60,13 +74,9 @@ namespace KZLib.KZUtility
 			{
 				var pathArray = path.Split(":");
 
-				var header = string.Empty;
-				var body = string.Empty;
-				var extension = string.Empty;
-
 				if(pathArray.Length == 0)
 				{
-					header = ConvertPath(path);
+					route = new Route(ConvertPath(path),string.Empty,string.Empty);
 				}
 				else
 				{
@@ -78,16 +88,18 @@ namespace KZLib.KZUtility
 						headerArray[i] = ConvertPath(pathArray[i]);
 					}
 
-					header = Path.Combine(headerArray);
+					var header = Path.Combine(headerArray);
+					var body = string.Empty;
+					var extension = string.Empty;
 
 					if(path.Contains("."))
 					{
-						body = Path.GetFileNameWithoutExtension(pathArray[^1]);
+						body = Path.Combine(Path.GetDirectoryName(pathArray[^1]),Path.GetFileNameWithoutExtension(pathArray[^1]));
 						extension = Path.GetExtension(path);
 					}
-				}
 
-				route = new Route(header,body,extension);
+					route = new Route(header,body,extension);
+				}
 
 				m_routeDict.Add(path,route);
 			}

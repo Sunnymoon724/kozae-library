@@ -2,7 +2,7 @@
 {
 	public interface IProto
 	{
-		int Num { get; set; }
+		int Num { get; }
 	}
 
 	public enum EffectType

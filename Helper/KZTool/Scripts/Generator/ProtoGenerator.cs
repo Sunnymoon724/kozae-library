@@ -62,7 +62,7 @@ namespace KZLib.KZTool
 		// 	var worksheet = workbook.AddWorksheet(templateName);
 
 		// 	worksheet.Cell(1,1).InsertData(new string[] { "Name", "Type", "IsUsed", "Default", "Comment" });
-		// 	worksheet.Cell(2,1).InsertData(new string[] { "#이름", "타입", "활성화 됨", "기본 값", "주석" });
+		// 	worksheet.Cell(2,1).InsertData(new string[] { "%이름", "타입", "활성화 됨", "기본 값", "주석" });
 
 		// 	var filePath = Path.Combine(configFolderPath,$"{templateName}.xlsx");
 
@@ -92,15 +92,15 @@ namespace KZLib.KZTool
 			var workbook = new XLWorkbook();
 			var motionSheet = workbook.AddWorksheet("+Motion");
 
-			motionSheet.Cell(1,1).InsertData(new string[] { "Num", "#Branch", "StateName", "EventArray" });
+			motionSheet.Cell(1,1).InsertData(new string[] { "Num", "%Branch", "StateName", "EventArray" });
 			motionSheet.Cell(2,1).InsertData(new string[] { "int", "string", "string", "MotionEvent[]" });
-			motionSheet.Cell(3,1).InsertData(new string[] { "#번호", "브랜치", "애니메이션 이름", "이벤트 배열" });
+			motionSheet.Cell(3,1).InsertData(new string[] { "%번호", "브랜치", "애니메이션 이름", "이벤트 배열" });
 
 			var eventSheet = workbook.AddWorksheet("+Event");
 
 			eventSheet.Cell(1,1).InsertData(new string[] { "Order", "EffectPath", "PositionOffset", "StartBone" });
 			eventSheet.Cell(2,1).InsertData(new string[] { "int", "string", "Vector3", "string" });
-			eventSheet.Cell(3,1).InsertData(new string[] { "#순서", "이펙트 경로", "위치 오프셋", "시작 위치" });
+			eventSheet.Cell(3,1).InsertData(new string[] { "%순서", "이펙트 경로", "위치 오프셋", "시작 위치" });
 
 			CommonUtility.GenerateExcelFile(protoFolderPath,"Motion",workbook,out result);
 		}

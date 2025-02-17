@@ -71,11 +71,31 @@ namespace KZLib.KZTool
 				throw new NullReferenceException($"{configFolderPath} is not exist");
 			}
 
+			// using var package = new ExcelPackage();
+
+			// var worksheet = package.Workbook.Worksheets.Add(templateName);
+
+			// var schemeArray = new string[] { "Name", "Type", "IsUsed", "Default", "Comment" };
+			// worksheet.Cells[1, 1, 1, schemeArray.Length].Value = schemeArray;
+
+			// var commentArray = new string[] { "%이름", "타입", "활성화 됨", "기본 값", "주석" };
+			// worksheet.Cells[2, 1, 1, schemeArray.Length].Value = commentArray;
+
+			// package.SaveAs(new FileInfo(Path.Combine(configFolderPath,$"{templateName}.xlsx")));
+
+			// result = $"{templateName} is generated";
+
 			var workbook = new XLWorkbook();
 			var workSheet = workbook.AddWorksheet(templateName);
 
 			workSheet.Cell(1,1).InsertData(new string[] { "Name", "Type", "IsUsed", "Default", "Comment" });
-			workSheet.Cell(2,1).InsertData(new string[] { "#이름", "타입", "활성화 됨", "기본 값", "주석" });
+			workSheet.Cell(2,1).InsertData(new string[] { "%이름", "타입", "활성화 됨", "기본 값", "주석" });
+
+			var filePath = Path.Combine(configFolderPath,$"{templateName}.xlsx");
+
+			workbook.SaveAs(filePath);
+
+			result = $"{fileName} is generated";
 
 			CommonUtility.GenerateExcelFile(configFolderPath,templateName,workbook,out result);
 		}
