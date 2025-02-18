@@ -34,30 +34,7 @@ namespace KZLib.KZUtility
 		{
 			base.Initialize();
 
-			var routeFilePath = Path.Combine(Directory.GetCurrentDirectory(),"Route.yaml");
-
-			if(!File.Exists(routeFilePath))
-			{
-				// add default route
-				var content = @"
-				# resources folder\n
-				defaultRes : Assets/Resources\n\n
-
-				# addressable folder\n
-				gameRes : Assets/GameResources\n\n
-
-				# for indirect references\n
-				workRes : Assets/WorkResources\n\n
-
-				# config folder\n
-				config : Text/Config\n\n
-
-				# proto folder\n
-				proto : Text/Proto";
-
-				File.WriteAllText(routeFilePath,content.Trim());
-			}
-
+			var routeFilePath = FindRouteFilePath();
 			var routeText = File.ReadAllText(routeFilePath);
 
 			var deserializer = new DeserializerBuilder().Build();
@@ -66,6 +43,34 @@ namespace KZLib.KZUtility
 			{
 				m_pathDict.Add(pair.Key,pair.Value);
 			}
+		}
+
+		public string FindRouteFilePath()
+		{
+			var routeFilePath = Path.Combine(Directory.GetCurrentDirectory(),"Route.yaml");
+
+			if(!File.Exists(routeFilePath))
+			{
+				// add default route
+				var content = @"# resources folder
+				defaultRes : Assets/Resources
+
+				# addressable folder
+				gameRes : Assets/GameResources
+
+				# for indirect references
+				workRes : Assets/WorkResources
+
+				# config folder
+				config : Text/Config
+
+				# proto folder
+				proto : Text/Proto";
+
+				File.WriteAllText(routeFilePath,content.Replace("\t",""));
+			}
+
+			return routeFilePath;
 		}
 
 		public Route GetOrCreateRoute(string path)

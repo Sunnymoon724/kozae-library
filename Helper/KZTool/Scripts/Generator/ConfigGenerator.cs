@@ -91,12 +91,6 @@ namespace KZLib.KZTool
 			workSheet.Cell(1,1).InsertData(new string[] { "Name", "Type", "IsUsed", "Default", "Comment" });
 			workSheet.Cell(2,1).InsertData(new string[] { "%이름", "타입", "활성화 됨", "기본 값", "주석" });
 
-			var filePath = Path.Combine(configFolderPath,$"{templateName}.xlsx");
-
-			workbook.SaveAs(filePath);
-
-			result = $"{fileName} is generated";
-
 			CommonUtility.GenerateExcelFile(configFolderPath,templateName,workbook,out result);
 		}
 

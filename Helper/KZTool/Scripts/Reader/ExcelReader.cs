@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ClosedXML.Excel.Exceptions;
 using ExcelDataReader;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -132,7 +133,9 @@ namespace KZLib.KZTool
 
 			ValidateRange(sheetName,index,rowArray.Length);
 
-			return rowArray[index];
+			var cellArray = rowArray[index];
+
+			return IsExistRow(cellArray) ? cellArray : Array.Empty<string>();
 		}
 
 		/// <summary>

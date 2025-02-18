@@ -69,7 +69,7 @@ namespace KZConsole
 				Console.WriteLine($"{exception}");
 				Console.ResetColor();
 
-				Environment.Exit(1);
+				Environment.Exit(-1);
 			}
 		}
 

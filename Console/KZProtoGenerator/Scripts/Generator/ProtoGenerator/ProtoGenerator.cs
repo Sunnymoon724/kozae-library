@@ -102,7 +102,8 @@ namespace KZConsole
 			Console.WriteLine($"-Generate {fileName}");
 
 			var sheetNameArray = excelReader.FindSheetNameArray(x => x.StartsWith('+'));
-			if (sheetNameArray.Length < 1)
+
+			if(sheetNameArray.Length < 1)
 			{
 				Console.WriteLine($"Warning : {fileName} is not include +Sheet");
 

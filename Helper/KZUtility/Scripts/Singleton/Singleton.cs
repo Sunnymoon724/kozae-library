@@ -58,7 +58,7 @@ namespace KZLib.KZUtility
 
 			if(disposing)
 			{
-				ClearAll();
+				Clear();
 			}
 
 			m_disposed = true;
@@ -66,6 +66,6 @@ namespace KZLib.KZUtility
 			base.Release(disposing);
 		}
 
-		protected abstract void ClearAll();
+		protected abstract void Clear();
 	}
 }
