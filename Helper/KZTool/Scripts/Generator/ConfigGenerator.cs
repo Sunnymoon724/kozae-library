@@ -14,7 +14,7 @@ namespace KZLib.KZTool
 			public string Name { get; set; }
 			public string Type { get; set; }
 			public bool IsUsed { get; set; }
-			public object Default { get; set; }
+			public string Default { get; set; }
 			public string Comment { get; set; }
 		}
 
@@ -39,7 +39,14 @@ namespace KZLib.KZTool
 					continue;
 				}
 
-				stringBuilder.Append($"\t\tpublic {scheme.Type} {scheme.Name} {{ get; private set; }} = {scheme.Default}; // {scheme.Comment}{Environment.NewLine}");
+				if(string.IsNullOrEmpty(scheme.Default))
+				{
+					stringBuilder.Append($"\t\tpublic {scheme.Type} {scheme.Name} {{ get; private set; }} // {scheme.Comment}{Environment.NewLine}");
+				}
+				else
+				{
+					stringBuilder.Append($"\t\tpublic {scheme.Type} {scheme.Name} {{ get; private set; }} = {scheme.Default}; // {scheme.Comment}{Environment.NewLine}");
+				}
 			}
 
 			if(stringBuilder.Length <= 0)
@@ -53,11 +60,10 @@ namespace KZLib.KZTool
 
 			var configCode = stringBuilder.ToString();
 
+			templateText = templateText.Replace("$ClassName",fileName);
 			templateText = templateText.Replace("$Properties",configCode);
 
-			var configCodeFilePath = Path.Combine(outputFolderPath,$"{fileName}.generated.cs");
-
-			Directory.CreateDirectory(outputFolderPath);
+			var configCodeFilePath = Path.Combine(outputFolderPath,$"{fileName}Config.generated.cs");
 
 			CommonUtility.GenerateTextFile(configCodeFilePath,templateText,out result);
 

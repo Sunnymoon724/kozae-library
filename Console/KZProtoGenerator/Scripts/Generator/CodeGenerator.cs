@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using KZLib.KZTool;
+using KZLib.KZUtility;
 
 namespace KZConsole
 {
@@ -69,7 +70,7 @@ namespace KZConsole
 
 			var enumCodeFilePath = Path.Combine(outputFolderPath,$"Enum.cs");
 
-			Utility.WriteTextToFile(enumCodeFilePath,enumTemplate);
+			FileUtility.WriteTextToFile(enumCodeFilePath,enumTemplate);
 
 			m_protoCodeList.Add(enumTemplate);
 		}
@@ -107,7 +108,7 @@ namespace KZConsole
 				var mainClassCode = string.Empty;
 				var subClassCode = string.Empty;
 
-				var mainSheetName = Utility.RemovePlusHeader(sheetNameArray[0]);
+				var mainSheetName = sheetNameArray[0].TrimStart('+');
 
 				mainClassCode = GenerateClassTemplate(excelReader,sheetNameArray[0],$"{mainSheetName}Proto : IProto",protoFilePath);
 
@@ -117,7 +118,7 @@ namespace KZConsole
 
 					for(var i=1;i<nameCount;i++)
 					{
-						var sheetName = Utility.RemovePlusHeader(sheetNameArray[i]);
+						var sheetName = sheetNameArray[i].TrimStart('+');
 
 						classBuilder.Append($"{Environment.NewLine}{Environment.NewLine}{GenerateClassTemplate(excelReader,sheetNameArray[i],$"{sheetName}",protoFilePath)}");
 					}
@@ -130,7 +131,7 @@ namespace KZConsole
 
 				var protoCodeFilePath = Path.Combine(outputFolderPath,$"{fileName}.cs");
 
-				Utility.WriteTextToFile(protoCodeFilePath,protoTemplate);
+				FileUtility.WriteTextToFile(protoCodeFilePath,protoTemplate);
 
 				m_protoCodeList.Add(protoTemplate);
 			}

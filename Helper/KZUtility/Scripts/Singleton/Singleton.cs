@@ -44,28 +44,4 @@ namespace KZLib.KZUtility
 			GC.SuppressFinalize(this);
 		}
 	}
-
-	public abstract class DataSingleton<TClass> : Singleton<TClass> where TClass : class,new()
-	{
-		private bool m_disposed = false;
-
-		protected override void Release(bool disposing)
-		{
-			if(m_disposed)
-			{
-				return;
-			}
-
-			if(disposing)
-			{
-				Clear();
-			}
-
-			m_disposed = true;
-
-			base.Release(disposing);
-		}
-
-		protected abstract void Clear();
-	}
 }

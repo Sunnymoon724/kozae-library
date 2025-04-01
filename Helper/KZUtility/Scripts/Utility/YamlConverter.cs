@@ -24,7 +24,7 @@ namespace KZLib.KZUtility
 	/// </summary>
 	public class YamlConverter : IYamlTypeConverter
 	{
-		private readonly static HashSet<Type> s_converter_hashSet = new HashSet<Type>
+		private readonly static HashSet<Type> s_converterHashSet = new HashSet<Type>
 		{
 			typeof(Color),			typeof(Color32),
 			typeof(Vector2),		typeof(Vector3),			typeof(Vector4),
@@ -37,7 +37,7 @@ namespace KZLib.KZUtility
 
 		public bool Accepts(Type objectType)
 		{
-			return s_converter_hashSet.Contains(objectType);
+			return s_converterHashSet.Contains(objectType);
 		}
 
 		public object? ReadYaml(IParser parser,Type objectType,ObjectDeserializer deserializer)

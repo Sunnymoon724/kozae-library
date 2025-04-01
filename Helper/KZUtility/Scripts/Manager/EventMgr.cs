@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace KZLib.KZUtility
 {
-	public class EventManager : Singleton<EventManager>
+	public class EventMgr : Singleton<EventMgr>
 	{
 		private readonly Dictionary<string,Delegate> m_listenerDict = new Dictionary<string,Delegate>();
 

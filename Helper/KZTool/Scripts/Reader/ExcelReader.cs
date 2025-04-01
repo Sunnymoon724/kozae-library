@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ClosedXML.Excel.Exceptions;
 using ExcelDataReader;
+using KZLib.KZUtility;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -21,7 +21,7 @@ namespace KZLib.KZTool
 		{
 			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-			if(!File.Exists(filePath))
+			if(!FileUtility.IsFileExist(filePath))
 			{
 				throw new FileNotFoundException($"{filePath} is not exist");
 			}
@@ -318,6 +318,11 @@ namespace KZLib.KZTool
 				{
 					throw new FormatException($"{exception.Message} in {cell}. [line: {line} / type: {targetType}]");
 				}
+			}
+
+			if(targetType == typeof(DateTime))
+			{
+				return string.Equals(cell,"DateTime.Now") ? DateTime.Now : DateTime.Parse(cell);
 			}
 
 			if(targetType.IsPrimitive)

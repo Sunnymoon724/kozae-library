@@ -2,6 +2,7 @@
 using System.Text;
 using KZConsole.KZProto;
 using KZLib.KZTool;
+using KZLib.KZUtility;
 using MessagePack;
 using Newtonsoft.Json;
 
@@ -94,7 +95,7 @@ namespace KZConsole
 			var serializedData = MessagePackSerializer.Serialize(protoList);
 			var filePath = Path.Combine(byteFolderPath,$"{fileName}.bytes");
 
-			Utility.WriteBytesToFile(filePath,serializedData);
+			FileUtility.WriteByteToFile(filePath,serializedData);
 		}
 
 		private List<object> GenerateProtoList(string fileName,ExcelReader excelReader,string csvFolderPath)
@@ -135,7 +136,7 @@ namespace KZConsole
 
 			for(var i=1;i<sheetNameArray.Length;i++)
 			{
-				var className = $"{Utility.RemovePlusHeader(sheetNameArray[i])}";
+				var className = $"{sheetNameArray[i].TrimStart('+')}";
 
 				ProcessSubSheetTypes(typeNameArray,className,ref indexListDict);
 			}
@@ -188,7 +189,7 @@ namespace KZConsole
 		{
 			var csvFilePath = Path.Combine(csvFolderPath,$"{fileName}.csv");
 
-			Utility.WriteTextToFile(csvFilePath,csvText);
+			FileUtility.WriteTextToFile(csvFilePath,csvText);
 		}
 
 		private string[][] GenerateRowArray(ExcelReader excelReader,string sheetName)

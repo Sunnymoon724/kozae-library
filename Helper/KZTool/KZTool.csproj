@@ -7,18 +7,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.2" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.3" />
     <PackageReference Include="Unity3D.SDK" Version="2021.1.14.1" />
     <PackageReference Include="ExcelDataReader" Version="3.7.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="plist-cil" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../KZData/KZData.csproj" />
     <ProjectReference Include="../KZUtility/KZUtility.csproj" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <DefineConstants>WINDOWS;MACOS</DefineConstants>
+  </PropertyGroup>
 
   <PropertyGroup>
     <NoWarn>NU1701</NoWarn><!-- Unity warning -->

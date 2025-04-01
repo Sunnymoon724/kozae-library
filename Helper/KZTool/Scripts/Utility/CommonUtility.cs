@@ -1,7 +1,7 @@
 using System;
 using ClosedXML.Excel;
 using System.IO;
-using System.Text;
+using KZLib.KZUtility;
 
 namespace KZLib.KZTool
 {
@@ -23,7 +23,7 @@ namespace KZLib.KZTool
 
 		internal static void GenerateTextFile(string filePath,string text,out string result)
 		{
-			File.WriteAllText(filePath,text,Encoding.UTF8);
+			FileUtility.WriteTextToFile(filePath,text);
 
 			result = $"{filePath} is generated";
 		}

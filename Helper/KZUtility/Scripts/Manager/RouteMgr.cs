@@ -5,7 +5,7 @@ using YamlDotNet.Serialization;
 
 namespace KZLib.KZUtility
 {
-	public class RouteManager : Singleton<RouteManager>
+	public class RouteMgr : Singleton<RouteMgr>
 	{
 		private readonly Dictionary<string,Route> m_routeDict = new Dictionary<string,Route>();
 
@@ -35,7 +35,7 @@ namespace KZLib.KZUtility
 			base.Initialize();
 
 			var routeFilePath = FindRouteFilePath();
-			var routeText = File.ReadAllText(routeFilePath);
+			var routeText = FileUtility.ReadFileToText(routeFilePath);
 
 			var deserializer = new DeserializerBuilder().Build();
 
@@ -49,7 +49,7 @@ namespace KZLib.KZUtility
 		{
 			var routeFilePath = Path.Combine(Directory.GetCurrentDirectory(),"Route.yaml");
 
-			if(!File.Exists(routeFilePath))
+			if(!FileUtility.IsFileExist(routeFilePath))
 			{
 				// add default route
 				var content = @"# resources folder
@@ -65,9 +65,12 @@ namespace KZLib.KZUtility
 				config : Text/Config
 
 				# proto folder
-				proto : Text/Proto";
+				proto : Text/Proto
 
-				File.WriteAllText(routeFilePath,content.Replace("\t",""));
+				# generated script folder
+				generatedScript : Assets/Scripts/Generated";
+
+				FileUtility.WriteTextToFile(routeFilePath,content.Replace("\t",""));
 			}
 
 			return routeFilePath;
@@ -81,7 +84,7 @@ namespace KZLib.KZUtility
 
 				if(pathArray.Length == 0)
 				{
-					route = new Route(ConvertPath(path),string.Empty,string.Empty);
+					route = new Route(_ConvertPath(path),string.Empty,string.Empty);
 				}
 				else
 				{
@@ -90,7 +93,7 @@ namespace KZLib.KZUtility
 
 					for(var i=0;i<count;i++)
 					{
-						headerArray[i] = ConvertPath(pathArray[i]);
+						headerArray[i] = _ConvertPath(pathArray[i]);
 					}
 
 					var header = Path.Combine(headerArray);
@@ -112,7 +115,7 @@ namespace KZLib.KZUtility
 			return route;
 		}
 
-		private string ConvertPath(string text)
+		private string _ConvertPath(string text)
 		{
 			return m_pathDict.TryGetValue(text,out var path) ? path : text;
 		}

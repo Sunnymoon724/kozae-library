@@ -1,4 +1,6 @@
 ﻿
+using KZLib.KZUtility;
+
 namespace KZConsole
 {
 	public class ProjectManager
@@ -11,10 +13,10 @@ namespace KZConsole
 
 		public ProjectManager(string currentPath,string outputFolderPath)
 		{
-			m_projectFolderPath = Utility.GetFullPath(currentPath,"../ProtoProject");
+			m_projectFolderPath = Path.GetFullPath(currentPath,"../ProtoProject");
 			m_projectFilePath = Path.Combine(m_projectFolderPath,"ProtoProject.csproj");
 
-			Utility.CreateFolder(m_projectFolderPath);
+			FileUtility.CreateFolder(m_projectFolderPath);
 
 			m_outputFolderPath = outputFolderPath;
 
@@ -49,7 +51,7 @@ namespace KZConsole
 
 			</Project>";
 
-			Utility.WriteTextToFile(m_projectFilePath,projectText);
+			FileUtility.WriteTextToFile(m_projectFilePath,projectText);
 		}
 
 		public void BuildProject()
