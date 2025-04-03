@@ -14,7 +14,7 @@ namespace KZLib.KZUtility
 				return string.Empty;
 			}
 
-			return ReadFile(filePath,File.ReadAllText);
+			return _ReadFile(filePath,File.ReadAllText);
 		}
 
 		/// <param name="filePath">The absolute file path.</param>
@@ -25,10 +25,10 @@ namespace KZLib.KZUtility
 				return Array.Empty<byte>();
 			}
 
-			return ReadFile(filePath,File.ReadAllBytes);
+			return _ReadFile(filePath,File.ReadAllBytes);
 		}
 
-		private static TRead ReadFile<TRead>(string filePath,Func<string,TRead> onRead)
+		private static TRead _ReadFile<TRead>(string filePath,Func<string,TRead> onRead)
 		{
 			return onRead(filePath);
 		}

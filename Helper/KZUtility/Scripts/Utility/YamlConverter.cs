@@ -42,7 +42,7 @@ namespace KZLib.KZUtility
 
 		public object? ReadYaml(IParser parser,Type objectType,ObjectDeserializer deserializer)
 		{
-			var dictionary = ConvertToDictionary(parser);
+			var dictionary = _ConvertToDictionary(parser);
 
 			if(dictionary.Count == 0)
 			{
@@ -51,25 +51,25 @@ namespace KZLib.KZUtility
 
 			return objectType.Name switch
 			{
-				nameof(Color) 				=> new Color(GetFloat(dictionary,"r"),GetFloat(dictionary,"g"),GetFloat(dictionary,"b"),GetFloat(dictionary,"a")),
-				nameof(Color32)				=> new Color32(GetByte(dictionary,"r"),GetByte(dictionary,"g"),GetByte(dictionary,"b"),GetByte(dictionary,"a")),
+				nameof(Color) 				=> new Color(_GetFloat(dictionary,"r"),_GetFloat(dictionary,"g"),_GetFloat(dictionary,"b"),_GetFloat(dictionary,"a")),
+				nameof(Color32)				=> new Color32(_GetByte(dictionary,"r"),_GetByte(dictionary,"g"),_GetByte(dictionary,"b"),_GetByte(dictionary,"a")),
 
-				nameof(Vector2)				=> new Vector2(GetFloat(dictionary,"x"),GetFloat(dictionary,"y")),
-				nameof(Vector3)				=> new Vector3(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"z")),
-				nameof(Vector4)				=> new Vector4(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"z"),GetFloat(dictionary,"w")),
+				nameof(Vector2)				=> new Vector2(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y")),
+				nameof(Vector3)				=> new Vector3(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"z")),
+				nameof(Vector4)				=> new Vector4(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"z"),_GetFloat(dictionary,"w")),
 
-				nameof(Vector2Int)			=> new Vector2Int(GetInt(dictionary,"x"),GetInt(dictionary,"y")),
-				nameof(Vector3Int)			=> new Vector3Int(GetInt(dictionary,"x"),GetInt(dictionary,"y"),GetInt(dictionary,"z")),
+				nameof(Vector2Int)			=> new Vector2Int(_GetInt(dictionary,"x"),_GetInt(dictionary,"y")),
+				nameof(Vector3Int)			=> new Vector3Int(_GetInt(dictionary,"x"),_GetInt(dictionary,"y"),_GetInt(dictionary,"z")),
 
-				nameof(Quaternion)			=> new Quaternion(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"z"),GetFloat(dictionary,"w")),
+				nameof(Quaternion)			=> new Quaternion(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"z"),_GetFloat(dictionary,"w")),
 
-				nameof(Rect)				=> new Rect(GetFloat(dictionary,"x"),GetFloat(dictionary,"y"),GetFloat(dictionary,"width"),GetFloat(dictionary,"heigh")),
-				nameof(RectInt)				=> new RectInt(GetInt(dictionary,"x"),GetInt(dictionary,"y"),GetInt(dictionary,"width"),GetInt(dictionary,"heigh")),
+				nameof(Rect)				=> new Rect(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"width"),_GetFloat(dictionary,"heigh")),
+				nameof(RectInt)				=> new RectInt(_GetInt(dictionary,"x"),_GetInt(dictionary,"y"),_GetInt(dictionary,"width"),_GetInt(dictionary,"heigh")),
 
-				nameof(SoundVolume)			=> new SoundVolume(GetFloat(dictionary,"level"),GetBool(dictionary,"mute")),
-				nameof(ScreenResolution)	=> new ScreenResolution(GetInt(dictionary,"width"),GetInt(dictionary,"height"),GetBool(dictionary,"fullscreen")),
+				nameof(SoundVolume)			=> new SoundVolume(_GetFloat(dictionary,"level"),_GetBool(dictionary,"mute")),
+				nameof(ScreenResolution)	=> new ScreenResolution(_GetInt(dictionary,"width"),_GetInt(dictionary,"height"),_GetBool(dictionary,"fullscreen")),
 
-				nameof(Route)				=> new Route(GetString(dictionary,"AbsolutePath")),
+				nameof(Route)				=> new Route(_GetString(dictionary,"AbsolutePath")),
 
 				_ => throw new NotSupportedException($"NotSupported type {objectType.Name}"),
 			};
@@ -90,14 +90,14 @@ namespace KZLib.KZUtility
 				{
 					var color = (Color) value;
 
-					EmitValue(emitter,new string[] { "r", "g", "b", "a" },new string[] { $"{color.r}", $"{color.g}", $"{color.b}", $"{color.a}" });
+					_EmitValue(emitter,new string[] { "r", "g", "b", "a" },new string[] { $"{color.r}", $"{color.g}", $"{color.b}", $"{color.a}" });
 				}
 				break;
 				case nameof(Color32):
 				{
 					var color = (Color32) value;
 
-					EmitValue(emitter,new string[] { "r", "g", "b", "a" },new string[] { $"{color.r}", $"{color.g}", $"{color.b}", $"{color.a}" });
+					_EmitValue(emitter,new string[] { "r", "g", "b", "a" },new string[] { $"{color.r}", $"{color.g}", $"{color.b}", $"{color.a}" });
 				}
 				break;
 
@@ -105,21 +105,21 @@ namespace KZLib.KZUtility
 				{
 					var vector = (Vector2) value;
 
-					EmitValue(emitter,new string[] { "x", "y" },new string[] { $"{vector.x}", $"{vector.y}" });
+					_EmitValue(emitter,new string[] { "x", "y" },new string[] { $"{vector.x}", $"{vector.y}" });
 				}
 				break;
 				case nameof(Vector3):
 				{
 					var vector = (Vector3) value;
 
-					EmitValue(emitter,new string[] { "x", "y", "z" },new string[] { $"{vector.x}", $"{vector.y}", $"{vector.z}" });
+					_EmitValue(emitter,new string[] { "x", "y", "z" },new string[] { $"{vector.x}", $"{vector.y}", $"{vector.z}" });
 				}
 				break;
 				case nameof(Vector4):
 				{
 					var vector = (Vector4) value;
 
-					EmitValue(emitter,new string[] { "x", "y", "z", "w" },new string[] { $"{vector.x}", $"{vector.y}", $"{vector.z}", $"{vector.w}" });
+					_EmitValue(emitter,new string[] { "x", "y", "z", "w" },new string[] { $"{vector.x}", $"{vector.y}", $"{vector.z}", $"{vector.w}" });
 				}
 				break;
 
@@ -127,14 +127,14 @@ namespace KZLib.KZUtility
 				{
 					var vector = (Vector2Int) value;
 
-					EmitValue(emitter,new string[] { "x", "y" },new string[] { $"{vector.x}", $"{vector.y}" });
+					_EmitValue(emitter,new string[] { "x", "y" },new string[] { $"{vector.x}", $"{vector.y}" });
 				}
 				break;
 				case nameof(Vector3Int):
 				{
 					var vector = (Vector3Int) value;
 
-					EmitValue(emitter,new string[] { "x", "y", "z" },new string[] { $"{vector.x}", $"{vector.y}", $"{vector.z}" });
+					_EmitValue(emitter,new string[] { "x", "y", "z" },new string[] { $"{vector.x}", $"{vector.y}", $"{vector.z}" });
 				}
 				break;
 
@@ -142,7 +142,7 @@ namespace KZLib.KZUtility
 				{
 					var quaternion = (Quaternion) value;
 
-					EmitValue(emitter,new string[] { "x", "y", "z", "w" },new string[] { $"{quaternion.x}", $"{quaternion.y}", $"{quaternion.z}", $"{quaternion.w}" });
+					_EmitValue(emitter,new string[] { "x", "y", "z", "w" },new string[] { $"{quaternion.x}", $"{quaternion.y}", $"{quaternion.z}", $"{quaternion.w}" });
 				}
 				break;
 
@@ -150,14 +150,14 @@ namespace KZLib.KZUtility
 				{
 					var rect = (Rect) value;
 
-					EmitValue(emitter,new string[] { "x", "y", "width", "height" },new string[] { $"{rect.x}", $"{rect.y}", $"{rect.width}", $"{rect.height}" });
+					_EmitValue(emitter,new string[] { "x", "y", "width", "height" },new string[] { $"{rect.x}", $"{rect.y}", $"{rect.width}", $"{rect.height}" });
 				}
 				break;
 				case nameof(RectInt):
 				{
 					var rect = (RectInt) value;
 
-					EmitValue(emitter,new string[] { "x", "y", "width", "height" },new string[] { $"{rect.x}", $"{rect.y}", $"{rect.width}", $"{rect.height}" });
+					_EmitValue(emitter,new string[] { "x", "y", "width", "height" },new string[] { $"{rect.x}", $"{rect.y}", $"{rect.width}", $"{rect.height}" });
 				}
 				break;
 
@@ -165,14 +165,14 @@ namespace KZLib.KZUtility
 				{
 					var volume = (SoundVolume) value;
 
-					EmitValue(emitter,new string[] { "level", "mute" },new string[] { $"{volume.level}", $"{volume.mute}" });
+					_EmitValue(emitter,new string[] { "level", "mute" },new string[] { $"{volume.level}", $"{volume.mute}" });
 				}
 				break;
 				case nameof(ScreenResolution):
 				{
 					var resolution = (ScreenResolution) value;
 
-					EmitValue(emitter,new string[] { "width", "height", "fullscreen" },new string[] { $"{resolution.width}", $"{resolution.height}", $"{resolution.fullscreen}" });
+					_EmitValue(emitter,new string[] { "width", "height", "fullscreen" },new string[] { $"{resolution.width}", $"{resolution.height}", $"{resolution.fullscreen}" });
 				}
 				break;
 
@@ -180,7 +180,7 @@ namespace KZLib.KZUtility
 				{
 					var route = (Route) value;
 
-					EmitValue(emitter,new string[] { "AbsolutePath" },new string[] { $"{route.AbsolutePath}" });
+					_EmitValue(emitter,new string[] { "AbsolutePath" },new string[] { $"{route.AbsolutePath}" });
 				}
 				break;
 			}
@@ -188,7 +188,7 @@ namespace KZLib.KZUtility
 			emitter.Emit(new MappingEnd());
 		}
 
-		private void EmitValue(IEmitter emitter,string[] keyArray,string[] valueArray)
+		private void _EmitValue(IEmitter emitter,string[] keyArray,string[] valueArray)
 		{
 			for(var i=0;i<keyArray.Length;i++)
 			{
@@ -197,7 +197,7 @@ namespace KZLib.KZUtility
 			}
 		}
 
-		private Dictionary<string,string> ConvertToDictionary(IParser parser)
+		private Dictionary<string,string> _ConvertToDictionary(IParser parser)
 		{
 			var dictionary = new Dictionary<string,string>();
 
@@ -215,27 +215,27 @@ namespace KZLib.KZUtility
 			return dictionary;
 		}
 
-		private float GetFloat(Dictionary<string,string> dictionary,string key)
+		private float _GetFloat(Dictionary<string,string> dictionary,string key)
 		{
 			return dictionary.TryGetValue(key,out var value) && float.TryParse(value,out var result) ? result : default;
 		}
 
-		private int GetInt(Dictionary<string,string> dictionary,string key)
+		private int _GetInt(Dictionary<string,string> dictionary,string key)
 		{
 			return dictionary.TryGetValue(key,out var value) && int.TryParse(value,out var result) ? result : default;
 		}
 
-		private bool GetBool(Dictionary<string,string> dictionary,string key)
+		private bool _GetBool(Dictionary<string,string> dictionary,string key)
 		{
 			return dictionary.TryGetValue(key,out var value) && bool.TryParse(value,out var result) && result;
 		}
 
-		private byte GetByte(Dictionary<string,string> dictionary,string key)
+		private byte _GetByte(Dictionary<string,string> dictionary,string key)
 		{
 			return dictionary.TryGetValue(key,out var value) && byte.TryParse(value,out var result) ? result : default;
 		}
 
-		private string GetString(Dictionary<string,string> dictionary,string key)
+		private string _GetString(Dictionary<string,string> dictionary,string key)
 		{
 			return dictionary.TryGetValue(key,out var value) ? value : string.Empty;
 		}

@@ -94,7 +94,7 @@ namespace KZLib.KZTool
 			return m_sheetDict.ContainsKey(sheetName);
 		}
 
-		private string[][] GetRowArray(string sheetName)
+		private string[][] _GetRowArray(string sheetName)
 		{
 			if(!m_sheetDict.TryGetValue(sheetName,out var sheet))
 			{
@@ -106,7 +106,7 @@ namespace KZLib.KZTool
 
 		public int GetRowSize(string sheetName)
 		{
-			return GetRowArray(sheetName).Length;
+			return _GetRowArray(sheetName).Length;
 		}
 
 		public int FindPrimaryKeyIndex(string sheetName)
@@ -129,13 +129,13 @@ namespace KZLib.KZTool
 		/// </summary>
 		public string[] GetCellArrayInRow(string sheetName,int index)
 		{
-			var rowArray = GetRowArray(sheetName);
+			var rowArray = _GetRowArray(sheetName);
 
-			ValidateRange(sheetName,index,rowArray.Length);
+			_ValidateRange(sheetName,index,rowArray.Length);
 
 			var cellArray = rowArray[index];
 
-			return IsExistRow(cellArray) ? cellArray : Array.Empty<string>();
+			return _IsExistRow(cellArray) ? cellArray : Array.Empty<string>();
 		}
 
 		/// <summary>
@@ -158,9 +158,9 @@ namespace KZLib.KZTool
 		/// </summary>
 		public string[] ExtractCellArrayInColumn(string sheetName,int index)
 		{
-			var rowArray = GetRowArray(sheetName);
+			var rowArray = _GetRowArray(sheetName);
 
-			ValidateRange(sheetName,index,rowArray[0].Length);
+			_ValidateRange(sheetName,index,rowArray[0].Length);
 
 			var length = rowArray.Length;
 			var columnArray = new string[length];
@@ -198,7 +198,7 @@ namespace KZLib.KZTool
 
 		public IEnumerable<object> DeserializeGroup(string sheetName,Type dataType,int startRow = 1)
 		{
-			var rowArray = GetRowArray(sheetName);
+			var rowArray = _GetRowArray(sheetName);
 			var lastRow = rowArray.Length;
 			startRow = Math.Clamp(startRow,0,lastRow);
 
@@ -209,7 +209,7 @@ namespace KZLib.KZTool
 			{
 				var cellArray = rowArray[i];
 
-				if(!IsExistRow(cellArray))
+				if(!_IsExistRow(cellArray))
 				{
 					continue;
 				}
@@ -259,7 +259,7 @@ namespace KZLib.KZTool
 					{
 						var cell = cellArray[schemeIndexList[i]];
 
-						resultArray.SetValue(ConvertCell(cell,line,elementType),i);
+						resultArray.SetValue(_ConvertCell(cell,line,elementType),i);
 					}
 
 					propertyInfo.SetValue(instance,resultArray);
@@ -268,14 +268,14 @@ namespace KZLib.KZTool
 				{
 					var cell = cellArray[schemeIndexList[0]];
 
-					propertyInfo.SetValue(instance,ConvertCell(cell,line,propertyType));
+					propertyInfo.SetValue(instance,_ConvertCell(cell,line,propertyType));
 				}
 			}
 
 			return instance;
 		}
 
-		private object ConvertCell(string cell,int line,Type targetType)
+		private object _ConvertCell(string cell,int line,Type targetType)
 		{
 			if(targetType == typeof(string))
 			{
@@ -352,7 +352,7 @@ namespace KZLib.KZTool
 		/// </summary>
 		public string[,] ConvertToArray(string sheetName,int x,int y,int width,int height)
 		{
-			var rowArray = GetRowArray(sheetName);
+			var rowArray = _GetRowArray(sheetName);
 			var resultArray = new string[width,height];
 
 			for(var i=x;i<x+width;i++)
@@ -381,7 +381,7 @@ namespace KZLib.KZTool
 					continue;
 				}
 
-				foreach(var keyword in s_keyword_array)
+				foreach(var keyword in s_keywordArray)
 				{
 					if(string.Equals(keyword,scheme))
 					{
@@ -404,7 +404,7 @@ namespace KZLib.KZTool
 		/// <summary>
 		/// empty or %start -> not exist
 		/// </summary>
-		private bool IsExistRow(string[] cellArray)
+		private bool _IsExistRow(string[] cellArray)
 		{
 			if(cellArray == null || cellArray.Length == 0)
 			{
@@ -416,7 +416,7 @@ namespace KZLib.KZTool
 			return !header.StartsWith("%") && !string.IsNullOrEmpty(header);
 		}
 
-		private void ValidateRange(string sheetName,int index,int count)
+		private void _ValidateRange(string sheetName,int index,int count)
 		{
 			if(index < 0 || index >= count)
 			{
@@ -424,7 +424,7 @@ namespace KZLib.KZTool
 			}
 		}
 
-		private static readonly string[] s_keyword_array = new string[]
+		private static readonly string[] s_keywordArray = new string[]
 		{
 			"abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", 
 			"class", "const", "continue", "decimal", "default", "delegate", "do", "double", "else", "enum",

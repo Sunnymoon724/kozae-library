@@ -22,7 +22,7 @@ namespace System.Collections.Generic
 		{
 			for(var i=m_dataList.Count/2-1;i>=0;i--)
 			{
-				HeapifyDown(i);
+				_HeapifyDown(i);
 			}
 		}
 
@@ -32,7 +32,7 @@ namespace System.Collections.Generic
 			lock(m_syncRoot)
 			{
 				m_dataList.Add(data);
-				HeapifyUp(m_dataList.Count-1);
+				_HeapifyUp(m_dataList.Count-1);
 			}
 		}
 
@@ -52,7 +52,7 @@ namespace System.Collections.Generic
 
 				if(!IsEmpty)
 				{
-					HeapifyDown(0);
+					_HeapifyDown(0);
 				}
 
 				return top;
@@ -88,15 +88,15 @@ namespace System.Collections.Generic
 
 				if(index < m_dataList.Count)
 				{
-					HeapifyDown(index);
-					HeapifyUp(index);
+					_HeapifyDown(index);
+					_HeapifyUp(index);
 				}
 
 				return true;
 			}
 		}
 
-		private void HeapifyUp(int index)
+		private void _HeapifyUp(int index)
 		{
 			while(index > 0)
 			{
@@ -107,13 +107,13 @@ namespace System.Collections.Generic
 					break;
 				}
 
-				Swap(index,parent);
+				_Swap(index,parent);
 
 				index = parent;
 			}
 		}
 
-		private void HeapifyDown(int index)
+		private void _HeapifyDown(int index)
 		{
 			var last = m_dataList.Count-1;
 
@@ -138,13 +138,13 @@ namespace System.Collections.Generic
 					break;
 				}
 
-				Swap(index,swap);
+				_Swap(index,swap);
 
 				index = swap;
 			}
 		}
 
-		private void Swap(int prev,int next)
+		private void _Swap(int prev,int next)
 		{
 			(m_dataList[next],m_dataList[prev]) = (m_dataList[prev],m_dataList[next]);
 		}

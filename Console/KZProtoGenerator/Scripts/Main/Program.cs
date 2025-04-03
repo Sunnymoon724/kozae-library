@@ -16,10 +16,12 @@ namespace KZConsole
 				Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
 
 				var currentPath = Directory.GetCurrentDirectory();
-				var protoFolderPath = Path.GetFullPath(currentPath,argumentArray[0]);
-				var outputFolderPath = Path.GetFullPath(currentPath,"../ProtoOutput");
+				
+				var protoFolderPath = Path.GetFullPath(Path.Combine(currentPath,argumentArray[0]));
 
-				FileUtility.CreateFolder(outputFolderPath);
+				Console.WriteLine($"Proto folder path : {protoFolderPath}");
+
+				var outputFolderPath = Path.GetFullPath(Path.Combine(currentPath,"../ProtoOutput"));
 
 				var projectManager = new ProjectManager(currentPath,outputFolderPath);
 

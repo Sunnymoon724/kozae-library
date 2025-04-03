@@ -38,11 +38,11 @@ namespace KZLib.KZUtility
 
 		private void _EnableListener(string eventName,Delegate callback)
 		{
-			ValidateCallback(callback);
+			_ValidateCallback(callback);
 
 			if(m_listenerDict.TryGetValue(eventName,out var listener) && listener != null)
 			{
-				ValidateType(eventName,callback,listener);
+				_ValidateType(eventName,callback,listener);
 
 				m_listenerDict[eventName] = Delegate.Combine(listener,callback);
 			}
@@ -64,14 +64,14 @@ namespace KZLib.KZUtility
 
 		private void _DisableListener(string eventName,Delegate callback)
 		{
-			ValidateCallback(callback);
+			_ValidateCallback(callback);
 
 			if(!m_listenerDict.TryGetValue(eventName,out var listener) || listener == null)
 			{
 				return;
 			}
 
-			ValidateType(eventName,callback,listener);
+			_ValidateType(eventName,callback,listener);
 
 			m_listenerDict[eventName] = Delegate.Remove(listener,callback);
 
@@ -105,7 +105,7 @@ namespace KZLib.KZUtility
 			}
 		}
 
-		private void ValidateCallback(Delegate callback)
+		private void _ValidateCallback(Delegate callback)
 		{
 			if(callback == null)
 			{
@@ -113,7 +113,7 @@ namespace KZLib.KZUtility
 			}
 		}
 
-		private void ValidateType(string eventName,Delegate callback,Delegate listener)
+		private void _ValidateType(string eventName,Delegate callback,Delegate listener)
 		{
 			var listenerType = listener.GetType();
 			var callbackType = callback.GetType();

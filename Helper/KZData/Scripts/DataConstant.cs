@@ -4,11 +4,6 @@
 
 	public interface ICluster { }
 
-	public interface IClusterParam
-	{
-		string Key { get; }
-	}
-
 	public interface IProto
 	{
 		int Num { get; }

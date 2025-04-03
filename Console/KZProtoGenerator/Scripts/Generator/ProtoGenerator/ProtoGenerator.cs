@@ -32,26 +32,26 @@ namespace KZConsole
 		{
 			Console.WriteLine("Generate all proto.");
 
-			GenerateBranch();
-			CompileCode(codeGroup);
-			GenerateProtoFiles(protoFilePathList,outputFolderPath);
+			_GenerateBranch();
+			_CompileCode(codeGroup);
+			_GenerateProtoFiles(protoFilePathList,outputFolderPath);
 		}
 
-		private void GenerateBranch()
+		private void _GenerateBranch()
 		{
 			Console.WriteLine("-Make branch.");
 
 			m_branchSheet.GenerateBranch();
 		}
 
-		private void CompileCode(IEnumerable<string> codeGroup)
+		private void _CompileCode(IEnumerable<string> codeGroup)
 		{
 			Console.WriteLine("-Compile code");
 
 			m_protoAssembly = CodeCompiler.CompileToAssembly(codeGroup);
 		}
 
-		private void GenerateProtoFiles(List<string> protoFilePathList,string outputFolderPath)
+		private void _GenerateProtoFiles(List<string> protoFilePathList,string outputFolderPath)
 		{
 			Console.WriteLine("Generate proto.");
 
@@ -60,37 +60,37 @@ namespace KZConsole
 
 			foreach(var protoFilePath in protoFilePathList)
 			{
-				if(ShouldSkipFile(protoFilePath))
+				if(_ShouldSkipFile(protoFilePath))
 				{
 					continue;
 				}
 
-				ProcessProtoFile(protoFilePath,csvFolderPath,byteFolderPath);
+				_ProcessProtoFile(protoFilePath,csvFolderPath,byteFolderPath);
 			}
 		}
 
-		private static bool ShouldSkipFile(string protoFilePath)
+		private static bool _ShouldSkipFile(string protoFilePath)
 		{
 			var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 
 			return s_exception_file_name_array.Contains(fileName);
 		}
 
-		private void ProcessProtoFile(string protoFilePath,string csvFolderPath,string byteFolderPath)
+		private void _ProcessProtoFile(string protoFilePath,string csvFolderPath,string byteFolderPath)
 		{
 			var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 			var excelReader = new ExcelReader(protoFilePath);
-			var protoList = GenerateProtoList(fileName,excelReader,csvFolderPath);
+			var protoList = _GenerateProtoList(fileName,excelReader,csvFolderPath);
 
 			if(protoList.Count > 0)
 			{
-                SaveProtoData(fileName,protoList,byteFolderPath);
+                _SaveProtoData(fileName,protoList,byteFolderPath);
 
 				Console.WriteLine($"-Save {fileName} proto");
 			}
 		}
 
-		private static void SaveProtoData(string fileName,List<object> protoList,string byteFolderPath)
+		private static void _SaveProtoData(string fileName,List<object> protoList,string byteFolderPath)
 		{
 			var serializedData = MessagePackSerializer.Serialize(protoList);
 			var filePath = Path.Combine(byteFolderPath,$"{fileName}.bytes");
@@ -98,7 +98,7 @@ namespace KZConsole
 			FileUtility.WriteByteToFile(filePath,serializedData);
 		}
 
-		private List<object> GenerateProtoList(string fileName,ExcelReader excelReader,string csvFolderPath)
+		private List<object> _GenerateProtoList(string fileName,ExcelReader excelReader,string csvFolderPath)
 		{
 			Console.WriteLine($"-Generate {fileName}");
 
@@ -111,20 +111,20 @@ namespace KZConsole
 				return [];
 			}
 
-			var protoType = GetDataType($"{fileName}Proto");
+			var protoType = _GetDataType($"{fileName}Proto");
 			var mainSheetName = sheetNameArray[0];
-			var schemeIndexListDict = GenerateSubSheet(excelReader,sheetNameArray,fileName);
+			var schemeIndexListDict = _GenerateSubSheet(excelReader,sheetNameArray,fileName);
 
-			var rowArray = (sheetNameArray.Length == 1 || schemeIndexListDict.Count == 0) ? GenerateRowArray(excelReader,mainSheetName) : GenerateCustomRowArray(excelReader,mainSheetName,schemeIndexListDict);
+			var rowArray = (sheetNameArray.Length == 1 || schemeIndexListDict.Count == 0) ? _GenerateRowArray(excelReader,mainSheetName) : _GenerateCustomRowArray(excelReader,mainSheetName,schemeIndexListDict);
 
-            var dataList = GenerateDataList(excelReader,rowArray,mainSheetName,protoType,out var csvText);
+            var dataList = _GenerateDataList(excelReader,rowArray,mainSheetName,protoType,out var csvText);
 
-            SaveCsvFile(csvFolderPath,fileName,csvText);
+            _SaveCsvFile(csvFolderPath,fileName,csvText);
 
             return dataList;
 		}
 
-		private Dictionary<Type,List<int>> GenerateSubSheet(ExcelReader excelReader,string[] sheetNameArray,string fileName)
+		private Dictionary<Type,List<int>> _GenerateSubSheet(ExcelReader excelReader,string[] sheetNameArray,string fileName)
 		{
 			if(sheetNameArray.Length == 1)
 			{
@@ -138,13 +138,13 @@ namespace KZConsole
 			{
 				var className = $"{sheetNameArray[i].TrimStart('+')}";
 
-				ProcessSubSheetTypes(typeNameArray,className,ref indexListDict);
+				_ProcessSubSheetTypes(typeNameArray,className,ref indexListDict);
 			}
 
 			return indexListDict;
 		}
 
-		private void ProcessSubSheetTypes(string[] typeNameArray,string className,ref Dictionary<Type,List<int>> schemeIndexListDict)
+		private void _ProcessSubSheetTypes(string[] typeNameArray,string className,ref Dictionary<Type,List<int>> schemeIndexListDict)
 		{
 			for(var j=0;j<typeNameArray.Length;j++)
 			{
@@ -152,7 +152,7 @@ namespace KZConsole
 
 				if(string.Equals(typeName,className))
 				{
-					var subClassType = GetDataType(className);
+					var subClassType = _GetDataType(className);
 
 					if(!schemeIndexListDict.TryGetValue(subClassType,out List<int>? value))
 					{
@@ -165,7 +165,7 @@ namespace KZConsole
 			}
 		}
 
-		private static List<object> GenerateDataList(ExcelReader excelReader,string[][] rowArray,string sheetName,Type dataType,out string csvText)
+		private static List<object> _GenerateDataList(ExcelReader excelReader,string[][] rowArray,string sheetName,Type dataType,out string csvText)
 		{
 			var dataList = new List<object>();
 			var schemeArray = excelReader.GetSchemeArray(sheetName);
@@ -185,18 +185,18 @@ namespace KZConsole
 			return dataList;
 		}
 
-		private static void SaveCsvFile(string csvFolderPath,string fileName,string csvText)
+		private static void _SaveCsvFile(string csvFolderPath,string fileName,string csvText)
 		{
 			var csvFilePath = Path.Combine(csvFolderPath,$"{fileName}.csv");
 
 			FileUtility.WriteTextToFile(csvFilePath,csvText);
 		}
 
-		private string[][] GenerateRowArray(ExcelReader excelReader,string sheetName)
+		private string[][] _GenerateRowArray(ExcelReader excelReader,string sheetName)
 		{
 			var keyHashSet = new HashSet<string>();
 			var schemeArray = excelReader.GetSchemeArray(sheetName);
-			var branchIndex = FindBranchIndex(schemeArray,excelReader.FilePath,sheetName);
+			var branchIndex = _FindBranchIndex(schemeArray,excelReader.FilePath,sheetName);
 
 			var rowSize = excelReader.GetRowSize(sheetName);
 			var keyIndex = excelReader.FindPrimaryKeyIndex(sheetName);
@@ -214,7 +214,7 @@ namespace KZConsole
 				}
 
 				// check branch
-				if(!ShouldIncludeRow(cellArray,branchIndex,excelReader,sheetName,i,keyHashSet,keyIndex))
+				if(!_ShouldIncludeRow(cellArray,branchIndex,excelReader,sheetName,i,keyHashSet,keyIndex))
 				{
 					continue;
 				}
@@ -225,7 +225,7 @@ namespace KZConsole
 			return [..rowList];
 		}
 
-		private bool ShouldIncludeRow(string[] cellArray,int branchIndex,ExcelReader excelReader,string sheetName,int rowIndex,HashSet<string> keyHashSet,int keyIndex)
+		private bool _ShouldIncludeRow(string[] cellArray,int branchIndex,ExcelReader excelReader,string sheetName,int rowIndex,HashSet<string> keyHashSet,int keyIndex)
 		{
 			if(!m_branchSheet.IsIncludeRow(cellArray[branchIndex],excelReader.FilePath,sheetName,rowIndex))
 			{
@@ -244,7 +244,7 @@ namespace KZConsole
 			return true;
 		}
 
-		private static int FindBranchIndex(string[] schemeArray,string filePath,string sheetName)
+		private static int _FindBranchIndex(string[] schemeArray,string filePath,string sheetName)
 		{
 			for(var i=0;i<schemeArray.Length;i++)
 			{
@@ -259,17 +259,17 @@ namespace KZConsole
 			throw new SheetConvertException($"$Branch is not included.",filePath,sheetName,0);
 		}
 
-		private string[][] GenerateCustomRowArray(ExcelReader excelReader,string mainSheetName,Dictionary<Type,List<int>> schemeIndexListDict)
+		private string[][] _GenerateCustomRowArray(ExcelReader excelReader,string mainSheetName,Dictionary<Type,List<int>> schemeIndexListDict)
         {
             var keyHashSet = new HashSet<string>();
             var schemeArray = excelReader.GetSchemeArray(mainSheetName);
-            var branchIndex = FindBranchIndex(schemeArray,excelReader.FilePath,mainSheetName);
+            var branchIndex = _FindBranchIndex(schemeArray,excelReader.FilePath,mainSheetName);
 
             var rowSize = excelReader.GetRowSize(mainSheetName);
 			var keyIndex = excelReader.FindPrimaryKeyIndex(mainSheetName);
 
 			var rowList = new List<string[]>();
-			var subSheetDataDict = GenerateSubSheetDataForCustomRow(excelReader,schemeIndexListDict);
+			var subSheetDataDict = _GenerateSubSheetDataForCustomRow(excelReader,schemeIndexListDict);
 
 			for(var i=c_value_index;i<rowSize;i++)
 			{
@@ -282,12 +282,12 @@ namespace KZConsole
 				}
 
 				// check branch
-				if(!ShouldIncludeRow(cellArray,branchIndex,excelReader,mainSheetName,i,keyHashSet,keyIndex))
+				if(!_ShouldIncludeRow(cellArray,branchIndex,excelReader,mainSheetName,i,keyHashSet,keyIndex))
 				{
 					continue;
 				}
 
-				ProcessCustomRowData(cellArray,schemeIndexListDict,subSheetDataDict);
+				_ProcessCustomRowData(cellArray,schemeIndexListDict,subSheetDataDict);
 
 				rowList.Add(cellArray);
 			}
@@ -295,7 +295,7 @@ namespace KZConsole
 			return [..rowList];
 		}
 
-		private static Dictionary<string,string> GenerateSubSheetDataForCustomRow(ExcelReader excelReader,Dictionary<Type,List<int>> schemeIndexListDict)
+		private static Dictionary<string,string> _GenerateSubSheetDataForCustomRow(ExcelReader excelReader,Dictionary<Type,List<int>> schemeIndexListDict)
 		{
 			var dataDict = new Dictionary<string,string>();
 			
@@ -333,7 +333,7 @@ namespace KZConsole
 			return dataDict;
 		}
 
-		private static void ProcessCustomRowData(string[] cellArray,Dictionary<Type,List<int>> schemeIndexListDict,Dictionary<string,string> subSheetDataDict)
+		private static void _ProcessCustomRowData(string[] cellArray,Dictionary<Type,List<int>> schemeIndexListDict,Dictionary<string,string> subSheetDataDict)
 		{
 			foreach(var pair in schemeIndexListDict)
 			{
@@ -349,7 +349,7 @@ namespace KZConsole
 			}
 		}
 
-		private Type GetDataType(string className)
+		private Type _GetDataType(string className)
 		{
 			return (m_protoAssembly.GetType($"KZLib.KZData.{className}") ?? m_dataAssembly.GetType($"KZLib.KZData.{className}")) ?? throw new InvalidDataException($"Invalid data in {className}");
 		}

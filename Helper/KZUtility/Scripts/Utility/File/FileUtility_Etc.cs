@@ -8,7 +8,7 @@ namespace KZLib.KZUtility
 		private const int c_kiloByte = 1 << 10;
 		private const int c_megaByte = c_kiloByte * c_kiloByte;
 
-		private static readonly string[] s_excelExtensionArray = new string[] { ".xls", ".xlsx", ".xlsm" };
+		private static readonly string[] s_excelExtensionArray = new string[] { "*.xls", "*.xlsx", "*.xlsm" };
 
 		public static long GetFileSizeByte(string filePath)
 		{

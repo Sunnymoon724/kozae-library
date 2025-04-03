@@ -218,27 +218,27 @@ namespace KZLib.KZUtility
 			return RemoveHeaderInPath(path,"Assets");
 		}
 
-		private static string GetUniquePath(string path)
-		{
-			if(!IsPathExist(path))
-			{
-				return string.Empty;
-			}
+		// private static string _GetUniquePath(string path)
+		// {
+		// 	if(!IsPathExist(path))
+		// 	{
+		// 		return string.Empty;
+		// 	}
 
-			var directory = GetParentPath(path);
-			var name = GetOnlyName(path);
-			var extension = GetExtension(path);
+		// 	var directory = GetParentPath(path);
+		// 	var name = GetOnlyName(path);
+		// 	var extension = GetExtension(path);
 
-			var count = 1;
-			var newPath = path;
+		// 	var count = 1;
+		// 	var newPath = path;
 
-			while(IsFileExist(newPath))
-			{
-				newPath = Path.Combine(directory,$"{name} ({count}){extension}");
-				count++;
-			}
+		// 	while(IsFileExist(newPath))
+		// 	{
+		// 		newPath = Path.Combine(directory,$"{name} ({count}){extension}");
+		// 		count++;
+		// 	}
 
-			return newPath;
-		}
+		// 	return newPath;
+		// }
 	}
 }

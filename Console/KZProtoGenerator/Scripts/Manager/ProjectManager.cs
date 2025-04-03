@@ -13,7 +13,7 @@ namespace KZConsole
 
 		public ProjectManager(string currentPath,string outputFolderPath)
 		{
-			m_projectFolderPath = Path.GetFullPath(currentPath,"../ProtoProject");
+			m_projectFolderPath = Path.GetFullPath(Path.Combine(currentPath,"../ProtoProject"));
 			m_projectFilePath = Path.Combine(m_projectFolderPath,"ProtoProject.csproj");
 
 			FileUtility.CreateFolder(m_projectFolderPath);

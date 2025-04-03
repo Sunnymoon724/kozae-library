@@ -27,14 +27,14 @@ namespace KZConsole
 			Console.WriteLine("Generate all proto code.");
 			Console.WriteLine("-Generate enum code.");
 
-			GenerateEnumCode(outputFolderPath);
+			_GenerateEnumCode(outputFolderPath);
 
 			Console.WriteLine("-Generate proto code.");
 
-			GenerateProtoCode(outputFolderPath);
+			_GenerateProtoCode(outputFolderPath);
 		}
 
-		private void GenerateEnumCode(string outputFolderPath)
+		private void _GenerateEnumCode(string outputFolderPath)
 		{
 			var enumBuilder = new StringBuilder();
 			var excelReader = new ExcelReader(m_enumExcelFilePath);
@@ -64,7 +64,7 @@ namespace KZConsole
 			enumBuilder.Length -= 2*Environment.NewLine.Length;
 
 			var enumCode = enumBuilder.ToString();
-			var enumTemplate = ReadEmbeddedResource("KZProtoGenerator.Templates.EnumTemplate.txt");
+			var enumTemplate = _ReadEmbeddedResource("KZProtoGenerator.Templates.EnumTemplate.txt");
 
 			enumTemplate = enumTemplate.Replace("$Enums",enumCode);
 
@@ -75,20 +75,20 @@ namespace KZConsole
 			m_protoCodeList.Add(enumTemplate);
 		}
 
-		private static bool IsExceptionPath(string protoFilePath)
+		private static bool _IsExceptionPath(string protoFilePath)
 		{
 			var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 
 			return s_exception_file_name_array.Contains(fileName);
 		}
 
-		private void GenerateProtoCode(string outputFolderPath)
+		private void _GenerateProtoCode(string outputFolderPath)
 		{
-			var templateText = ReadEmbeddedResource("KZProtoGenerator.Templates.ProtoTemplate.txt");
+			var templateText = _ReadEmbeddedResource("KZProtoGenerator.Templates.ProtoTemplate.txt");
 
 			foreach(var protoFilePath in m_protoFilePathList)
 			{
-				if(IsExceptionPath(protoFilePath))
+				if(_IsExceptionPath(protoFilePath))
 				{
 					continue;
 				}
@@ -110,7 +110,7 @@ namespace KZConsole
 
 				var mainSheetName = sheetNameArray[0].TrimStart('+');
 
-				mainClassCode = GenerateClassTemplate(excelReader,sheetNameArray[0],$"{mainSheetName}Proto : IProto",protoFilePath);
+				mainClassCode = _GenerateClassTemplate(excelReader,sheetNameArray[0],$"{mainSheetName}Proto : IProto",protoFilePath);
 
 				if(nameCount != 1)
 				{
@@ -120,7 +120,7 @@ namespace KZConsole
 					{
 						var sheetName = sheetNameArray[i].TrimStart('+');
 
-						classBuilder.Append($"{Environment.NewLine}{Environment.NewLine}{GenerateClassTemplate(excelReader,sheetNameArray[i],$"{sheetName}",protoFilePath)}");
+						classBuilder.Append($"{Environment.NewLine}{Environment.NewLine}{_GenerateClassTemplate(excelReader,sheetNameArray[i],$"{sheetName}",protoFilePath)}");
 					}
 
 					subClassCode = classBuilder.ToString();
@@ -137,9 +137,9 @@ namespace KZConsole
 			}
 		}
 
-		private static string GenerateClassTemplate(ExcelReader excelReader,string sheetName,string className,string filePath)
+		private static string _GenerateClassTemplate(ExcelReader excelReader,string sheetName,string className,string filePath)
 		{
-			var propertyCode = GeneratePropertyCode(excelReader,sheetName);
+			var propertyCode = _GeneratePropertyCode(excelReader,sheetName);
 
 			if(string.IsNullOrEmpty(propertyCode))
 			{
@@ -157,7 +157,7 @@ namespace KZConsole
 			return classBuilder.ToString();
 		}
 
-		private static string GeneratePropertyCode(ExcelReader excelReader,string sheetName)
+		private static string _GeneratePropertyCode(ExcelReader excelReader,string sheetName)
 		{
 			var propertyList = new List<string>();
 			var propertyBuilder = new StringBuilder();
@@ -194,7 +194,7 @@ namespace KZConsole
 			return propertyBuilder.ToString();
 		}
 
-		private static string ReadEmbeddedResource(string fileName)
+		private static string _ReadEmbeddedResource(string fileName)
 		{
 			var assembly = Assembly.GetExecutingAssembly();
 			using var stream = assembly.GetManifestResourceStream(fileName) ?? throw new FileNotFoundException($"Resource not found. [{fileName}]");
