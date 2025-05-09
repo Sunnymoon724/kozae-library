@@ -32,7 +32,6 @@ namespace KZLib.KZUtility
 			typeof(Quaternion),
 			typeof(Rect),			typeof(RectInt),
 			typeof(SoundVolume),	typeof(ScreenResolution),
-			typeof(Route),
 		};
 
 		public bool Accepts(Type objectType)
@@ -68,8 +67,6 @@ namespace KZLib.KZUtility
 
 				nameof(SoundVolume)			=> new SoundVolume(_GetFloat(dictionary,"level"),_GetBool(dictionary,"mute")),
 				nameof(ScreenResolution)	=> new ScreenResolution(_GetInt(dictionary,"width"),_GetInt(dictionary,"height"),_GetBool(dictionary,"fullscreen")),
-
-				nameof(Route)				=> new Route(_GetString(dictionary,"AbsolutePath")),
 
 				_ => throw new NotSupportedException($"NotSupported type {objectType.Name}"),
 			};
@@ -173,14 +170,6 @@ namespace KZLib.KZUtility
 					var resolution = (ScreenResolution) value;
 
 					_EmitValue(emitter,new string[] { "width", "height", "fullscreen" },new string[] { $"{resolution.width}", $"{resolution.height}", $"{resolution.fullscreen}" });
-				}
-				break;
-
-				case nameof(Route):
-				{
-					var route = (Route) value;
-
-					_EmitValue(emitter,new string[] { "AbsolutePath" },new string[] { $"{route.AbsolutePath}" });
 				}
 				break;
 			}

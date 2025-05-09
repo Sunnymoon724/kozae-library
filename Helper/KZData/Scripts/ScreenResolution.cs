@@ -90,7 +90,7 @@ namespace KZLib.KZData
 
 		public static ScreenResolution Parse(ReadOnlySpan<char> value,IFormatProvider provider)
 		{
-			return Parse(value.ToString(),CultureInfo.InvariantCulture);
+			return Parse(value.ToString(),provider);
 		}
 
 		public static ScreenResolution Parse(string value)
@@ -108,7 +108,7 @@ namespace KZLib.KZData
 				throw new FormatException($"Invalid resolution format in {resolutionMatch}");
 			}
 
-			var fullscreenRegex = new Regex(@"fullscreen\s*:\s*(true|false)");
+			var fullscreenRegex = new Regex(@"fullscreen\s*:\s*(true|false)",RegexOptions.IgnoreCase);
 			var fullscreenMatch = fullscreenRegex.Match(value);
 
 			if(!fullscreenMatch.Success || !bool.TryParse(fullscreenMatch.Groups[1].Value,out var fullscreen))

@@ -68,5 +68,21 @@ namespace KZLib.KZUtility
 
 			onComplete?.Invoke();
 		}
+
+		public static void DeleteFolder(string absoluteFolderPath,bool recursive,Action? onComplete = null)
+		{
+			if(!IsFolderExist(absoluteFolderPath))
+			{
+				return;
+			}
+
+			Directory.Delete(absoluteFolderPath,recursive);
+
+			var metaFile = $"{absoluteFolderPath}.meta";
+
+			DeleteFile(metaFile);
+
+			onComplete?.Invoke();
+		}
 	}
 }

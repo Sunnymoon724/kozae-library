@@ -14,7 +14,7 @@ namespace KZConsole
 			public string Comment { get; set; }
 		}
 
-		private static readonly string[] s_exception_file_name_array = ["Branch","Enum","Camera","Motion"]; // Motion,Camera are default proto
+		private static readonly string[] s_exceptionFileNameArray = ["Branch","Enum","Camera","Motion"]; // Motion,Camera are default proto
 
 		private readonly List<string> m_protoCodeList = [];
 
@@ -79,7 +79,7 @@ namespace KZConsole
 		{
 			var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 
-			return s_exception_file_name_array.Contains(fileName);
+			return s_exceptionFileNameArray.Contains(fileName);
 		}
 
 		private void _GenerateProtoCode(string outputFolderPath)
@@ -161,8 +161,8 @@ namespace KZConsole
 		{
 			var propertyList = new List<string>();
 			var propertyBuilder = new StringBuilder();
-			var protoJaggedArray = excelReader.MergeCellArrayInRows(sheetName,[Global.EXCEL_SCHEME_INDEX,Global.EXCEL_TYPE_INDEX]);
-			var schemeArray = protoJaggedArray[Global.EXCEL_SCHEME_INDEX];
+			var protoJaggedArray = excelReader.MergeCellArrayInRows(sheetName,[0,1]);
+			var schemeArray = protoJaggedArray[0];
 			var schemeLength = schemeArray.Length;
 			var keyIndex = 0;
 
@@ -176,7 +176,7 @@ namespace KZConsole
 					continue;
 				}
 
-				var type = protoJaggedArray[Global.EXCEL_TYPE_INDEX][i];
+				var type = protoJaggedArray[1][i];
 
 				propertyBuilder.Append($"\t\t[Key({keyIndex++})]{Environment.NewLine}");
 				propertyBuilder.Append($"\t\tpublic {type} {property} {{ get; private set; }}{Environment.NewLine}");

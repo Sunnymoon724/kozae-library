@@ -10,7 +10,7 @@ namespace KZLib.KZData
 {
 	public abstract class CustomTag : IComparable,IComparable<CustomTag>,IEquatable<CustomTag>
 	{
-		private const BindingFlags c_tag_flag = BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly;
+		private const BindingFlags c_tagFlag = BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
 		protected readonly string m_name = string.Empty;
 
@@ -21,14 +21,12 @@ namespace KZLib.KZData
 			m_name = name;
 		}
 
-		public static IEnumerable<TTag> GetCustomTagGroup<TTag>(bool isIncludeDerivedType) where TTag : CustomTag
+		public static List<TTag> CollectCustomTagList<TTag>(bool isIncludeDerivedType) where TTag : CustomTag
 		{
 			var tagType = typeof(CustomTag);
+			var tagList = new List<TTag>();
 
-			foreach(var tag in _GetCustomTagGroup<TTag>(tagType))
-			{
-				yield return tag;
-			}
+			_CollectCustomTagGroup(tagList,tagType);
 
 			if(isIncludeDerivedType)
 			{
@@ -38,23 +36,22 @@ namespace KZLib.KZData
 					{
 						if(tagType.IsAssignableFrom(assemblyType) && assemblyType != tagType)
 						{
-							foreach(var tag in _GetCustomTagGroup<TTag>(assemblyType))
-							{
-								yield return tag;
-							}
+							_CollectCustomTagGroup(tagList,assemblyType);
 						}
 					}
 				}
 			}
+
+			return tagList;
 		}
 
-		private static IEnumerable<TTag> _GetCustomTagGroup<TTag>(Type tagType) where TTag : CustomTag
+		private static void _CollectCustomTagGroup<TTag>(List<TTag> tagList,Type tagType) where TTag : CustomTag
 		{
-			foreach(var fieldInfo in tagType.GetFields(c_tag_flag))
+			foreach(var fieldInfo in tagType.GetFields(c_tagFlag))
 			{
 				if(fieldInfo.GetValue(null) is TTag tag)
 				{
-					yield return tag;
+					tagList.Add(tag);
 				}
 			}
 		}
@@ -76,7 +73,7 @@ namespace KZLib.KZData
 
 		public static bool TryParse<TTag>(string name,out TTag resultTag) where TTag : CustomTag
 		{
-			foreach(var customTag in GetCustomTagGroup<TTag>(true))
+			foreach(var customTag in CollectCustomTagList<TTag>(true))
 			{
 				if(string.Equals(customTag.m_name,name))
 				{

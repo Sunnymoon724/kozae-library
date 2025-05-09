@@ -10,7 +10,17 @@ namespace KZConsole.KZProto
 	{
 		public static Assembly CompileToAssembly(IEnumerable<string> codeGroup)
 		{
-			var syntaxTreeGroup = codeGroup.Where(x => x != null).Select(x => CSharpSyntaxTree.ParseText(x));
+			var syntaxTreeList = new List<SyntaxTree>();
+
+			foreach(var code in codeGroup)
+			{
+				if(code == null)
+				{
+					continue;
+				}
+
+				syntaxTreeList.Add(CSharpSyntaxTree.ParseText(code));
+			}
 
 			var runtimeDirectory = RuntimeEnvironment.GetRuntimeDirectory();
 			var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -25,7 +35,7 @@ namespace KZConsole.KZProto
 
 			referenceList.AddRange(AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)).Select(a => MetadataReference.CreateFromFile(a.Location)));
 
-			var compilation = CSharpCompilation.Create("KZProto",syntaxTreeGroup,referenceList,new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+			var compilation = CSharpCompilation.Create("KZProto",syntaxTreeList,referenceList,new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
 			using var memoryStream = new MemoryStream();
 

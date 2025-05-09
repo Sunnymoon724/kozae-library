@@ -6,7 +6,7 @@ namespace KZConsole
 	public class Program
 	{
 		/// <summary>
-		/// 0 -> resultFolderPath
+		/// 0 -> luaFolderPath / 1 -> resultFolderPath
 		/// </summary>
 		internal static void Main(string[] argumentArray)
 		{
@@ -15,21 +15,25 @@ namespace KZConsole
 				Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 				Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
 
-				var keyInfo = Encryptor.GenerateKey();
+				var currentPath = Directory.GetCurrentDirectory();
+				var luaFolderPath = Path.GetFullPath(Path.Combine(currentPath,argumentArray[0]));
 
-				Console.WriteLine("Save keys");
+				Console.WriteLine($"Lua folder path : {luaFolderPath}");
 
-				var resultFolderPath = argumentArray[0];
+				var resultFolderPath = argumentArray[1];
 
 				FileUtility.CreateFolder(resultFolderPath);
 
-				var convertFilePath = Path.Combine(resultFolderPath,"Encryption.key");
-				var publicFilePath = Path.Combine(resultFolderPath,"PublicKey.pem");
-				var privateFilePath = Path.Combine(resultFolderPath,"PrivateKey.pem");
+				foreach(var filePath in FileUtility.GetFilePathArray(luaFolderPath))
+				{
+					var newFilePath = filePath.Replace(luaFolderPath,resultFolderPath);
 
-				FileUtility.WriteTextToFile(convertFilePath,keyInfo.ConvertKey);
-				FileUtility.WriteTextToFile(publicFilePath,FileUtility.WrapPemFormat(keyInfo.PublicKey,"PUBLIC KEY"));
-				FileUtility.WriteTextToFile(privateFilePath,FileUtility.WrapPemFormat(keyInfo.PrivateKey,"PRIVATE KEY"));
+					newFilePath = FileUtility.ChangeExtension(newFilePath,".lua.bytes");
+
+					FileUtility.CreateFolder(newFilePath);
+
+					FileUtility.CopyFile(filePath,newFilePath,true);
+				}
 
 				Console.WriteLine("Press enter to exit...");
 				Console.ReadLine();

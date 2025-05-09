@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace KZLib.KZUtility
@@ -11,33 +10,30 @@ namespace KZLib.KZUtility
 		/// <param name="folderPath">The absolute folder path.</param>
 		public static IEnumerable<string> FindFilePathGroup(string folderPath,bool includeSubFolder = false)
 		{
-			if(!IsFolderExist(folderPath))
+			if(IsFolderExist(folderPath))
 			{
-				yield break;
-			}
+				var folderQueue = new Queue<string>();
 
-			var folderQueue = new Queue<string>();
-			folderQueue.Enqueue(folderPath);
+				folderQueue.Enqueue(folderPath);
 
-			while(folderQueue.Count > 0)
-			{
-				var currentFolderPath = folderQueue.Dequeue();
-
-				foreach(var filePath in GetFilePathArray(folderPath))
+				while(folderQueue.Count > 0)
 				{
-					if(filePath.EndsWith(".meta"))
+					var currentFolderPath = folderQueue.Dequeue();
+
+					foreach(var filePath in GetFilePathArray(folderPath))
 					{
-						continue;
+						if(!string.IsNullOrEmpty(filePath) && !filePath.EndsWith(".meta"))
+						{
+							yield return filePath;
+						}
 					}
 
-					yield return filePath;
-				}
-
-				if(includeSubFolder)
-				{
-					foreach(var subFolderPath in GetFolderPathArray(currentFolderPath))
+					if(includeSubFolder)
 					{
-						folderQueue.Enqueue(subFolderPath);
+						foreach(var subFolderPath in GetFolderPathArray(currentFolderPath))
+						{
+							folderQueue.Enqueue(subFolderPath);
+						}
 					}
 				}
 			}
@@ -46,61 +42,95 @@ namespace KZLib.KZUtility
 		/// <param name="folderPath">The absolute folder path.</param>
 		public static string FindFileInFolder(string folderPath,string targetName)
 		{
-			if(!IsFolderExist(folderPath))
+			if(IsFolderExist(folderPath))
 			{
-				return string.Empty;
-			}
-
-			foreach(var filePath in GetFilePathArray(folderPath))
-			{
-				var fileName = GetFileName(filePath);
-
-				if(string.Equals(fileName,targetName))
+				foreach(var filePath in GetFilePathArray(folderPath))
 				{
-					return filePath;
+					var fileName = GetFileName(filePath);
+
+					if(string.Equals(fileName,targetName))
+					{
+						return filePath;
+					}
 				}
-			}
 
-			foreach(var subFolderPath in GetFolderPathArray(folderPath))
-			{
-				var result = FindFileInFolder(subFolderPath,targetName);
-
-				if(result != null)
+				foreach(var subFolderPath in GetFolderPathArray(folderPath))
 				{
-					return result;
+					var result = FindFileInFolder(subFolderPath,targetName);
+
+					if(result != null)
+					{
+						return result;
+					}
 				}
 			}
 
 			return string.Empty;
 		}
 
-		/// <param name="folderPath">The absolute folder path.</param>
-		public static IEnumerable<string> FindExtensionInFolder(string folderPath,string extension)
+		public static IEnumerable<string> FindAllExcelFileGroupByFolderPath(string absoluteFolderPath)
 		{
-			if(!IsFolderExist(folderPath))
-			{
-				yield break;
-			}
-
-			foreach(var filePath in GetFilePathArray(folderPath,extension))
+			foreach(var filePath in FindAllFileGroupByFolderPath(absoluteFolderPath,s_excelExtensionArray))
 			{
 				yield return filePath;
 			}
+		}
 
-			foreach(var subFolderPath in GetFolderPathArray(folderPath))
+		public static IEnumerable<string> FindAllFileGroupByFolderPath(string absoluteFolderPath,string[] extensionArray)
+		{
+			foreach(var extension in extensionArray)
 			{
-				foreach(var filePath in FindExtensionInFolder(subFolderPath,extension))
+				foreach(var filePath in GetFilePathArray(absoluteFolderPath,extension))
 				{
-					yield return filePath;
+					if(!string.IsNullOrEmpty(filePath))
+					{
+						yield return filePath;
+					}
+				}
+			}
+		}
+
+		public static IEnumerable<string> FindAllExtensionGroupInFolder(string absoluteFolderPath,string extension)
+		{
+			var folderQueue = new Queue<string>();
+
+			folderQueue.Enqueue(absoluteFolderPath);
+
+			while(folderQueue.Count > 0)
+			{
+				var folderPath = folderQueue.Dequeue();
+
+				foreach (var filePath in GetFilePathArray(folderPath, extension))
+				{
+					if(!string.IsNullOrEmpty(filePath))
+					{
+						yield return filePath;
+					}
+				}
+
+				foreach (var subFolderPath in GetFolderPathArray(folderPath))
+				{
+					if(!string.IsNullOrEmpty(subFolderPath))
+					{
+						folderQueue.Enqueue(subFolderPath);
+					}
 				}
 			}
 		}
 
 		public static string FindFilePath(List<string> filePathList,string text)
 		{
-			var filePath = filePathList.Find(x => x.Contains(text));
+			for(var i=0;i<filePathList.Count;i++)
+			{
+				var filePath = filePathList[i];
 
-			return IsPathExist(filePath) ? filePath : string.Empty;
+				if(filePath.Contains(text) && IsPathExist(filePath))
+				{
+					return filePath;
+				}
+			}
+
+			return string.Empty;
 		}
 	}
 }

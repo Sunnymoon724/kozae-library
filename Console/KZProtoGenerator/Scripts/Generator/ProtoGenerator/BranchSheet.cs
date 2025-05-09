@@ -1,10 +1,11 @@
 ﻿using KZLib.KZTool;
+using KZLib.KZUtility;
 
 namespace KZConsole.KZProto
 {
 	public class BranchSheet(string branchName,string branchFilePath)
 	{
-		private const string c_sheet_name = "Branch";
+		private const string c_sheetName = "Branch";
 
 		private readonly Dictionary<string,bool> m_branchStateDict = [];
 
@@ -12,12 +13,12 @@ namespace KZConsole.KZProto
 		{
 			var excelReader = new ExcelReader(branchFilePath);
 
-			if(!excelReader.IsExistSheetName(c_sheet_name))
+			if(!excelReader.IsExistSheetName(c_sheetName))
 			{
-				throw new NullReferenceException($"{c_sheet_name} is not exist in {branchFilePath}.");
+				throw new NullReferenceException($"{c_sheetName} is not exist in {branchFilePath}.");
 			}
 
-			var schemeArray = excelReader.GetSchemeArray(c_sheet_name);
+			var schemeArray = excelReader.FindSchemeArray(c_sheetName);
 
 			if(schemeArray.Length == 0 || !schemeArray.Contains(branchName))
 			{
@@ -28,8 +29,8 @@ namespace KZConsole.KZProto
 
 			m_branchStateDict.Clear();
 
-			var branchJaggedArray = excelReader.MergeCellArrayInColumns(c_sheet_name,Global.EXCEL_SCHEME_INDEX,Array.IndexOf(schemeArray,branchName));
-			var branchArray = branchJaggedArray[Global.EXCEL_SCHEME_INDEX];
+			var branchJaggedArray = excelReader.MergeCellArrayInColumns(c_sheetName,0,Array.IndexOf(schemeArray,branchName));
+			var branchArray = branchJaggedArray[0];
 
 			for(int i=1;i<branchArray.Length;i++)
 			{
@@ -65,7 +66,7 @@ namespace KZConsole.KZProto
 
 			if(!m_branchStateDict.TryGetValue(branch,out var result))
 			{
-				throw new SheetConvertException($"{branch} not exist.",filePath,sheetName,line);
+				throw new KZSheetException($"{branch} not exist.",filePath,sheetName,line);
 			}
 
 			return result;

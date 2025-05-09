@@ -11,7 +11,7 @@ namespace KZLib.KZUtility
 		/// <summary>
 		/// It is based on the Assets folder.
 		/// </summary>
-		public static string GetAbsolutePath(string path,bool isIncludeAssets)
+		public static string GetAbsolutePath(string path,bool isIncludeAsset)
 		{
 			if(!IsPathExist(path))
 			{
@@ -23,10 +23,10 @@ namespace KZLib.KZUtility
 			{
 				return NormalizePath(path);
 			}
-			else if(isIncludeAssets)
+			else if(isIncludeAsset)
 			{
-				//? Change AssetsPath
-				return NormalizePath(Path.GetFullPath(GetAssetsPath(path)));
+				//? Change AssetPath
+				return NormalizePath(Path.GetFullPath(GetAssetPath(path)));
 			}
 			else
 			{
@@ -75,9 +75,9 @@ namespace KZLib.KZUtility
 			return IsPathExist(path) ? Path.ChangeExtension(path,extension) : string.Empty;
 		}
 
-		public static string GetParentAbsolutePath(string path,bool isIncludeAssets)
+		public static string GetParentAbsolutePath(string path,bool isIncludeAsset)
 		{
-			return IsPathExist(path) ? GetAbsolutePath(GetParentPath(path),isIncludeAssets) : string.Empty;
+			return IsPathExist(path) ? GetAbsolutePath(GetParentPath(path),isIncludeAsset) : string.Empty;
 		}
 
 		/// <summary>
@@ -90,10 +90,10 @@ namespace KZLib.KZUtility
 				return string.Empty;
 			}
 
-			return IsIncludeAssetsHeader(path) ? RemoveAssetsHeader(path) : NormalizePath(path);
+			return IsIncludeAssetHeader(path) ? RemoveAssetHeader(path) : NormalizePath(path);
 		}
 
-		public static string GetAssetsPath(string path)
+		public static string GetAssetPath(string path)
 		{
 			if(!IsPathExist(path))
 			{
@@ -103,7 +103,7 @@ namespace KZLib.KZUtility
 			return Path.Combine("Assets",GetLocalPath(path));
 		}
 
-		public static bool IsIncludeAssetsHeader(string path)
+		public static bool IsIncludeAssetHeader(string path)
 		{
 			if(!IsPathExist(path))
 			{
@@ -113,7 +113,7 @@ namespace KZLib.KZUtility
 			return path.Contains("Assets");
 		}
 
-		public static bool IsStartWithAssetsHeader(string path)
+		public static bool IsStartWithAssetHeader(string path)
 		{
 			if(!IsPathExist(path))
 			{
@@ -208,7 +208,7 @@ namespace KZLib.KZUtility
 			return path[headerLength..];
 		}
 
-		public static string RemoveAssetsHeader(string path)
+		public static string RemoveAssetHeader(string path)
 		{
 			if(!IsPathExist(path))
 			{
@@ -218,27 +218,27 @@ namespace KZLib.KZUtility
 			return RemoveHeaderInPath(path,"Assets");
 		}
 
-		// private static string _GetUniquePath(string path)
-		// {
-		// 	if(!IsPathExist(path))
-		// 	{
-		// 		return string.Empty;
-		// 	}
+		private static string _GetUniquePath(string path)
+		{
+			if(!IsPathExist(path))
+			{
+				return string.Empty;
+			}
 
-		// 	var directory = GetParentPath(path);
-		// 	var name = GetOnlyName(path);
-		// 	var extension = GetExtension(path);
+			var directory = GetParentPath(path);
+			var name = GetOnlyName(path);
+			var extension = GetExtension(path);
 
-		// 	var count = 1;
-		// 	var newPath = path;
+			var count = 1;
+			var newPath = path;
 
-		// 	while(IsFileExist(newPath))
-		// 	{
-		// 		newPath = Path.Combine(directory,$"{name} ({count}){extension}");
-		// 		count++;
-		// 	}
+			while(IsFileExist(newPath))
+			{
+				newPath = Path.Combine(directory,$"{name} ({count}){extension}");
+				count++;
+			}
 
-		// 	return newPath;
-		// }
+			return newPath;
+		}
 	}
 }

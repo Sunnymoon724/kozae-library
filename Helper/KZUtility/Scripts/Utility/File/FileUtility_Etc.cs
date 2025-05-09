@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Linq;
 
 namespace KZLib.KZUtility
 {
@@ -25,15 +24,18 @@ namespace KZLib.KZUtility
 			return (long) (GetFileSizeByte(filePath)/(double)c_megaByte);
 		}
 
-		public static bool IsExcelFile(string filePath)
+		public static bool IsExcelFile(string absoluteFilePath)
 		{
-			var fileExtension = Path.GetExtension(filePath).ToLower();
-
-			foreach(var excelExtension in s_excelExtensionArray)
+			if(IsFileExist(absoluteFilePath))
 			{
-				if(string.Equals(fileExtension,excelExtension))
+				var fileExtension = Path.GetExtension(absoluteFilePath).ToLower();
+
+				foreach(var excelExtension in s_excelExtensionArray)
 				{
-					return true;
+					if(string.Equals($"*{fileExtension}",excelExtension))
+					{
+						return true;
+					}
 				}
 			}
 

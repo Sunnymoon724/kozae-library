@@ -32,31 +32,5 @@ namespace KZLib.KZUtility
 		{
 			return onRead(filePath);
 		}
-
-		/// <param name="filePath">The absolute file path.</param>
-		public static IEnumerable<string> ReadExcelFileGroupByFolderPath(string folderPath)
-		{
-			foreach(var filePath in ReadFileGroupByFolderPath(folderPath,s_excelExtensionArray))
-			{
-				yield return filePath;
-			}
-		}
-
-		/// <param name="filePath">The absolute file path.</param>
-		public static IEnumerable<string> ReadFileGroupByFolderPath(string folderPath,string[] extensionArray)
-		{
-			if(!IsFolderExist(folderPath))
-			{
-				yield break;
-			}
-
-			foreach(var extension in extensionArray)
-			{
-				foreach(var filePath in Directory.GetFiles(folderPath,extension))
-				{
-					yield return filePath;
-				}
-			}
-		}
 	}
 }

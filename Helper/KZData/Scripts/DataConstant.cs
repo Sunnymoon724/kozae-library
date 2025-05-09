@@ -2,6 +2,12 @@
 {
 	public interface IConfig { }
 
+	public interface IAffix
+	{
+		public void Initialize();
+		public void Release();
+	}
+
 	public interface ICluster { }
 
 	public interface IProto

@@ -11,7 +11,19 @@ namespace KZLib.KZTool
 {
 	public class ExcelReader
 	{
-		private const int c_scheme_index = 0;
+		public readonly struct SchemeInfo
+		{
+			string Title { get; }
+			int Index { get; }
+
+			public SchemeInfo(string title,int index)
+			{
+				Title = title;
+				Index = index;
+			}
+		}
+
+		private const int c_schemeIndex = 0;
 
 		public string FilePath { get; }
 
@@ -111,7 +123,7 @@ namespace KZLib.KZTool
 
 		public int FindPrimaryKeyIndex(string sheetName)
 		{
-			var schemeArray = GetSchemeArray(sheetName);
+			var schemeArray = FindSchemeArray(sheetName);
 
 			for(var i=0;i<schemeArray.Length;i++)
 			{
@@ -127,7 +139,7 @@ namespace KZLib.KZTool
 		/// <summary>
 		/// Get data group in row
 		/// </summary>
-		public string[] GetCellArrayInRow(string sheetName,int index)
+		public string[] FindCellArrayInRow(string sheetName,int index)
 		{
 			var rowArray = _GetRowArray(sheetName);
 
@@ -147,7 +159,7 @@ namespace KZLib.KZTool
 
 			for(var i=0;i<indexArray.Length;i++)
 			{
-				jaggedArray[i] = GetCellArrayInRow(sheetName,indexArray[i]);
+				jaggedArray[i] = FindCellArrayInRow(sheetName,indexArray[i]);
 			}
 
 			return jaggedArray;
@@ -202,7 +214,7 @@ namespace KZLib.KZTool
 			var lastRow = rowArray.Length;
 			startRow = Math.Clamp(startRow,0,lastRow);
 
-			var schemeArray = GetSchemeArray(sheetName);
+			var schemeArray = FindSchemeArray(sheetName);
 
 			// n -> last (get row)
 			for(var i=startRow;i<lastRow;i++)
@@ -368,9 +380,9 @@ namespace KZLib.KZTool
 			return resultArray;
 		}
 
-		public IEnumerable<(string Title,int Index)> GetSchemeGroup(string sheetName)
+		public IEnumerable<SchemeInfo> FindSchemeInfoGroup(string sheetName)
 		{
-			var schemeArray = GetSchemeArray(sheetName);
+			var schemeArray = FindSchemeArray(sheetName);
 
 			for(var i=0;i<schemeArray.Length;i++)
 			{
@@ -389,16 +401,16 @@ namespace KZLib.KZTool
 					}
 				}
 
-				yield return (scheme,i);
+				yield return new SchemeInfo(scheme,i);
 			}
 		}
 
 		/// <summary>
 		/// Get title & index
 		/// </summary>
-		public string[] GetSchemeArray(string sheetName)
+		public string[] FindSchemeArray(string sheetName)
 		{
-			return GetCellArrayInRow(sheetName,c_scheme_index) ?? throw new NullReferenceException($"Scheme is not included in {sheetName}");
+			return FindCellArrayInRow(sheetName,c_schemeIndex) ?? throw new NullReferenceException($"Scheme is not included in {sheetName}");
 		}
 
 		/// <summary>

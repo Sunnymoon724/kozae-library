@@ -44,8 +44,6 @@ namespace KZLib.KZUtility
 				nameof(SoundVolume)			=> new SoundVolumeFormatter() as IMessagePackFormatter<T>,
 				nameof(ScreenResolution)	=> new ScreenResolutionFormatter() as IMessagePackFormatter<T>,
 
-				nameof(Route)				=> new RouteFormatter() as IMessagePackFormatter<T>,
-
 				_ => throw new NotSupportedException($"NotSupported type {objectType.Name}"),
 			};
 		}
@@ -340,27 +338,5 @@ namespace KZLib.KZUtility
 			}
 		}
 		#endregion ScreenResolution
-
-		#region Route
-		internal class RouteFormatter : IMessagePackFormatter<Route>
-		{
-			public void Serialize(ref MessagePackWriter writer,Route soundVolume,MessagePackSerializerOptions options)
-			{
-				writer.WriteArrayHeader(1);
-
-				writer.Write(soundVolume.AbsolutePath);
-			}
-
-			public Route Deserialize(ref MessagePackReader reader,MessagePackSerializerOptions options)
-			{
-				if(!reader.TryReadArrayHeader(out int length) || length != 1)
-				{
-					throw new InvalidOperationException($"Reader error. or {length} != 3");
-				}
-
-				return new Route(reader.ReadString() ?? string.Empty);
-			}
-		}
-		#endregion Route
 	}
 }

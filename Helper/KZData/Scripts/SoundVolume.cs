@@ -120,7 +120,7 @@ namespace KZLib.KZData
 
 		public static SoundVolume Parse(ReadOnlySpan<char> value,IFormatProvider provider)
 		{
-			return Parse(value.ToString(),CultureInfo.InvariantCulture);
+			return Parse(value.ToString(),provider);
 		}
 
 		public static SoundVolume Parse(string value)
@@ -130,15 +130,15 @@ namespace KZLib.KZData
 
 		public static SoundVolume Parse(string value,IFormatProvider provider)
 		{
-			var levelRegex = new Regex(@"level\s*:\s*(\d+)");
+			var levelRegex = new Regex(@"level\s*:\s*(\d+(\.\d+)?)");
 			var levelMatch = levelRegex.Match(value);
 
-			if(!levelMatch.Success || !float.TryParse(levelMatch.Groups[1].Value,NumberStyles.AllowThousands,provider,out var level))
+			if(!levelMatch.Success || !float.TryParse(levelMatch.Groups[1].Value,NumberStyles.AllowDecimalPoint,provider,out var level))
 			{
 				throw new FormatException($"Invalid level format in '{value}'");
 			}
 
-			var muteRegex = new Regex(@"mute\s*:\s*(true|false)");
+			var muteRegex = new Regex(@"mute\s*:\s*(true|false)",RegexOptions.IgnoreCase);
 			var muteMatch = muteRegex.Match(value);
 
 			if(!muteMatch.Success || !bool.TryParse(muteMatch.Groups[1].Value,out var mute))
@@ -149,32 +149,33 @@ namespace KZLib.KZData
 			return new SoundVolume(level,mute);
 		}
 
-		public static bool TryParse(ReadOnlySpan<char> value,out SoundVolume resolution)
+
+		public static bool TryParse(ReadOnlySpan<char> value,out SoundVolume soundVolume)
 		{
-			return TryParse(value,CultureInfo.InvariantCulture,out resolution);
+			return TryParse(value,CultureInfo.InvariantCulture,out soundVolume);
 		}
 
-		public static bool TryParse(ReadOnlySpan<char> value,IFormatProvider provider,out SoundVolume resolution)
+		public static bool TryParse(ReadOnlySpan<char> value,IFormatProvider provider,out SoundVolume soundVolume)
 		{
-			return TryParse(value.ToString(),provider,out resolution);
+			return TryParse(value.ToString(),provider,out soundVolume);
 		}
 
-		public static bool TryParse(string value,out SoundVolume resolution)
+		public static bool TryParse(string value,out SoundVolume soundVolume)
 		{
-			return TryParse(value,CultureInfo.InvariantCulture,out resolution);
+			return TryParse(value,CultureInfo.InvariantCulture,out soundVolume);
 		}
 
-		public static bool TryParse(string value,IFormatProvider provider,out SoundVolume resolution)
+		public static bool TryParse(string value,IFormatProvider provider,out SoundVolume soundVolume)
 		{
 			try
 			{
-				resolution = Parse(value,provider);
+				soundVolume = Parse(value,provider);
 
 				return true;
 			}
 			catch
 			{
-				resolution = default;
+				soundVolume = default;
 
 				return false;
 			}

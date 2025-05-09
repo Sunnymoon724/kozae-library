@@ -95,7 +95,7 @@ namespace KZLib.KZUtility
 			}
 
 			//? destinationPath == unique file path
-			var uniquePath = GetUniquePath(destinationPath);
+			var uniquePath = _GetUniquePath(destinationPath);
 
 			WriteByteToFile(uniquePath,compress);
 		}
@@ -149,7 +149,7 @@ namespace KZLib.KZUtility
 			}
 
 			//? destinationPath == unique folder path
-			var uniquePath = GetUniquePath(destinationPath);
+			var uniquePath = _GetUniquePath(destinationPath);
 
 			CreateFolder(uniquePath);
 

@@ -38,8 +38,9 @@ namespace KZLib.KZUtility
 					}
 
 					var assetPath = Path.Combine("Assets","Resources","ScriptableObject");
+					var instancePath = Path.Combine(Directory.GetCurrentDirectory(),assetPath);
 
-					Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(),assetPath));
+					Directory.CreateDirectory(instancePath);
 
 					AssetDatabase.CreateAsset(s_instance,Path.Combine(assetPath,$"{typeName}.asset"));
 					AssetDatabase.Refresh();

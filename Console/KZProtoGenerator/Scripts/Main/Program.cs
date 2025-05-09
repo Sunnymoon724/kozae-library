@@ -16,7 +16,6 @@ namespace KZConsole
 				Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
 
 				var currentPath = Directory.GetCurrentDirectory();
-				
 				var protoFolderPath = Path.GetFullPath(Path.Combine(currentPath,argumentArray[0]));
 
 				Console.WriteLine($"Proto folder path : {protoFolderPath}");
@@ -27,7 +26,7 @@ namespace KZConsole
 
 				projectManager.CreateProject();
 
-				var protoFilePathList = new List<string>(FileUtility.ReadExcelFileGroupByFolderPath(protoFolderPath));
+				var protoFilePathList = new List<string>(FileUtility.FindAllExcelFileGroupByFolderPath(protoFolderPath));
 
 				var enumFilePath = FileUtility.FindFilePath(protoFilePathList,"Enum");
 				var branchFilePath = FileUtility.FindFilePath(protoFilePathList,"Branch");
@@ -60,8 +59,8 @@ namespace KZConsole
 				var destinationDllFilePath = Path.Combine(resultFolderPath,"KZProto.dll");
 				var destinationPdbFilePath = Path.Combine(resultFolderPath,"KZProto.pdb");
 
-				File.Move(sourceDllFilePath,destinationDllFilePath,true);
-				File.Move(sourcePdbFilePath,destinationPdbFilePath,true);
+				FileUtility.MoveFile(sourceDllFilePath,destinationDllFilePath,true);
+				FileUtility.MoveFile(sourcePdbFilePath,destinationPdbFilePath,true);
 
 				Console.WriteLine("Press enter to exit...");
 				Console.ReadLine();

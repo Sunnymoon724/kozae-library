@@ -10,7 +10,7 @@ namespace KZConsole
 {
 	public class ProtoGenerator
 	{
-		private const int c_value_index = 3;
+		private const int c_valueIndex = 3;
 
 		private static readonly string[] s_exception_file_name_array = ["Branch","Enum"];
 
@@ -132,7 +132,7 @@ namespace KZConsole
 			}
 
 			var indexListDict = new Dictionary<Type,List<int>>();
-			var typeNameArray = excelReader.GetCellArrayInRow(sheetNameArray[0],Global.EXCEL_TYPE_INDEX);
+			var typeNameArray = excelReader.FindCellArrayInRow(sheetNameArray[0],1);
 
 			for(var i=1;i<sheetNameArray.Length;i++)
 			{
@@ -168,7 +168,7 @@ namespace KZConsole
 		private static List<object> _GenerateDataList(ExcelReader excelReader,string[][] rowArray,string sheetName,Type dataType,out string csvText)
 		{
 			var dataList = new List<object>();
-			var schemeArray = excelReader.GetSchemeArray(sheetName);
+			var schemeArray = excelReader.FindSchemeArray(sheetName);
 
 			var csvBuilder = new StringBuilder();
 			csvBuilder.AppendLine(string.Join(",",schemeArray));
@@ -195,7 +195,7 @@ namespace KZConsole
 		private string[][] _GenerateRowArray(ExcelReader excelReader,string sheetName)
 		{
 			var keyHashSet = new HashSet<string>();
-			var schemeArray = excelReader.GetSchemeArray(sheetName);
+			var schemeArray = excelReader.FindSchemeArray(sheetName);
 			var branchIndex = _FindBranchIndex(schemeArray,excelReader.FilePath,sheetName);
 
 			var rowSize = excelReader.GetRowSize(sheetName);
@@ -203,9 +203,9 @@ namespace KZConsole
 
 			var rowList = new List<string[]>();
 
-			for(var i=c_value_index;i<rowSize;i++)
+			for(var i=c_valueIndex;i<rowSize;i++)
 			{
-				var cellArray = excelReader.GetCellArrayInRow(sheetName,i);
+				var cellArray = excelReader.FindCellArrayInRow(sheetName,i);
 
 				// skip empty
 				if(cellArray.Length == 0)
@@ -236,7 +236,7 @@ namespace KZConsole
 
 			if(keyHashSet.Contains(primaryKey))
 			{
-				throw new SheetConvertException($"{primaryKey} is already added.",excelReader.FilePath,sheetName,rowIndex);
+				throw new KZSheetException($"{primaryKey} is already added.",excelReader.FilePath,sheetName,rowIndex);
 			}
 
 			keyHashSet.Add(primaryKey);
@@ -256,13 +256,13 @@ namespace KZConsole
 				}
 			}
 
-			throw new SheetConvertException($"$Branch is not included.",filePath,sheetName,0);
+			throw new KZSheetException($"$Branch is not included.",filePath,sheetName,0);
 		}
 
 		private string[][] _GenerateCustomRowArray(ExcelReader excelReader,string mainSheetName,Dictionary<Type,List<int>> schemeIndexListDict)
         {
             var keyHashSet = new HashSet<string>();
-            var schemeArray = excelReader.GetSchemeArray(mainSheetName);
+            var schemeArray = excelReader.FindSchemeArray(mainSheetName);
             var branchIndex = _FindBranchIndex(schemeArray,excelReader.FilePath,mainSheetName);
 
             var rowSize = excelReader.GetRowSize(mainSheetName);
@@ -271,9 +271,9 @@ namespace KZConsole
 			var rowList = new List<string[]>();
 			var subSheetDataDict = _GenerateSubSheetDataForCustomRow(excelReader,schemeIndexListDict);
 
-			for(var i=c_value_index;i<rowSize;i++)
+			for(var i=c_valueIndex;i<rowSize;i++)
 			{
-				var cellArray = excelReader.GetCellArrayInRow(mainSheetName,i);
+				var cellArray = excelReader.FindCellArrayInRow(mainSheetName,i);
 
 				// skip empty
 				if(cellArray.Length == 0)
@@ -302,14 +302,14 @@ namespace KZConsole
 			foreach(var pair in schemeIndexListDict)
 			{
 				var subSheetName = $"+{pair.Key.Name}";
-				var schemeArray = excelReader.GetSchemeArray(subSheetName);
+				var schemeArray = excelReader.FindSchemeArray(subSheetName);
 
 				var rowSize = excelReader.GetRowSize(subSheetName);
 				var keyIndex = excelReader.FindPrimaryKeyIndex(subSheetName);
 
-				for(var i=c_value_index;i<rowSize;i++)
+				for(var i=c_valueIndex;i<rowSize;i++)
 				{
-					var cellArray = excelReader.GetCellArrayInRow(subSheetName,i);
+					var cellArray = excelReader.FindCellArrayInRow(subSheetName,i);
 
 					// skip empty
 					if(cellArray.Length == 0)
@@ -321,7 +321,7 @@ namespace KZConsole
 
 					if(dataDict.ContainsKey(primaryKey))
 					{
-						throw new SheetConvertException($"{primaryKey} is already added.",excelReader.FilePath,subSheetName,i);
+						throw new KZSheetException($"{primaryKey} is already added.",excelReader.FilePath,subSheetName,i);
 					}
 
 					var text = JsonConvert.SerializeObject(excelReader.Deserialize(schemeArray,pair.Key,cellArray,i),new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });

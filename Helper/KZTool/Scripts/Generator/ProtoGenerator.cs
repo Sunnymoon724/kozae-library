@@ -82,13 +82,8 @@ namespace KZLib.KZTool
 		// 	result = $"{configFilePath} generated";
 		// }
 
-		public static void GenerateMotionProtoFile(string protoFolderPath,out string result)
+		public static void GenerateMotionProtoFile(string protoFolderPath)
 		{
-			if(!Directory.Exists(protoFolderPath))
-			{
-				throw new NullReferenceException($"{protoFolderPath} is not exist");
-			}
-
 			var workbook = new XLWorkbook();
 			var motionSheet = workbook.AddWorksheet("+Motion");
 
@@ -102,7 +97,7 @@ namespace KZLib.KZTool
 			eventSheet.Cell(2,1).InsertData(new string[] { "int", "string", "Vector3", "string" });
 			eventSheet.Cell(3,1).InsertData(new string[] { "%순서", "이펙트 경로", "위치 오프셋", "시작 위치" });
 
-			CommonUtility.GenerateExcelFile(protoFolderPath,"Motion",workbook,out result);
+			CommonUtility.GenerateExcelFile(protoFolderPath,"Motion",workbook);
 		}
 	}
 }
