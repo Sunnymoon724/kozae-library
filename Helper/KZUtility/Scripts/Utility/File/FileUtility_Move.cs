@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace KZLib.KZUtility
@@ -8,6 +9,7 @@ namespace KZLib.KZUtility
 		/// <param name="_destinationPath">The absolute path of the folder.</param>
 		public static void MoveFile(string sourceFilePath,string destinationFolderPath,bool isOverride)
 		{
+			//? not exist file -> return
 			if(!IsFileExist(sourceFilePath))
 			{
 				return;
@@ -16,6 +18,9 @@ namespace KZLib.KZUtility
 			var fileName = GetFileName(sourceFilePath);
 			var destinationFilePath = Path.Combine(destinationFolderPath,fileName);
 
+			CreateFolder(destinationFolderPath);
+
+			//? exist file -> return
 			if(IsFileExist(destinationFilePath))
 			{
 				if(!isOverride)

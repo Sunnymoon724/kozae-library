@@ -49,18 +49,15 @@ namespace KZConsole
 				projectManager.DeleteProject();
 
 				Console.WriteLine("Move dll & pdb file");
-				var resultFolderPath = argumentArray[2];
+				var resultFolderPath = Path.GetFullPath(argumentArray[2]);
 
 				FileUtility.CreateFolder(resultFolderPath);
 
 				var sourceDllFilePath = Path.Combine(outputFolderPath,"KZProto.dll");
 				var sourcePdbFilePath = Path.Combine(outputFolderPath,"KZProto.pdb");
 
-				var destinationDllFilePath = Path.Combine(resultFolderPath,"KZProto.dll");
-				var destinationPdbFilePath = Path.Combine(resultFolderPath,"KZProto.pdb");
-
-				FileUtility.MoveFile(sourceDllFilePath,destinationDllFilePath,true);
-				FileUtility.MoveFile(sourcePdbFilePath,destinationPdbFilePath,true);
+				FileUtility.MoveFile(sourceDllFilePath,resultFolderPath,true);
+				FileUtility.MoveFile(sourcePdbFilePath,resultFolderPath,true);
 
 				Console.WriteLine("Press enter to exit...");
 				Console.ReadLine();

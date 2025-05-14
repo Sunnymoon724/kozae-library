@@ -21,9 +21,8 @@ namespace KZConsole
 			m_outputFolderPath = outputFolderPath;
 
 			var sourceDllFilePath = Path.Combine(currentPath,"KZData.dll");
-			var destinationDllPath = Path.Combine(m_projectFolderPath,Path.GetFileName(sourceDllFilePath));
 
-			FileUtility.CopyFile(sourceDllFilePath,destinationDllPath,true);
+			FileUtility.CopyFile(sourceDllFilePath,m_projectFolderPath,true);
 		}
 
 		public void CreateProject()
