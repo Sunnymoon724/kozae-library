@@ -3,6 +3,7 @@ using System;
 using MessagePack;
 using MessagePack.Formatters;
 using KZLib.KZData;
+using MessagePack.Resolvers;
 
 namespace KZLib.KZUtility
 {
@@ -22,29 +23,29 @@ namespace KZLib.KZUtility
 
 		public IMessagePackFormatter<T>? GetFormatter<T>()
 		{
-			var objectType = typeof(T);
+			var type = typeof(T);
 
-			return objectType.Name switch
+			return type.Name switch
 			{
-				nameof(Color)				=> new ColorFormatter() as IMessagePackFormatter<T>,
-				nameof(Color32)				=> new Color32Formatter() as IMessagePackFormatter<T>,
+				nameof(Color)				=> new ColorFormatter()				as IMessagePackFormatter<T>,
+				nameof(Color32)				=> new Color32Formatter()			as IMessagePackFormatter<T>,
 
-				nameof(Vector2)				=> new Vector2Formatter() as IMessagePackFormatter<T>,
-				nameof(Vector3)				=> new Vector3Formatter() as IMessagePackFormatter<T>,
-				nameof(Vector4)				=> new Vector4Formatter() as IMessagePackFormatter<T>,
+				nameof(Vector2)				=> new Vector2Formatter()			as IMessagePackFormatter<T>,
+				nameof(Vector3)				=> new Vector3Formatter()			as IMessagePackFormatter<T>,
+				nameof(Vector4)				=> new Vector4Formatter()			as IMessagePackFormatter<T>,
 
-				nameof(Vector2Int)			=> new Vector2IntFormatter() as IMessagePackFormatter<T>,
-				nameof(Vector3Int)			=> new Vector2IntFormatter() as IMessagePackFormatter<T>,
+				nameof(Vector2Int)			=> new Vector2IntFormatter()		as IMessagePackFormatter<T>,
+				nameof(Vector3Int)			=> new Vector3IntFormatter()		as IMessagePackFormatter<T>,
 
-				nameof(Quaternion)			=> new QuaternionFormatter() as IMessagePackFormatter<T>,
+				nameof(Quaternion)			=> new QuaternionFormatter()		as IMessagePackFormatter<T>,
 
-				nameof(Rect)				=> new RectFormatter() as IMessagePackFormatter<T>,
-				nameof(RectInt)				=> new RectIntFormatter() as IMessagePackFormatter<T>,
+				nameof(Rect)				=> new RectFormatter()				as IMessagePackFormatter<T>,
+				nameof(RectInt)				=> new RectIntFormatter()			as IMessagePackFormatter<T>,
 
-				nameof(SoundVolume)			=> new SoundVolumeFormatter() as IMessagePackFormatter<T>,
-				nameof(ScreenResolution)	=> new ScreenResolutionFormatter() as IMessagePackFormatter<T>,
+				nameof(SoundVolume)			=> new SoundVolumeFormatter()		as IMessagePackFormatter<T>,
+				nameof(ScreenResolution)	=> new ScreenResolutionFormatter()	as IMessagePackFormatter<T>,
 
-				_ => throw new NotSupportedException($"NotSupported type {objectType.Name}"),
+				_ => StandardResolver.Instance.GetFormatter<T>()
 			};
 		}
 

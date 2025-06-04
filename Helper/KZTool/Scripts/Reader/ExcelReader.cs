@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ExcelDataReader;
+using ClosedXML.Excel;
 using KZLib.KZUtility;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -13,8 +13,8 @@ namespace KZLib.KZTool
 	{
 		public readonly struct SchemeInfo
 		{
-			string Title { get; }
-			int Index { get; }
+			public string Title { get; }
+			public int Index { get; }
 
 			public SchemeInfo(string title,int index)
 			{
@@ -38,36 +38,39 @@ namespace KZLib.KZTool
 				throw new FileNotFoundException($"{filePath} is not exist");
 			}
 
-			using var stream = new FileStream(filePath,FileMode.Open,FileAccess.Read);
-			using var reader = ExcelReaderFactory.CreateReader(stream);
-
 			FilePath = filePath;
 
-			var dataSet = reader.AsDataSet();
-			var sheetCollection = dataSet.Tables;
+			var workbook = new XLWorkbook(filePath);
+			var worksheets = workbook.Worksheets;
 
-			for(var i=0;i<sheetCollection.Count;i++)
+			for(var i=0;i<worksheets.Count;i++)
 			{
-				var sheet = sheetCollection[i];
-				var rowCollection = sheet.Rows;
+				var worksheet = worksheets.Worksheet(i+1);
 
-				var rowCount = rowCollection.Count;
+				var range = worksheet.RangeUsed();
+
+				if(range == null)
+				{
+					continue;
+				}
+
+				var rowCount = range.RowCount();
 				var rowArray = new string[rowCount][];
 
 				for(var j=0;j<rowCount;j++)
 				{
-					var cellArray = rowCollection[j].ItemArray;
-					var cellCount = cellArray.Length;
+					var row = range.Row(j+1);
+					var cellCount = row.CellCount();
 
 					rowArray[j] = new string[cellCount];
 
 					for(var k=0;k<cellCount;k++)
 					{
-						rowArray[j][k] = cellArray[k]?.ToString() ?? string.Empty;
+						rowArray[j][k] = row.Cell(k+1).GetValue<string>() ?? string.Empty;
 					}
 				}
 
-				m_sheetDict.Add(sheet.TableName,rowArray);
+				m_sheetDict.Add(worksheet.Name,rowArray);
 			}
 		}
 
