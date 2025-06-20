@@ -90,10 +90,6 @@ namespace KZLib.KZUtility
 			{
 				onAction?.Invoke();
 			}
-			else
-			{
-				throw new InvalidOperationException($"No valid listener for event '{eventName}' or incorrect listener type.");
-			}
 		}
 
 		public static void SendEvent<TParam>(string eventName,TParam param)
@@ -101,10 +97,6 @@ namespace KZLib.KZUtility
 			if(m_listenerDict.TryGetValue(eventName,out var listener) && listener is Action<TParam> onAction)
 			{
 				onAction?.Invoke(param);
-			}
-			else
-			{
-				throw new InvalidOperationException($"No valid listener for event '{eventName}' or incorrect listener type.");
 			}
 		}
 
