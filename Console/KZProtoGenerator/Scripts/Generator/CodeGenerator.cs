@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text;
 using KZLib.KZTool;
@@ -85,12 +86,14 @@ namespace KZConsole
 		private void _GenerateProtoCode(string outputFolderPath)
 		{
 			var templateText = _ReadEmbeddedResource("KZProtoGenerator.Templates.ProtoTemplate.txt");
-
-			foreach(var protoFilePath in m_protoFilePathList)
+			
+			var protoCodeBag = new ConcurrentBag<string>();
+			
+			Parallel.ForEach(m_protoFilePathList,(protoFilePath)=>
 			{
 				if(_IsExceptionPath(protoFilePath))
 				{
-					continue;
+					return;
 				}
 
 				var excelReader = new ExcelReader(protoFilePath);
@@ -102,7 +105,7 @@ namespace KZConsole
 				{
 					Console.WriteLine($"Warning : {fileName} is not include +Sheet");
 
-					continue;
+					return;
 				}
 
 				var mainClassCode = string.Empty;
@@ -133,8 +136,10 @@ namespace KZConsole
 
 				FileUtility.WriteTextToFile(protoCodeFilePath,protoTemplate);
 
-				m_protoCodeList.Add(protoTemplate);
-			}
+				protoCodeBag.Add(protoTemplate);
+			});
+
+			m_protoCodeList.AddRange(protoCodeBag);
 		}
 
 		private static string _GenerateClassTemplate(ExcelReader excelReader,string sheetName,string className,string filePath)
@@ -179,7 +184,7 @@ namespace KZConsole
 				var type = protoJaggedArray[1][i];
 
 				propertyBuilder.Append($"\t\t[Key({keyIndex++})]{Environment.NewLine}");
-				propertyBuilder.Append($"\t\tpublic {type} {property} {{ get; private set; }}{Environment.NewLine}");
+				propertyBuilder.Append($"\t\tpublic {type} {property} {{ get; init; }}{Environment.NewLine}");
 
 				propertyList.Add(property);
 			}

@@ -31,7 +31,7 @@ namespace KZConsole
 				FileUtility.WriteTextToFile(publicFilePath,FileUtility.WrapPemFormat(keyInfo.PublicKey,"PUBLIC KEY"));
 				FileUtility.WriteTextToFile(privateFilePath,FileUtility.WrapPemFormat(keyInfo.PrivateKey,"PRIVATE KEY"));
 
-				Console.WriteLine("Press enter to exit...");
+				Console.WriteLine("Program is done");
 				Console.ReadLine();
 			}
 			catch(Exception exception)

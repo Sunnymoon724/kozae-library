@@ -59,7 +59,7 @@ namespace KZConsole
 				FileUtility.MoveFile(sourceDllFilePath,resultFolderPath,true);
 				FileUtility.MoveFile(sourcePdbFilePath,resultFolderPath,true);
 
-				Console.WriteLine("Press enter to exit...");
+				Console.WriteLine("Program is done");
 				Console.ReadLine();
 			}
 			catch(Exception exception)

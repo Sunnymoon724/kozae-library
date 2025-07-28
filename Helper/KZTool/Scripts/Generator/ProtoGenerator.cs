@@ -24,7 +24,7 @@ namespace KZLib.KZTool
 		// 			continue;
 		// 		}
 
-		// 		stringBuilder.Append($"\t\tpublic {scheme.Type} {scheme.Name} {{ get; private set; }} = {scheme.Default}; // {scheme.Comment}{Environment.NewLine}");
+		// 		stringBuilder.Append($"\t\tpublic {scheme.Type} {scheme.Name} {{ get; init; }} = {scheme.Default}; // {scheme.Comment}{Environment.NewLine}");
 		// 	}
 
 		// 	if(stringBuilder.Length <= 0)

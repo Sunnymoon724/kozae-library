@@ -10,7 +10,9 @@ namespace KZConsole
 {
 	public class ProtoGenerator
 	{
+		private const string c_branchTag = "%Branch";
 		private const int c_valueIndex = 3;
+		private const char c_sheetMark = '+';
 
 		private static readonly string[] s_exceptionFileNameArray = ["Branch","Enum"];
 
@@ -109,7 +111,7 @@ namespace KZConsole
 			Console.WriteLine($"-Generate {fileName}");
 
 			// Generate is only +sheet
-			var sheetNameArray = excelReader.FindSheetNameArray(x => x.StartsWith('+'));
+			var sheetNameArray = excelReader.FindSheetNameArray(x => x.StartsWith(c_sheetMark));
 
 			if(sheetNameArray.Length < 1)
 			{
@@ -126,9 +128,9 @@ namespace KZConsole
 			var schemeIndexListDict = _GenerateSubSheet(excelReader,sheetNameArray);
 
 			var rowArray = _GenerateRowArray(excelReader,mainSheetName,schemeIndexListDict);
-			var protoArray = _ConvertProtoArray(excelReader,rowArray,mainSheetName,protoType,out var csvText);
+			var protoArray = _ConvertProtoArray(excelReader,rowArray,mainSheetName,protoType,out var content);
 
-			_SaveCsvFile(csvFolderPath,fileName,csvText);
+			_SaveCsvFile(csvFolderPath,fileName,content);
 
 			return protoArray;
 		}
@@ -145,7 +147,7 @@ namespace KZConsole
 
 			for(var i=1;i<sheetNameArray.Length;i++)
 			{
-				var className = $"{sheetNameArray[i].TrimStart('+')}";
+				var className = sheetNameArray[i].TrimStart(c_sheetMark);
 
 				_ProcessSubSheetTypes(typeNameArray,className,ref indexListDict);
 			}
@@ -174,33 +176,56 @@ namespace KZConsole
 			}
 		}
 
-		private static Array _ConvertProtoArray(ExcelReader excelReader,string[][] rowArray,string sheetName,Type protoType,out string csvText)
+		private static Array _ConvertProtoArray(ExcelReader excelReader,string[][] rowArray,string sheetName,Type protoType,out string content)
 		{
 			var protoArray = Array.CreateInstance(protoType,rowArray.Length);
 			var schemeArray = excelReader.FindSchemeArray(sheetName);
 
-			var csvBuilder = new StringBuilder();
-			csvBuilder.AppendLine(string.Join(",",schemeArray));
+			var builder = new StringBuilder();
+			builder.AppendLine(string.Join(",",schemeArray));
 
 			for(var i=0;i<rowArray.Length;i++)
 			{
-				csvBuilder.AppendLine(string.Join(",",rowArray[i]));
+				var escapedRow = rowArray[i].Select(_EscapeText);
+
+				builder.AppendLine(string.Join(",",escapedRow));
 
 				var proto = excelReader.Deserialize(schemeArray,protoType,rowArray[i],i);
+
+				Console.WriteLine($"proto : {JsonConvert.SerializeObject(proto)}");
 
 				protoArray.SetValue(proto,i);
 			}
 
-			csvText = csvBuilder.ToString();
+			content = builder.ToString();
 
 			return protoArray;
 		}
 
-		private static void _SaveCsvFile(string csvFolderPath,string fileName,string csvText)
+		private static string _EscapeText(string content)
 		{
-			var csvFilePath = Path.Combine(csvFolderPath,$"{fileName}.csv");
+			if(string.IsNullOrEmpty(content))
+			{
+				return string.Empty;
+			}
 
-			FileUtility.WriteTextToFile(csvFilePath,csvText);
+			bool mustQuote = content.Contains(',') || content.Contains('"') || content.Contains('\n') || content.Contains('\r');
+
+			if(mustQuote)
+			{
+				content = content.Replace("\"","\"\"");
+
+				return $"\"{content}\"";
+			}
+
+			return content;
+		}
+
+		private static void _SaveCsvFile(string csvFolderPath,string csvFileName,string content)
+		{
+			var csvFilePath = Path.Combine(csvFolderPath,$"{csvFileName}.csv");
+
+			FileUtility.WriteTextToFile(csvFilePath,content);
 		}
 
 		private bool _ShouldIncludeRow(string[] cellArray,int branchIndex,ExcelReader excelReader,string sheetName,int rowIndex,HashSet<string> keyHashSet,int keyIndex)
@@ -228,7 +253,7 @@ namespace KZConsole
 			{
 				var scheme = schemeArray[i];
 
-				if(string.Equals(scheme,"%Branch"))
+				if(string.Equals(scheme,c_branchTag))
 				{
 					return i;
 				}
@@ -305,9 +330,9 @@ namespace KZConsole
 						throw new KZSheetException($"{primaryKey} is already added.",excelReader.FilePath,subSheetName,i);
 					}
 
-					var text = JsonConvert.SerializeObject(excelReader.Deserialize(schemeArray,pair.Key,cellArray,i),new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+					var content = JsonConvert.SerializeObject(excelReader.Deserialize(schemeArray,pair.Key,cellArray,i),new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 
-					dictionary.Add($"{pair.Key.Name}_{primaryKey}",text);
+					dictionary.Add($"{pair.Key.Name}_{primaryKey}",content);
 				}
 			}
 

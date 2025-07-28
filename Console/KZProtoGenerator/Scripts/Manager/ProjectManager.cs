@@ -33,10 +33,11 @@ namespace KZConsole
 			<PropertyGroup>
 			<TargetFramework>netstandard2.1</TargetFramework>
 			<AssemblyName>KZProto</AssemblyName>
+			<LangVersion>9.0</LangVersion>
 			</PropertyGroup>
 			
 			<ItemGroup>
-			<PackageReference Include=""MessagePack"" Version=""3.1.3"" />
+			<PackageReference Include=""MessagePack"" Version=""3.1.4"" />
 			<PackageReference Include=""Unity3D.SDK"" Version=""2021.1.14.1"" />
 			</ItemGroup>
 			
@@ -51,6 +52,19 @@ namespace KZConsole
 			</Project>";
 
 			FileUtility.WriteTextToFile(m_projectFilePath,projectText);
+
+			var globalFilePath = Path.Combine(m_projectFolderPath,"Global.cs");
+
+			var globalText = @"
+			using System.ComponentModel;
+
+			namespace System.Runtime.CompilerServices
+			{
+				[EditorBrowsable(EditorBrowsableState.Never)]
+				internal class IsExternalInit { }
+			}";
+
+			FileUtility.WriteTextToFile(globalFilePath,globalText);
 		}
 
 		public void BuildProject()

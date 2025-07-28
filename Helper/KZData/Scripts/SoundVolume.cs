@@ -13,13 +13,13 @@ namespace KZLib.KZData
 		public float level;
 		public bool mute;
 
-		private static readonly SoundVolume zeroSoundVolume = new SoundVolume(0.0f,true);
-		private static readonly SoundVolume minSoundVolume = new SoundVolume(0.1f,false);
-		private static readonly SoundVolume maxSoundVolume = new SoundVolume(1.0f,false);
+		private static readonly SoundVolume zeroSoundVolume	= new(0.0f,true);
+		private static readonly SoundVolume minSoundVolume	= new(0.1f,false);
+		private static readonly SoundVolume maxSoundVolume	= new(1.0f,false);
 
-		public static SoundVolume zero => zeroSoundVolume;
-		public static SoundVolume min => minSoundVolume;
-		public static SoundVolume max => maxSoundVolume;
+		public static SoundVolume zero	=> zeroSoundVolume;
+		public static SoundVolume min	=> minSoundVolume;
+		public static SoundVolume max	=> maxSoundVolume;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SoundVolume(float level,bool mute)

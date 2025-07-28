@@ -347,11 +347,11 @@ namespace KZLib.KZTool
 
 			try
 			{
-				var json = JsonConvert.DeserializeObject(cell,targetType);
+                var result = JsonConvert.DeserializeObject(cell,targetType);
 
-				if(json != null)
+				if(result != null)
 				{
-					return json;
+					return result;
 				}
 			}
 			catch(JsonException exception)

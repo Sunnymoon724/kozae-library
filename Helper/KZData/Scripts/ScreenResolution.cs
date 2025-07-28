@@ -11,17 +11,17 @@ namespace KZLib.KZData
 		public int height;
 		public bool fullscreen;
 
-		private static readonly ScreenResolution sdScreenResolution = new ScreenResolution(720,480,true);
-		private static readonly ScreenResolution hdScreenResolution = new ScreenResolution(1280,720,true);
-		private static readonly ScreenResolution fhdScreenResolution = new ScreenResolution(1920,1080,true);
-		private static readonly ScreenResolution qhdScreenResolution = new ScreenResolution(2560,1440,true);
-		private static readonly ScreenResolution uhdScreenResolution = new ScreenResolution(3840,2160,true);
+		private static readonly ScreenResolution sdScreenResolution		= new(720,480,true);
+		private static readonly ScreenResolution hdScreenResolution		= new(1280,720,true);
+		private static readonly ScreenResolution fhdScreenResolution	= new(1920,1080,true);
+		private static readonly ScreenResolution qhdScreenResolution	= new(2560,1440,true);
+		private static readonly ScreenResolution uhdScreenResolution	= new(3840,2160,true);
 
-		public static ScreenResolution sd => sdScreenResolution;
-		public static ScreenResolution hd => hdScreenResolution;
-		public static ScreenResolution fhd => fhdScreenResolution;
-		public static ScreenResolution qhd => qhdScreenResolution;
-		public static ScreenResolution uhd => uhdScreenResolution;
+		public static ScreenResolution sd	=> sdScreenResolution;
+		public static ScreenResolution hd	=> hdScreenResolution;
+		public static ScreenResolution fhd	=> fhdScreenResolution;
+		public static ScreenResolution qhd	=> qhdScreenResolution;
+		public static ScreenResolution uhd	=> uhdScreenResolution;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ScreenResolution(int width,int height,bool fullscreen)
