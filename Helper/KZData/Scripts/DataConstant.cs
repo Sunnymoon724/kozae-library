@@ -6,6 +6,9 @@
 	{
 		public void Initialize();
 		public void Release();
+		
+		public void Set(IAffix newAfx);
+		public void Update(IAffix newAfx);
 	}
 
 	public interface ICluster { }

@@ -192,8 +192,6 @@ namespace KZConsole
 
 				var proto = excelReader.Deserialize(schemeArray,protoType,rowArray[i],i);
 
-				Console.WriteLine($"proto : {JsonConvert.SerializeObject(proto)}");
-
 				protoArray.SetValue(proto,i);
 			}
 

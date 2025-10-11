@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using KZLib.KZUtility;
+﻿using KZLib.KZUtility;
 
 namespace KZConsole
 {
@@ -10,41 +9,28 @@ namespace KZConsole
 		/// </summary>
 		internal static void Main(string[] argumentArray)
 		{
-			try
+			AppRunner.Execute(argumentArray,onPlayProgram);
+		}
+		
+		private static void onPlayProgram(string[] argumentArray)
+		{
+			var currentPath = Directory.GetCurrentDirectory();
+			var luaFolderPath = Path.GetFullPath(Path.Combine(currentPath,argumentArray[0]));
+
+			Console.WriteLine($"Lua folder path : {luaFolderPath}");
+
+			var resultFolderPath = argumentArray[1];
+
+			FileUtility.CreateFolder(resultFolderPath);
+
+			foreach(var filePath in FileUtility.GetFilePathArray(luaFolderPath))
 			{
-				Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-				Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+				var newFilePath = filePath.Replace(luaFolderPath,resultFolderPath);
 
-				var currentPath = Directory.GetCurrentDirectory();
-				var luaFolderPath = Path.GetFullPath(Path.Combine(currentPath,argumentArray[0]));
+				newFilePath = FileUtility.ChangeExtension(newFilePath,".lua.bytes");
 
-				Console.WriteLine($"Lua folder path : {luaFolderPath}");
-
-				var resultFolderPath = argumentArray[1];
-
-				FileUtility.CreateFolder(resultFolderPath);
-
-				foreach(var filePath in FileUtility.GetFilePathArray(luaFolderPath))
-				{
-					var newFilePath = filePath.Replace(luaFolderPath,resultFolderPath);
-
-					newFilePath = FileUtility.ChangeExtension(newFilePath,".lua.bytes");
-
-					FileUtility.CreateFolder(newFilePath);
-
-					FileUtility.CopyFile(filePath,newFilePath,true);
-				}
-
-				Console.WriteLine("Press enter to exit...");
-				Console.ReadLine();
-			}
-			catch(Exception exception)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine($"{exception}");
-				Console.ResetColor();
-
-				Environment.Exit(-1);
+				FileUtility.CreateFolder(newFilePath);
+				FileUtility.CopyFile(filePath,newFilePath,true);
 			}
 		}
 	}

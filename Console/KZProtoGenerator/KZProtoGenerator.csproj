@@ -16,6 +16,8 @@
   <ItemGroup>
     <ProjectReference Include="../../Helper/KZData/KZData.csproj" />
     <ProjectReference Include="../../Helper/KZTool/KZTool.csproj" />
+
+    <ProjectReference Include="../KZCommon/KZCommon.csproj" />
   </ItemGroup>
 
   <ItemGroup>

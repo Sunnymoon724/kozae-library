@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using KZLib.KZUtility;
+﻿using KZLib.KZUtility;
 
 namespace KZConsole
 {
@@ -10,66 +9,54 @@ namespace KZConsole
 		/// </summary>
 		internal static void Main(string[] argumentArray)
 		{
-			try
-			{
-				Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-				Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+			AppRunner.Execute(argumentArray,onPlayProgram);
+		}
+		
+		private static void onPlayProgram(string[] argumentArray)
+		{
+			var currentPath = Directory.GetCurrentDirectory();
+			var protoFolderPath = Path.GetFullPath(Path.Combine(currentPath,argumentArray[0]));
 
-				var currentPath = Directory.GetCurrentDirectory();
-				var protoFolderPath = Path.GetFullPath(Path.Combine(currentPath,argumentArray[0]));
+			Console.WriteLine($"Proto folder path : {protoFolderPath}");
 
-				Console.WriteLine($"Proto folder path : {protoFolderPath}");
+			var outputFolderPath = Path.GetFullPath(Path.Combine(currentPath,"../ProtoOutput"));
 
-				var outputFolderPath = Path.GetFullPath(Path.Combine(currentPath,"../ProtoOutput"));
+			var projectManager = new ProjectManager(currentPath,outputFolderPath);
 
-				var projectManager = new ProjectManager(currentPath,outputFolderPath);
+			projectManager.CreateProject();
 
-				projectManager.CreateProject();
+			var protoFilePathList = new List<string>(FileUtility.FindAllExcelFileGroupByFolderPath(protoFolderPath));
 
-				var protoFilePathList = new List<string>(FileUtility.FindAllExcelFileGroupByFolderPath(protoFolderPath));
+			var enumFilePath = FileUtility.FindFilePath(protoFilePathList,"Enum");
+			var branchFilePath = FileUtility.FindFilePath(protoFilePathList,"Branch");
 
-				var enumFilePath = FileUtility.FindFilePath(protoFilePathList,"Enum");
-				var branchFilePath = FileUtility.FindFilePath(protoFilePathList,"Branch");
+			var codeGenerator = new CodeGenerator(protoFilePathList,enumFilePath);
+			codeGenerator.GenerateAllProtoCode(projectManager.ProjectFolderPath);
 
-				var codeGenerator = new CodeGenerator(protoFilePathList,enumFilePath);
-				codeGenerator.GenerateAllProtoCode(projectManager.ProjectFolderPath);
+			var protoGenerator = new ProtoGenerator(argumentArray[1],branchFilePath);
 
-				var protoGenerator = new ProtoGenerator(argumentArray[1],branchFilePath);
+			protoGenerator.GenerateAllProto(protoFilePathList,codeGenerator.ProtoCodeGroup,outputFolderPath);
 
-				protoGenerator.GenerateAllProto(protoFilePathList,codeGenerator.ProtoCodeGroup,outputFolderPath);
+			Console.WriteLine("Build project");
 
-				Console.WriteLine("Build project");
+			//? Build Project
+			projectManager.BuildProject();
 
-				//? Build Project
-				projectManager.BuildProject();
+			Console.WriteLine("Delete project");
 
-				Console.WriteLine("Delete project");
+			//? Delete Project
+			projectManager.DeleteProject();
 
-				//? Delete Project
-				projectManager.DeleteProject();
+			Console.WriteLine("Move dll & pdb file");
+			var resultFolderPath = Path.GetFullPath(argumentArray[2]);
 
-				Console.WriteLine("Move dll & pdb file");
-				var resultFolderPath = Path.GetFullPath(argumentArray[2]);
+			FileUtility.CreateFolder(resultFolderPath);
 
-				FileUtility.CreateFolder(resultFolderPath);
+			var sourceDllFilePath = Path.Combine(outputFolderPath,"KZProto.dll");
+			var sourcePdbFilePath = Path.Combine(outputFolderPath,"KZProto.pdb");
 
-				var sourceDllFilePath = Path.Combine(outputFolderPath,"KZProto.dll");
-				var sourcePdbFilePath = Path.Combine(outputFolderPath,"KZProto.pdb");
-
-				FileUtility.MoveFile(sourceDllFilePath,resultFolderPath,true);
-				FileUtility.MoveFile(sourcePdbFilePath,resultFolderPath,true);
-
-				Console.WriteLine("Program is done");
-				Console.ReadLine();
-			}
-			catch(Exception exception)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine($"{exception}");
-				Console.ResetColor();
-
-				Environment.Exit(-1);
-			}
+			FileUtility.MoveFile(sourceDllFilePath,resultFolderPath,true);
+			FileUtility.MoveFile(sourcePdbFilePath,resultFolderPath,true);
 		}
 	}
 }

@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../../Helper/KZUtility/KZUtility.csproj" />
+
+    <ProjectReference Include="../KZCommon/KZCommon.csproj" />
   </ItemGroup>
 
 </Project>
