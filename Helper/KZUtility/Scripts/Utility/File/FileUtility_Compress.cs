@@ -14,15 +14,13 @@ namespace KZLib.KZUtility
 			}
 
 			using var memoryStream = new MemoryStream();
+			using var archive = new ZipArchive(memoryStream,ZipArchiveMode.Create,true);
 
-			using(var archive = new ZipArchive(memoryStream,ZipArchiveMode.Create,true))
-			{
-				var entry = archive.CreateEntry("data.bin",CompressionLevel.Optimal);
+			var entry = archive.CreateEntry("data.bin",CompressionLevel.Optimal);
 
-				using var entryStream = entry.Open();
+			using var entryStream = entry.Open();
 
-				entryStream.Write(bytes,0,bytes.Length);
-			}
+			entryStream.Write(bytes,0,bytes.Length);
 
 			return memoryStream.ToArray();
 		}
@@ -42,19 +40,17 @@ namespace KZLib.KZUtility
 			else
 			{
 				using var memoryStream = new MemoryStream();
+				using var archive = new ZipArchive(memoryStream,ZipArchiveMode.Create,true);
 
-				using(var archive = new ZipArchive(memoryStream,ZipArchiveMode.Create,true))
+				foreach(var filePath in Directory.GetFiles(sourcePath,"*.*",SearchOption.AllDirectories))
 				{
-					foreach(var filePath in Directory.GetFiles(sourcePath,"*.*",SearchOption.AllDirectories))
-					{
-						var relativePath = Path.GetRelativePath(sourcePath,filePath);
-						var entry = archive.CreateEntry(relativePath,CompressionLevel.Optimal);
+					var relativePath = Path.GetRelativePath(sourcePath,filePath);
+					var entry = archive.CreateEntry(relativePath,CompressionLevel.Optimal);
 
-						using var entryStream = entry.Open();
-						using var fileStream = File.OpenRead(filePath);
+					using var entryStream = entry.Open();
+					using var fileStream = File.OpenRead(filePath);
 
-						fileStream.CopyTo(entryStream);
-					}
+					fileStream.CopyTo(entryStream);
 				}
 
 				return memoryStream.ToArray();

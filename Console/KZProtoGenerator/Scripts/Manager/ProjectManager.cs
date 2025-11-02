@@ -34,6 +34,7 @@ namespace KZConsole
 			<TargetFramework>netstandard2.1</TargetFramework>
 			<AssemblyName>KZProto</AssemblyName>
 			<LangVersion>9.0</LangVersion>
+			<DebugType>portable</DebugType>
 			</PropertyGroup>
 			
 			<ItemGroup>

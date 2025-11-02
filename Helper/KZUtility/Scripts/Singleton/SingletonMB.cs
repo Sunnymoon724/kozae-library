@@ -126,7 +126,7 @@ namespace KZLib.KZUtility
 
 					if(!s_instance)
 					{
-						var instance = Resources.Load<TBehaviour>(typeof(TBehaviour).Name);
+						var instance = Resources.Load<TBehaviour>($"Prefab/{typeof(TBehaviour).Name}");
 
 						s_instance = Instantiate(instance);
 						s_instance.name = instance.name;

@@ -22,5 +22,4 @@ namespace KZLib.KZData
 		[Key(3)] public string StartBone { get; init; }
 	}
 }
-
-#pragma warning restore CS8618 
+#pragma warning restore CS8618
