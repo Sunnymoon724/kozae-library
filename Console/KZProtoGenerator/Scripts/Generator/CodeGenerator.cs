@@ -6,7 +6,7 @@ using KZLib.KZUtility;
 
 namespace KZConsole
 {
-	public class CodeGenerator(List<string> m_protoFilePathList,string m_enumExcelFilePath)
+	public class CodeGenerator
 	{
 		private struct EnumScheme
 		{
@@ -15,11 +15,24 @@ namespace KZConsole
 			public string Comment { get; set; }
 		}
 
-		private static readonly string[] s_exceptionFileNameArray = ["Branch","Enum","Camera","Motion"]; // Motion,Camera are default proto
+		private static readonly string[] s_exceptionFileNameArray = ["Branch","Enum"];
 
 		private readonly List<string> m_protoCodeList = [];
+		private readonly List<string> m_protoFilePathList = [];
+		private readonly string m_enumExcelFilePath = string.Empty;
+		private readonly Assembly m_assembly = null!;
 
 		public IEnumerable<string> ProtoCodeGroup => m_protoCodeList;
+
+		public CodeGenerator(List<string> protoFilePathList,string enumExcelFilePath)
+		{
+			m_protoFilePathList = protoFilePathList;
+			m_enumExcelFilePath = enumExcelFilePath;
+
+			var dllPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"KZData.dll");
+
+			m_assembly = Assembly.LoadFrom(dllPath);
+		}
 
 		public void GenerateAllProtoCode(string outputFolderPath)
 		{
@@ -76,28 +89,26 @@ namespace KZConsole
 			m_protoCodeList.Add(enumTemplate);
 		}
 
-		private static bool _IsExceptionPath(string protoFilePath)
-		{
-			var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
-
-			return s_exceptionFileNameArray.Contains(fileName);
-		}
-
 		private void _GenerateProtoCode(string outputFolderPath)
 		{
 			var templateText = _ReadEmbeddedResource("KZProtoGenerator.Templates.ProtoTemplate.txt");
-			
 			var protoCodeBag = new ConcurrentBag<string>();
-			
+
 			Parallel.ForEach(m_protoFilePathList,(protoFilePath)=>
 			{
-				if(_IsExceptionPath(protoFilePath))
+				var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
+
+				if(s_exceptionFileNameArray.Contains(fileName))
+				{
+					return;
+				}
+
+				if(_IsDefaultProtoType($"{fileName}Proto"))
 				{
 					return;
 				}
 
 				var excelReader = new ExcelReader(protoFilePath);
-				var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 				var sheetNameArray = excelReader.FindSheetNameArray(x=>x.StartsWith('+'));
 				var nameCount = sheetNameArray.Length;
 
@@ -206,6 +217,13 @@ namespace KZConsole
 			using var streamReader = new StreamReader(stream);
 
 			return streamReader.ReadToEnd();
+		}
+		
+		private bool _IsDefaultProtoType(string className)
+		{
+			var proto = m_assembly.GetType($"KZLib.KZData.{className}");
+
+			return proto != null;
 		}
 	}
 }

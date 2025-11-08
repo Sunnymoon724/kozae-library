@@ -52,11 +52,12 @@ namespace KZConsole.KZProto
 			}
 			else
 			{
-				var failures = result.Diagnostics.Where(diagnostic => diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
-
-				foreach(var diagnostic in failures)
+				foreach(var diagnostic in result.Diagnostics)
 				{
-					Console.Error.WriteLine(diagnostic.ToString());
+					if(diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error)
+					{
+						Console.Error.WriteLine(diagnostic.ToString());
+					}
 				}
 
 				throw new InvalidOperationException("-Compilation failed.");

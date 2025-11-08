@@ -4,7 +4,7 @@ using MoonSharp.Interpreter;
 
 namespace KZLib.KZUtility
 {
-	public class LuaMgr : Singleton<LuaMgr>
+	public class LuaManager : Singleton<LuaManager>
 	{
 		private Script? m_luaScript = null;
 

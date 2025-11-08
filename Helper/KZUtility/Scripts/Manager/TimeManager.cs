@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace KZLib.KZUtility
 {
-	public class TimeMgr : Singleton<TimeMgr>
+	public class TimeManager : Singleton<TimeManager>
 	{
 		public DateTime ServerTime { get; private set; }
 		private TimeSpan m_timeDifference = TimeSpan.Zero;
