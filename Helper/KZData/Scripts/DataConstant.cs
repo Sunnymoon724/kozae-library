@@ -11,8 +11,6 @@
 		public void Update(IAffix newAfx);
 	}
 
-	public interface ICluster { }
-
 	public interface IProto
 	{
 		int Num { get; }

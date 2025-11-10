@@ -72,6 +72,13 @@ namespace KZLib.KZUtility
 		{
 			foreach(var filePath in FindAllFileGroupByFolderPath(absoluteFolderPath,s_excelExtensionArray))
 			{
+				var fileName = GetFileName(filePath);
+
+				if(fileName.StartsWith("~$"))
+				{
+					continue;
+				}
+
 				yield return filePath;
 			}
 		}

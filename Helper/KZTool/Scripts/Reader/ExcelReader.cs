@@ -40,7 +40,9 @@ namespace KZLib.KZTool
 
 			FilePath = filePath;
 
-			var workbook = new XLWorkbook(filePath);
+			using var stream = new FileStream(filePath,FileMode.Open,FileAccess.Read,FileShare.ReadWrite);
+			using var workbook = new XLWorkbook(stream);
+
 			var worksheets = workbook.Worksheets;
 
 			for(var i=0;i<worksheets.Count;i++)
@@ -74,7 +76,7 @@ namespace KZLib.KZTool
 			}
 		}
 
-		public IEnumerable<string> SheetNameGroup => m_sheetDict.Keys;
+		public IReadOnlyCollection<string> SheetNameGroup => m_sheetDict.Keys;
 
 		public string FindSheetName(Func<string,bool> condition)
 		{
@@ -342,7 +344,14 @@ namespace KZLib.KZTool
 
 			if(targetType.IsPrimitive)
 			{
-				return Convert.ChangeType(cell,targetType);
+				if(string.IsNullOrEmpty(cell))
+				{
+					return Activator.CreateInstance(targetType);
+				}
+				else
+				{
+					return Convert.ChangeType(cell,targetType);
+				}
 			}
 
 			try

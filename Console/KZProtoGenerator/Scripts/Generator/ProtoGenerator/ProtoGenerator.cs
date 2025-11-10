@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text;
 using KZConsole.KZProto;
+using KZConsole.KZUtility;
 using KZLib.KZTool;
 using KZLib.KZUtility;
 using MessagePack;
@@ -10,11 +11,7 @@ namespace KZConsole
 {
 	public class ProtoGenerator
 	{
-		private const string c_branchTag = "%Branch";
 		private const int c_valueIndex = 3;
-		private const char c_sheetMark = '+';
-
-		private static readonly string[] s_exceptionFileNameArray = ["Branch","Enum"];
 
 		private readonly BranchSheet m_branchSheet = null!;
 
@@ -25,7 +22,7 @@ namespace KZConsole
 		{
 			m_branchSheet = new(branchName,branchFilePath);
 
-			var dllPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"KZData.dll");
+			var dllPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,Global.DATA_FILE_NAME);
 
 			m_assembly = Assembly.LoadFrom(dllPath);
 		}
@@ -75,14 +72,14 @@ namespace KZConsole
 		{
 			var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 
-			return s_exceptionFileNameArray.Contains(fileName);
+			return Global.EXCEPTION_FILE_NAME_ARRAY.Contains(fileName);
 		}
 
 		private void _ProcessProtoFile(string protoFilePath,string csvFolderPath,string byteFolderPath)
 		{
 			var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 			var excelReader = new ExcelReader(protoFilePath);
-			
+
 			var protoType = _GetProtoType($"{fileName}Proto");
 			var protoArray = _GenerateProtoArray(fileName,protoType,excelReader,csvFolderPath);
 
@@ -111,7 +108,7 @@ namespace KZConsole
 			Console.WriteLine($"-Generate {fileName}");
 
 			// Generate is only +sheet
-			var sheetNameArray = excelReader.FindSheetNameArray(x => x.StartsWith(c_sheetMark));
+			var sheetNameArray = excelReader.FindSheetNameArray(x => x.StartsWith(Global.PLUS_MARK));
 
 			if(sheetNameArray.Length < 1)
 			{
@@ -147,7 +144,7 @@ namespace KZConsole
 
 			for(var i=1;i<sheetNameArray.Length;i++)
 			{
-				var className = sheetNameArray[i].TrimStart(c_sheetMark);
+				var className = sheetNameArray[i].TrimStart(Global.PLUS_MARK);
 
 				_ProcessSubSheetTypes(typeNameArray,className,ref indexListDict);
 			}
@@ -251,7 +248,7 @@ namespace KZConsole
 			{
 				var scheme = schemeArray[i];
 
-				if(string.Equals(scheme,c_branchTag))
+				if(string.Equals(scheme,$"%{Global.BRANCH}"))
 				{
 					return i;
 				}
@@ -305,7 +302,7 @@ namespace KZConsole
 			
 			foreach(var pair in schemeIndexListDict)
 			{
-				var subSheetName = $"+{pair.Key.Name}";
+				var subSheetName = $"{Global.PLUS_MARK}{pair.Key.Name}";
 				var schemeArray = excelReader.FindSchemeArray(subSheetName);
 
 				var rowSize = excelReader.GetRowSize(subSheetName);

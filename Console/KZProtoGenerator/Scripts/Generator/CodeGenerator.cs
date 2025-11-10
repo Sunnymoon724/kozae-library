@@ -1,6 +1,6 @@
-using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text;
+using KZConsole.KZUtility;
 using KZLib.KZTool;
 using KZLib.KZUtility;
 
@@ -15,8 +15,6 @@ namespace KZConsole
 			public string Comment { get; set; }
 		}
 
-		private static readonly string[] s_exceptionFileNameArray = ["Branch","Enum"];
-
 		private readonly List<string> m_protoCodeList = [];
 		private readonly List<string> m_protoFilePathList = [];
 		private readonly string m_enumExcelFilePath = string.Empty;
@@ -29,7 +27,7 @@ namespace KZConsole
 			m_protoFilePathList = protoFilePathList;
 			m_enumExcelFilePath = enumExcelFilePath;
 
-			var dllPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"KZData.dll");
+			var dllPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,Global.DATA_FILE_NAME);
 
 			m_assembly = Assembly.LoadFrom(dllPath);
 		}
@@ -52,11 +50,13 @@ namespace KZConsole
 		{
 			var enumBuilder = new StringBuilder();
 			var excelReader = new ExcelReader(m_enumExcelFilePath);
+			var collection = excelReader.SheetNameGroup;
+			var currentIndex = 0;
 
-			foreach(var sheetName in excelReader.SheetNameGroup)
+			foreach(var sheetName in collection)
 			{
-				enumBuilder.Append($"\tpublic enum {sheetName}{Environment.NewLine}");
-				enumBuilder.Append($"\t{{{Environment.NewLine}");
+				enumBuilder.Append($"\tpublic enum {sheetName}{Global.NEW_LINE}");
+				enumBuilder.Append($"\t{{{Global.NEW_LINE}");
 
 				var index = -1;
 
@@ -64,10 +64,19 @@ namespace KZConsole
 				{
 					index = int.TryParse(scheme.Value,out var number) ? number : ++index;
 
-					enumBuilder.Append($"\t\t{scheme.Key} = {index}, // {scheme.Comment}{Environment.NewLine}");
+					enumBuilder.Append($"\t\t{scheme.Key} = {index}, // {scheme.Comment}{Global.NEW_LINE}");
 				}
 
-				enumBuilder.Append($"\t}}{Environment.NewLine}{Environment.NewLine}");
+				currentIndex++;
+
+				if(currentIndex < collection.Count)
+				{
+					enumBuilder.Append($"\t}}{Global.NEW_LINE}{Global.NEW_LINE}");
+				}
+				else
+				{
+					enumBuilder.Append($"\t}}{Global.NEW_LINE}");
+				}
 			}
 
 			if(enumBuilder.Length <= 0)
@@ -75,14 +84,12 @@ namespace KZConsole
 				return;
 			}
 
-			enumBuilder.Length -= 2*Environment.NewLine.Length;
-
 			var enumCode = enumBuilder.ToString();
 			var enumTemplate = _ReadEmbeddedResource("KZProtoGenerator.Templates.EnumTemplate.txt");
 
 			enumTemplate = enumTemplate.Replace("$Enums",enumCode);
 
-			var enumCodeFilePath = Path.Combine(outputFolderPath,$"Enum.cs");
+			var enumCodeFilePath = Path.Combine(outputFolderPath,"Enum.cs");
 
 			FileUtility.WriteTextToFile(enumCodeFilePath,enumTemplate);
 
@@ -92,20 +99,20 @@ namespace KZConsole
 		private void _GenerateProtoCode(string outputFolderPath)
 		{
 			var templateText = _ReadEmbeddedResource("KZProtoGenerator.Templates.ProtoTemplate.txt");
-			var protoCodeBag = new ConcurrentBag<string>();
 
-			Parallel.ForEach(m_protoFilePathList,(protoFilePath)=>
+			for(int i=0;i<m_protoFilePathList.Count;i++)
 			{
+				var protoFilePath = m_protoFilePathList[i];
 				var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 
-				if(s_exceptionFileNameArray.Contains(fileName))
+				if(Global.EXCEPTION_FILE_NAME_ARRAY.Contains(fileName))
 				{
-					return;
+					continue;
 				}
 
 				if(_IsDefaultProtoType($"{fileName}Proto"))
 				{
-					return;
+					continue;
 				}
 
 				var excelReader = new ExcelReader(protoFilePath);
@@ -116,25 +123,21 @@ namespace KZConsole
 				{
 					Console.WriteLine($"Warning : {fileName} is not include +Sheet");
 
-					return;
+					continue;
 				}
 
 				var mainClassCode = string.Empty;
 				var subClassCode = string.Empty;
 
-				var mainSheetName = sheetNameArray[0].TrimStart('+');
-
-				mainClassCode = _GenerateClassTemplate(excelReader,sheetNameArray[0],$"{mainSheetName}Proto : IProto",protoFilePath);
+				mainClassCode = _GenerateClassTemplate(excelReader,sheetNameArray[0],true,protoFilePath);
 
 				if(nameCount != 1)
 				{
 					var classBuilder = new StringBuilder();
 
-					for(var i=1;i<nameCount;i++)
+					for(var j=1;j<nameCount;j++)
 					{
-						var sheetName = sheetNameArray[i].TrimStart('+');
-
-						classBuilder.Append($"{Environment.NewLine}{Environment.NewLine}{_GenerateClassTemplate(excelReader,sheetNameArray[i],$"{sheetName}",protoFilePath)}");
+						classBuilder.Append($"{Environment.NewLine}{Environment.NewLine}{_GenerateClassTemplate(excelReader,sheetNameArray[j],false,protoFilePath)}");
 					}
 
 					subClassCode = classBuilder.ToString();
@@ -147,14 +150,15 @@ namespace KZConsole
 
 				FileUtility.WriteTextToFile(protoCodeFilePath,protoTemplate);
 
-				protoCodeBag.Add(protoTemplate);
-			});
-
-			m_protoCodeList.AddRange(protoCodeBag);
+				m_protoCodeList.AddRange(protoTemplate);
+			}
 		}
 
-		private static string _GenerateClassTemplate(ExcelReader excelReader,string sheetName,string className,string filePath)
+		private static string _GenerateClassTemplate(ExcelReader excelReader,string sheetName,bool isMain,string filePath)
 		{
+			var name = sheetName.TrimStart(Global.PLUS_MARK);
+			var className = isMain ? $"{name}Proto : IProto" : name;
+
 			var propertyCode = _GeneratePropertyCode(excelReader,sheetName);
 
 			if(string.IsNullOrEmpty(propertyCode))

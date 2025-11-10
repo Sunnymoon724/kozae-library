@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
+using KZConsole.KZUtility;
 using MessagePack;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -29,7 +30,7 @@ namespace KZConsole.KZProto
 			{
 				MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
 				MetadataReference.CreateFromFile(typeof(MessagePackObjectAttribute).Assembly.Location),
-				MetadataReference.CreateFromFile(Path.Combine(baseDirectory,"KZData.dll")),
+				MetadataReference.CreateFromFile(Path.Combine(baseDirectory,Global.DATA_FILE_NAME)),
 				MetadataReference.CreateFromFile(Path.Combine(baseDirectory,"UnityEngine.dll")),
 			};
 

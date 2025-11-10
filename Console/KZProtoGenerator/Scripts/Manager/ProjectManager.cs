@@ -1,4 +1,5 @@
 ﻿
+using KZConsole.KZUtility;
 using KZLib.KZUtility;
 
 namespace KZConsole
@@ -20,7 +21,7 @@ namespace KZConsole
 
 			m_outputFolderPath = outputFolderPath;
 
-			var sourceDllFilePath = Path.Combine(currentPath,"KZData.dll");
+			var sourceDllFilePath = Path.Combine(currentPath,Global.DATA_FILE_NAME);
 
 			FileUtility.CopyFile(sourceDllFilePath,m_projectFolderPath,true);
 		}
