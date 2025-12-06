@@ -29,9 +29,16 @@ namespace System.Collections.Generic
 			
 			public bool TryGetTrieNode(char letter, out TrieNode node)
 			{
-				var result = m_childDict.TryGetValue(letter,out node);
+				if(m_childDict.TryGetValue(letter,out var trieNode) && trieNode != null)
+				{
+					node = trieNode;
+					
+					return true;
+				}
 
-				return result;
+				node = null!;
+	
+				return false;
 			}
 
 			public IEnumerable<KeyValuePair<char,TrieNode>> GetChildren()
@@ -40,9 +47,9 @@ namespace System.Collections.Generic
             }
 		}
 		
-		private readonly object m_syncRoot = new object();
+		private readonly object m_syncRoot = new();
 		
-		private readonly TrieNode m_root = new TrieNode();
+		private readonly TrieNode m_root = new();
 
 		public bool Insert(string word)
 		{

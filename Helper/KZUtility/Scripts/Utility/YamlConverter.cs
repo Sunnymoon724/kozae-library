@@ -24,7 +24,7 @@ namespace KZLib.KZUtility
 	/// </summary>
 	public class YamlConverter : IYamlTypeConverter
 	{
-		private readonly static HashSet<Type> s_converterHashSet = new HashSet<Type>
+		private readonly static HashSet<Type> s_converterHashSet = new()
 		{
 			typeof(Color),			typeof(Color32),
 			typeof(Vector2),		typeof(Vector3),			typeof(Vector4),

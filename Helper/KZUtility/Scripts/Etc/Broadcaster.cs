@@ -5,7 +5,7 @@ namespace KZLib.KZUtility
 {
 	public static class Broadcaster
 	{
-		private static readonly Dictionary<string,Delegate> m_listenerDict = new Dictionary<string,Delegate>();
+		private static readonly Dictionary<string,Delegate> m_listenerDict = new();
 
 		public static void EnableListener(string eventName,Action onAction)
 		{
@@ -59,29 +59,18 @@ namespace KZLib.KZUtility
 				return;
 			}
 
-			if(!_IsValidListener(eventName))
-			{
-				return;
-			}
-
 			_ValidateType(eventName,callback,listener);
+			
+			var newListener = Delegate.Remove(listener,callback);
 
-			m_listenerDict[eventName] = Delegate.Remove(listener,callback);
-
-			_IsValidListener(eventName);
-		}
-
-		private static bool _IsValidListener(string eventName)
-		{
-			// If the listener is null -> remove the event from the dictionary
-			if(m_listenerDict.ContainsKey(eventName) && m_listenerDict[eventName] == null)
+			if(newListener == null)
 			{
-				m_listenerDict.Remove(eventName);
-
-				return false;
+				m_listenerDict.Remove(eventName); 
 			}
-
-			return true;
+			else
+			{
+				m_listenerDict[eventName] = newListener;
+			}
 		}
 
 		public static void SendEvent(string eventName)

@@ -1,4 +1,6 @@
 ﻿
+using System;
+using System.IO;
 using KZConsole.KZUtility;
 using KZLib.KZUtility;
 
@@ -30,16 +32,17 @@ namespace KZConsole
 		{
 			var projectText = @"
 			<Project Sdk=""Microsoft.NET.Sdk"">
-
 			<PropertyGroup>
-			<TargetFramework>netstandard2.1</TargetFramework>
+			<TargetFrameworks>netstandard2.1;net9.0</TargetFrameworks>
 			<AssemblyName>KZProto</AssemblyName>
-			<LangVersion>9.0</LangVersion>
+			<LangVersion>11.0</LangVersion>
 			<DebugType>portable</DebugType>
 			</PropertyGroup>
 			
 			<ItemGroup>
-			<PackageReference Include=""MessagePack"" Version=""3.1.4"" />
+			<PackageReference Include=""MemoryPack"" Version=""1.21.4"" />
+			<PackageReference Include=""MemoryPack.Generator"" Version=""1.21.4"" OutputItemType=""Analyzer"" ReferenceOutputAssembly=""false"" />
+			<CompilerVisibleProperty Include=""MemoryPackGenerator_SerializationInfoOutputDirectory"" />
 			<PackageReference Include=""Unity3D.SDK"" Version=""2021.1.14.1"" />
 			</ItemGroup>
 			

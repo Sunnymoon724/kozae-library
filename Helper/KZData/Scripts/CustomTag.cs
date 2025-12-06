@@ -83,18 +83,23 @@ namespace KZLib.KZData
 				}
 			}
 
-			resultTag = null!;
+			resultTag = default!;
 
 			return false;
 		}
 
-		public override bool Equals(object other)
+		public override bool Equals(object? other)
 		{
 			return other is CustomTag tag && Equals(tag);
 		}
 
-		public bool Equals(CustomTag tag)
+		public bool Equals(CustomTag? tag)
 		{
+			if(tag is null)
+			{
+				return false;
+			}
+
 			return string.Equals(m_name,tag.m_name,StringComparison.Ordinal);
 		}
 
@@ -122,13 +127,18 @@ namespace KZLib.KZData
 
 		public override string ToString() => m_name;
 
-		public int CompareTo(object other)
+		public int CompareTo(object? other)
 		{
 			return other is CustomTag tag ? CompareTo(tag) : throw new ArgumentException($"{other} is not a CustomTag");
 		}
 
-		public int CompareTo(CustomTag tag)
+		public int CompareTo(CustomTag? tag)
 		{
+			if(tag is null)
+			{
+				throw new ArgumentException($"{tag} can not be null");
+			}
+
 			return m_name.CompareTo(tag.m_name);
 		}
 	}

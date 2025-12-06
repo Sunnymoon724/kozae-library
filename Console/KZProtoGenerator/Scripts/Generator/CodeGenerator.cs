@@ -1,6 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using KZConsole.KZUtility;
+using KZLib.KZData;
 using KZLib.KZTool;
 using KZLib.KZUtility;
 
@@ -105,7 +109,7 @@ namespace KZConsole
 				var protoFilePath = m_protoFilePathList[i];
 				var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 
-				if(Global.EXCEPTION_FILE_NAME_ARRAY.Contains(fileName))
+				if(Array.IndexOf(Global.EXCEPTION_FILE_NAME_ARRAY, fileName) >= 0)
 				{
 					continue;
 				}
@@ -137,7 +141,7 @@ namespace KZConsole
 
 					for(var j=1;j<nameCount;j++)
 					{
-						classBuilder.Append($"{Environment.NewLine}{Environment.NewLine}{_GenerateClassTemplate(excelReader,sheetNameArray[j],false,protoFilePath)}");
+						classBuilder.Append($"{Global.NEW_LINE}{Global.NEW_LINE}{_GenerateClassTemplate(excelReader,sheetNameArray[j],false,protoFilePath)}");
 					}
 
 					subClassCode = classBuilder.ToString();
@@ -146,7 +150,7 @@ namespace KZConsole
 				var protoTemplate = templateText.Replace("$MainClass",mainClassCode);
 				protoTemplate = protoTemplate.Replace("$SubClass",subClassCode);
 
-				var protoCodeFilePath = Path.Combine(outputFolderPath,$"{fileName}.cs");
+				var protoCodeFilePath = Path.Combine(outputFolderPath,$"{fileName}Proto.cs");
 
 				FileUtility.WriteTextToFile(protoCodeFilePath,protoTemplate);
 
@@ -168,10 +172,10 @@ namespace KZConsole
 
 			var classBuilder = new StringBuilder();
 
-			classBuilder.Append($"\t[MessagePackObject]{Environment.NewLine}");
-			classBuilder.Append($"\tpublic partial class {className}{Environment.NewLine}");
-			classBuilder.Append($"\t{{{Environment.NewLine}");
-			classBuilder.Append($"{propertyCode}{Environment.NewLine}");
+			classBuilder.Append($"\t[MemoryPackable]{Global.NEW_LINE}");
+			classBuilder.Append($"\tpublic partial class {className}{Global.NEW_LINE}");
+			classBuilder.Append($"\t{{{Global.NEW_LINE}");
+			classBuilder.Append($"{propertyCode}{Global.NEW_LINE}");
 			classBuilder.Append($"\t}}");
 
 			return classBuilder.ToString();
@@ -198,8 +202,8 @@ namespace KZConsole
 
 				var type = protoJaggedArray[1][i];
 
-				propertyBuilder.Append($"\t\t[Key({keyIndex++})]{Environment.NewLine}");
-				propertyBuilder.Append($"\t\tpublic {type} {property} {{ get; init; }}{Environment.NewLine}");
+				propertyBuilder.Append($"\t\t[MemoryPackOrder({keyIndex++})]{Global.NEW_LINE}");
+				propertyBuilder.Append($"\t\tpublic {type} {property} {{ get; init; }}{Global.NEW_LINE}");
 
 				propertyList.Add(property);
 			}
@@ -209,7 +213,7 @@ namespace KZConsole
 				return string.Empty;
 			}
 
-			propertyBuilder.Length -= Environment.NewLine.Length;
+			propertyBuilder.Length -= Global.NEW_LINE.Length;
 
 			return propertyBuilder.ToString();
 		}
@@ -222,7 +226,7 @@ namespace KZConsole
 
 			return streamReader.ReadToEnd();
 		}
-		
+
 		private bool _IsDefaultProtoType(string className)
 		{
 			var proto = m_assembly.GetType($"KZLib.KZData.{className}");

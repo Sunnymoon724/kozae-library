@@ -5,7 +5,7 @@ namespace System.Collections.Generic
 	{
 		private readonly TData[] m_dataArray = Array.Empty<TData>();
 		private readonly int m_capacity = 0;
-		private readonly object m_syncRoot = new object();
+		private readonly object m_syncRoot = new();
 
 		private int m_front = -1;
 		private int m_rear = -1;
@@ -35,7 +35,7 @@ namespace System.Collections.Generic
 		{
 			if(data == null)
 			{
-				throw new ArgumentNullException("Data cannot be null.");
+				throw new NullReferenceException("Data cannot be null.");
 			}
 
 			lock(m_syncRoot)
@@ -148,7 +148,7 @@ namespace System.Collections.Generic
 		{
 			if(data == null)
 			{
-				throw new ArgumentNullException("Data cannot be null.");
+				throw new NullReferenceException("Data cannot be null.");
 			}
 
 			lock(m_syncRoot)
@@ -173,7 +173,7 @@ namespace System.Collections.Generic
 		{
 			if(array == null)
 			{
-				throw new ArgumentNullException("Array cannot be null.");
+				throw new NullReferenceException("Array cannot be null.");
 			}
 
 			if(index < 0 || index >= array.Length)

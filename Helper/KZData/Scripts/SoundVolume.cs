@@ -2,13 +2,15 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using MemoryPack;
 
 namespace KZLib.KZData
 {
 	/// <summary>
 	/// level -> 0.0 - 1.0
 	/// </summary>
-	public struct SoundVolume : IEquatable<SoundVolume>,IFormattable
+	[MemoryPackable]
+	public partial struct SoundVolume : IEquatable<SoundVolume>,IFormattable
 	{
 		public float level;
 		public bool mute;
@@ -44,7 +46,7 @@ namespace KZLib.KZData
 			return ToString(format,CultureInfo.InvariantCulture);
 		}
 
-		public string ToString(string format,IFormatProvider? formatProvider)
+		public string ToString(string? format,IFormatProvider? formatProvider)
 		{
 			if(string.IsNullOrEmpty(format))
 			{
@@ -61,7 +63,7 @@ namespace KZLib.KZData
 			return HashCode.Combine(level,mute);
 		}
 
-		public override bool Equals(object other)
+		public override bool Equals(object? other)
 		{
 			return other is SoundVolume volume && Equals(volume);
 		}

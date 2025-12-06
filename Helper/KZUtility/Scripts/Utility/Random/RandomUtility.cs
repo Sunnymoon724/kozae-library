@@ -5,7 +5,7 @@ namespace KZLib.KZUtility
 {
 	public static class RandomUtility
 	{
-		private static readonly Randomizer s_randomizer = new Randomizer();
+		private static readonly Randomizer s_randomizer = new();
 
 		#region Gaussian
 		public static int GenerateGaussian(int mean,int deviation)
@@ -48,10 +48,7 @@ namespace KZLib.KZUtility
 
 		public static TValue GetRandomValue<TValue>(IList<TValue> list)
 		{
-			if(list == null || list.Count == 0)
-			{
-				throw new ArgumentException("List is null or empty");
-			}
+			_IsValidList(list);
 
 			var index = s_randomizer.PickInteger(0,list.Count-1);
 
@@ -60,10 +57,7 @@ namespace KZLib.KZUtility
 
 		public static TValue GetWeightedRandomValue<TValue>(IList<TValue> list,float[] weightedArray)
 		{
-			if(list == null || list.Count == 0)
-			{
-				throw new ArgumentException("List is null or empty");
-			}
+			_IsValidList(list);
 
 			var index = s_randomizer.PickWeightedInteger(weightedArray);
 
@@ -72,10 +66,7 @@ namespace KZLib.KZUtility
 
 		public static IEnumerable<TValue> GetRandomValueGroup<TValue>(IList<TValue> list,int count,bool allowDuplicate = true)
 		{
-			if(list == null || list.Count == 0)
-			{
-				throw new ArgumentException("List is null or empty");
-			}
+			_IsValidList(list);
 
 			if(allowDuplicate)
 			{
@@ -99,10 +90,7 @@ namespace KZLib.KZUtility
 
 		public static void Randomize<TValue>(IList<TValue> list)
 		{
-			if(list == null || list.Count == 0)
-			{
-				throw new ArgumentException("List is null or empty");
-			}
+			_IsValidList(list);
 
 			if (list.Count < 2) 
 			{
@@ -120,10 +108,7 @@ namespace KZLib.KZUtility
 
 		public static bool RemoveRandomValue<TValue>(IList<TValue> list,out TValue value)
 		{
-			if(list == null || list.Count == 0)
-			{
-				throw new ArgumentException("List is null or empty");
-			}
+			_IsValidList(list);
 
 			var count = list.Count;
 
@@ -202,6 +187,16 @@ namespace KZLib.KZUtility
 		private static (TValue min,TValue max) _NormalizeRange<TValue>(TValue minValue,TValue maxValue) where TValue : IComparable<TValue>
 		{
 			return minValue.CompareTo(maxValue) > 0 ? (maxValue,minValue) : (minValue,maxValue);
+		}
+
+		private static bool _IsValidList<TValue>(IList<TValue> list)
+		{
+			if(list == null || list.Count == 0)
+			{
+				throw new ArgumentException("List is null or empty");
+			}
+
+			return true;
 		}
 	}
 }

@@ -1,9 +1,7 @@
 // using UnityEngine;
 // using System;
-// using MessagePack;
-// using MessagePack.Formatters;
 // using KZLib.KZData;
-// using MessagePack.Resolvers;
+// using MemoryPack;
 
 // namespace KZLib.KZUtility
 // {
@@ -17,7 +15,7 @@
 // 	/// <br/>
 // 	/// var object = MessagePackSerializer.Deserialize(bytes,MessagePackSerializerOptions.Standard.WithResolver(MessagePackResolver.Instance));
 // 	/// </summary>
-// 	public class MessagePackResolver : IFormatterResolver
+// 	public class MemoryPackResolver : IFormatterResolver
 // 	{
 // 		public static readonly MessagePackResolver Instance = new MessagePackResolver();
 
@@ -50,26 +48,26 @@
 // 		}
 
 // 		#region Color
-// 		internal class ColorFormatter : IMessagePackFormatter<Color>
+// 		internal class ColorFormatter : MemoryPackFormatter<Color>
 // 		{
-// 			public void Serialize(ref MessagePackWriter writer,Color color,MessagePackSerializerOptions options)
+// 			// Serialize: Vector3를 float 3개로 바이트에 씁니다.
+// 			public override void Serialize(ref MemoryPackWriter writer, ref Color color)
 // 			{
-// 				writer.WriteArrayHeader(4);
-
-// 				writer.Write(color.r);
-// 				writer.Write(color.g);
-// 				writer.Write(color.b);
-// 				writer.Write(color.a);
+// 				writer.WriteValue(color.r);
+// 				writer.WriteValue(color.g);
+// 				writer.WriteValue(color.b);
+// 				writer.WriteValue(color.a);
 // 			}
 
-// 			public Color Deserialize(ref MessagePackReader reader,MessagePackSerializerOptions options)
+// 			// Deserialize: 바이트에서 float 3개를 읽어 Vector3를 재구성합니다.
+// 			public override void Deserialize(ref MemoryPackReader reader, ref Color color)
 // 			{
-// 				if(!reader.TryReadArrayHeader(out int length) || length != 4)
-// 				{
-// 					throw new InvalidOperationException($"Reader is error. or {length} != 4");
-// 				}
+// 				float r = reader.ReadValue<float>();
+// 				float g = reader.ReadValue<float>();
+// 				float b = reader.ReadValue<float>();
+// 				float a = reader.ReadValue<float>();
 
-// 				return new Color(reader.ReadSingle(),reader.ReadSingle(),reader.ReadSingle(),reader.ReadSingle());
+// 				color = new Color(r, g, b,a);
 // 			}
 // 		}
 // 		#endregion Color
@@ -100,24 +98,20 @@
 // 		#endregion Color32
 
 // 		#region Vector2
-// 		internal class Vector2Formatter : IMessagePackFormatter<Vector2>
+// 		internal class Vector2Formatter : MemoryPackFormatter<Vector2>
 // 		{
-// 			public void Serialize(ref MessagePackWriter writer,Vector2 vector,MessagePackSerializerOptions options)
+// 			public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> writer, ref Vector2 vector)
 // 			{
-// 				writer.WriteArrayHeader(2);
-
-// 				writer.Write(vector.x);
-// 				writer.Write(vector.y);
+// 				writer.WriteValue(vector.x);
+// 				writer.WriteValue(vector.y);
 // 			}
 
-// 			public Vector2 Deserialize(ref MessagePackReader reader,MessagePackSerializerOptions options)
+// 			public override void Deserialize(ref MemoryPackReader reader, ref Vector2 vector)
 // 			{
-// 				if(!reader.TryReadArrayHeader(out int length) || length != 2)
-// 				{
-// 					throw new InvalidOperationException($"Reader error. or {length} != 2");
-// 				}
+// 				float x = reader.ReadValue<float>();
+// 				float y = reader.ReadValue<float>();
 
-// 				return new Vector2(reader.ReadSingle(),reader.ReadSingle());
+// 				vector = new Vector2(x, y);
 // 			}
 // 		}
 // 		#endregion Vector2

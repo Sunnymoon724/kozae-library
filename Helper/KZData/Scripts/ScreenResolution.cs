@@ -2,10 +2,12 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using MemoryPack;
 
 namespace KZLib.KZData
 {
-	public struct ScreenResolution : IEquatable<ScreenResolution>,IFormattable
+	[MemoryPackable]
+	public partial struct ScreenResolution : IEquatable<ScreenResolution>,IFormattable
 	{
 		public int width;
 		public int height;
@@ -48,7 +50,7 @@ namespace KZLib.KZData
 			return ToString(format,CultureInfo.InvariantCulture);
 		}
 
-		public string ToString(string format,IFormatProvider? formatProvider)
+		public string ToString(string? format,IFormatProvider? formatProvider)
 		{
 			formatProvider ??= CultureInfo.InvariantCulture;
 
@@ -60,7 +62,7 @@ namespace KZLib.KZData
 			return HashCode.Combine(width,height,fullscreen);
 		}
 
-		public override bool Equals(object other)
+		public override bool Equals(object? other)
 		{
 			return other is ScreenResolution resolution && Equals(resolution);
 		}

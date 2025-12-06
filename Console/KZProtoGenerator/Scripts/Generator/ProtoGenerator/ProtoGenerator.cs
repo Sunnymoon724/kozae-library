@@ -1,10 +1,13 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using KZConsole.KZProto;
 using KZConsole.KZUtility;
 using KZLib.KZTool;
 using KZLib.KZUtility;
-using MessagePack;
+using MemoryPack;
 using Newtonsoft.Json;
 
 namespace KZConsole
@@ -72,7 +75,7 @@ namespace KZConsole
 		{
 			var fileName = Path.GetFileNameWithoutExtension(protoFilePath);
 
-			return Global.EXCEPTION_FILE_NAME_ARRAY.Contains(fileName);
+			return Array.IndexOf(Global.EXCEPTION_FILE_NAME_ARRAY, fileName) >= 0;
 		}
 
 		private void _ProcessProtoFile(string protoFilePath,string csvFolderPath,string byteFolderPath)
@@ -94,13 +97,39 @@ namespace KZConsole
 		private static void _SaveProto(string fileName,Array protoArray,string byteFolderPath)
 		{
 			var arrayType = protoArray.GetType();
-			var options = MessagePackSerializerOptions.Standard.WithResolver(MessagePackResolver.Instance);
 
-			var serialized = MessagePackSerializer.Serialize(arrayType,protoArray,options);
+			var serialized = MemoryPackSerializer.Serialize(arrayType,protoArray);
 
 			var filePath = Path.Combine(byteFolderPath,$"{fileName}.bytes");
 
 			FileUtility.WriteByteToFile(filePath,serialized);
+		}
+		
+		private static void _RegisterDynamicMemoryPackFormatter(Type elementType)
+		{
+			var formatterTypeName = $"{elementType.FullName}Formatter";
+
+			var formatterType = elementType.Assembly.GetType(formatterTypeName);
+
+			if (formatterType != null)
+			{
+				var instanceProperty = formatterType.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public);
+
+				var formatterInstance = instanceProperty?.GetValue(null); 
+
+				if (formatterInstance != null)
+				{
+					Console.WriteLine($"[MemoryPack] 성공적으로 동적 포맷터를 등록했습니다: {elementType.Name}");
+				}
+				else
+				{
+					Console.WriteLine($"[MemoryPack] 경고: 포맷터 인스턴스를 얻을 수 없습니다: {formatterTypeName}");
+				}
+			}
+			else
+			{
+				Console.WriteLine($"[MemoryPack] 심각 오류: 동적 어셈블리에서 포맷터 타입 {formatterTypeName}을(를) 찾을 수 없습니다.");
+			}
 		}
 
 		private Array _GenerateProtoArray(string fileName,Type protoType,ExcelReader excelReader,string csvFolderPath)
@@ -183,7 +212,13 @@ namespace KZConsole
 
 			for(var i=0;i<rowArray.Length;i++)
 			{
-				var escapedRow = rowArray[i].Select(_EscapeText);
+				string[] currentRow = rowArray[i];
+				string[] escapedRow = new string[currentRow.Length];
+
+				for(var j=0;j<currentRow.Length;j++)
+				{
+					escapedRow[j] = _EscapeText(currentRow[j]);
+				}
 
 				builder.AppendLine(string.Join(",",escapedRow));
 

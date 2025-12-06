@@ -1,4 +1,6 @@
-﻿using KZConsole.KZUtility;
+﻿using System;
+using System.Collections.Generic;
+using KZConsole.KZUtility;
 using KZLib.KZTool;
 using KZLib.KZUtility;
 
@@ -14,16 +16,16 @@ namespace KZConsole.KZProto
 
 			if(!excelReader.IsExistSheetName(Global.BRANCH))
 			{
-				throw new NullReferenceException($"{Global.BRANCH} is not exist in {branchFilePath}.");
+				throw new InvalidOperationException($"{Global.BRANCH} is not exist in {branchFilePath}.");
 			}
 
 			var schemeArray = excelReader.FindSchemeArray(Global.BRANCH);
 
-			if(schemeArray.Length == 0 || !schemeArray.Contains(branchName))
+			if(schemeArray.Length == 0 || Array.IndexOf(schemeArray, branchName) < 0)
 			{
 				var header = string.Join("/",schemeArray);
 
-				throw new NullReferenceException($"{branchName} is not exist in {header}. [{branchFilePath}]");
+				throw new ArgumentException($"{branchName} is not exist in {header}. [{branchFilePath}]");
 			}
 
 			m_branchStateDict.Clear();

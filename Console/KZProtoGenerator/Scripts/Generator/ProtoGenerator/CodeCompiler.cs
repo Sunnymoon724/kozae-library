@@ -1,7 +1,9 @@
-﻿using System.Reflection;
-using System.Runtime.InteropServices;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using KZConsole.KZUtility;
-using MessagePack;
+using MemoryPack;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -15,7 +17,7 @@ namespace KZConsole.KZProto
 
 			foreach(var code in codeGroup)
 			{
-				if(code == null)
+				if(string.IsNullOrEmpty(code))
 				{
 					continue;
 				}
@@ -23,18 +25,32 @@ namespace KZConsole.KZProto
 				syntaxTreeList.Add(CSharpSyntaxTree.ParseText(code));
 			}
 
-			var runtimeDirectory = RuntimeEnvironment.GetRuntimeDirectory();
 			var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
 			var referenceList = new List<MetadataReference>
 			{
 				MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-				MetadataReference.CreateFromFile(typeof(MessagePackObjectAttribute).Assembly.Location),
+
+				MetadataReference.CreateFromFile(typeof(MemoryPackableAttribute).Assembly.Location),
+
 				MetadataReference.CreateFromFile(Path.Combine(baseDirectory,Global.DATA_FILE_NAME)),
 				MetadataReference.CreateFromFile(Path.Combine(baseDirectory,"UnityEngine.dll")),
 			};
+			
+			var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+			var filteredReferences = new List<MetadataReference>();
+			
+			foreach (var assembly in assemblies)
+			{
+				if (!assembly.IsDynamic && !string.IsNullOrEmpty(assembly.Location))
+				{
+					var reference = MetadataReference.CreateFromFile(assembly.Location);
 
-			referenceList.AddRange(AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)).Select(a => MetadataReference.CreateFromFile(a.Location)));
+					filteredReferences.Add(reference);
+				}
+			}
+
+			referenceList.AddRange(filteredReferences);
 
 			var compilation = CSharpCompilation.Create("KZProto",syntaxTreeList,referenceList,new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 

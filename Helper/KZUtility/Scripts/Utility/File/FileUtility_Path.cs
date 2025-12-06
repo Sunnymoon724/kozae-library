@@ -59,7 +59,18 @@ namespace KZLib.KZUtility
 
 		public static string GetParentPath(string path)
 		{
-			return IsPathExist(path) ? Path.GetDirectoryName(path) : string.Empty;
+			if(IsPathExist(path))
+			{
+				var directoryName = Path.GetDirectoryName(path);
+				
+				if(!string.IsNullOrEmpty(directoryName))
+				{
+					return directoryName;
+				}
+			}
+
+			return string.Empty;
+
 		}
 
 		/// <summary>

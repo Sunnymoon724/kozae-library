@@ -96,7 +96,7 @@ namespace KZLib.KZUtility
 					throw new ArgumentException("Key must be 16 or 24 or 32 bytes.");
 				}
 			}
-
+			
 			private static byte[] _GenerateKey(int size)
 			{
 				using var provider = new System.Security.Cryptography.RNGCryptoServiceProvider();
@@ -200,12 +200,11 @@ namespace KZLib.KZUtility
 
 			public static byte[] ComputeHashToBytes(byte[] source)
 			{
-				_Validate(source,"Source");
+				_Validate(source, "Source"); 
 
-				using var provider = new System.Security.Cryptography.SHA256CryptoServiceProvider();
-				var result = provider.ComputeHash(source);
+				using var provider = System.Security.Cryptography.SHA256.Create();
 
-				return result;
+				return provider.ComputeHash(source);
 			}
 
 			// public static string ComputeHMACSHA256ToString(string source,string secretKey)

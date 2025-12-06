@@ -385,7 +385,7 @@ namespace KZLib.KZTool
 
 				for(var j=y;j<y+height;j++)
 				{
-					resultArray[i,j] = (cellArray == null || cellArray.Length == 0) ? string.Empty : cellArray[j];
+					resultArray[i,j] = _IsValidCellArray(cellArray) ? cellArray[j] : string.Empty;
 				}
 			}
 
@@ -430,7 +430,7 @@ namespace KZLib.KZTool
 		/// </summary>
 		private bool _IsExistRow(string[] cellArray)
 		{
-			if(cellArray == null || cellArray.Length == 0)
+			if(!_IsValidCellArray(cellArray))
 			{
 				return false;
 			}
@@ -446,6 +446,11 @@ namespace KZLib.KZTool
 			{
 				throw new IndexOutOfRangeException($"{index} is out of range in {sheetName}");
 			}
+		}
+		
+		private bool _IsValidCellArray(string[] cellArray)
+		{
+			return cellArray != null && cellArray.Length != 0;
 		}
 
 		private static readonly string[] s_keywordArray = new string[]

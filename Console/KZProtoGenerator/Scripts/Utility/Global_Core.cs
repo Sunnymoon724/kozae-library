@@ -1,5 +1,4 @@
-﻿using System.IO;
-using UnityEngine;
+﻿using System;
 
 namespace KZConsole.KZUtility
 {

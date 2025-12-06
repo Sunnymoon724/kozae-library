@@ -1,4 +1,4 @@
-using MessagePack;
+using MemoryPack;
 using UnityEngine;
 
 namespace KZLib.KZData

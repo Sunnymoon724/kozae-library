@@ -1,17 +1,16 @@
 ﻿#pragma warning disable CS8618
-using MessagePack;
+using MemoryPack;
 
 namespace KZLib.KZData
 {
-	[MessagePackObject]
+	[MemoryPackable]
 	public partial class NetworkErrorProto : IProto
 	{
-		[Key(0)] public int Num { get; init; }
+		[MemoryPackOrder(0)] public int Num { get; init; }
 
-		[Key(1)] public string Description { get; init; }
-		[Key(2)] public NetworkErrorResultType ResultMainType { get; init; }
-		[Key(3)] public NetworkErrorResultType ResultSubType { get; init; }
+		[MemoryPackOrder(1)] public string Description { get; init; }
+		[MemoryPackOrder(2)] public NetworkErrorResultType ResultMainType { get; init; }
+		[MemoryPackOrder(3)] public NetworkErrorResultType ResultSubType { get; init; }
 	}
 }
-
 #pragma warning restore CS8618 

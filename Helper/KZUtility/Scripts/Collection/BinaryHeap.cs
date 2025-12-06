@@ -3,8 +3,8 @@ namespace System.Collections.Generic
 {
 	public abstract class BinaryHeap<TData> : IEnumerable<TData>,IEnumerable,IReadOnlyCollection<TData>,ICollection where TData : IComparable<TData>
 	{
-		private readonly List<TData> m_dataList = new List<TData>();
-		private readonly object m_syncRoot = new object();
+		private readonly List<TData> m_dataList = new();
+		private readonly object m_syncRoot = new();
 
 		protected abstract int Compare(TData first,TData second);
 
@@ -166,7 +166,7 @@ namespace System.Collections.Generic
 		{
 			if(array == null)
 			{
-				throw new ArgumentNullException("Array cannot be null.");
+				throw new NullReferenceException("Array cannot be null.");
 			}
 
 			if(index < 0 || index >= array.Length)
@@ -191,7 +191,7 @@ namespace System.Collections.Generic
 		{
 			if(data == null)
 			{
-				throw new ArgumentNullException("Data cannot be null.");
+				throw new NullReferenceException("Data cannot be null.");
 			}
 
 			lock(m_syncRoot)

@@ -1,0 +1,6 @@
+GenerateType Object KZLib.KZData.NetworkErrorProto
+---
+int Num
+string Description
+NetworkErrorResultType ResultMainType
+NetworkErrorResultType ResultSubType

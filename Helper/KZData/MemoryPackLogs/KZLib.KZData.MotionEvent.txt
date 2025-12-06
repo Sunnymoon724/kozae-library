@@ -1,0 +1,6 @@
+GenerateType Object KZLib.KZData.MotionEvent
+---
+int Order
+string EffectPath
+UnityEngine.Vector3 PositionOffset
+string StartBone

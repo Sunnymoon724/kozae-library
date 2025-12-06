@@ -58,7 +58,7 @@ namespace KZLib.KZUtility
 				{
 					var result = FindFileInFolder(subFolderPath,targetName);
 
-					if(result != null)
+					if(!string.IsNullOrEmpty(result))
 					{
 						return result;
 					}

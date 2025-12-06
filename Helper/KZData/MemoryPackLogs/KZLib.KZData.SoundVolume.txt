@@ -1,0 +1,4 @@
+GenerateType unmanaged KZLib.KZData.SoundVolume
+---
+float level
+bool mute

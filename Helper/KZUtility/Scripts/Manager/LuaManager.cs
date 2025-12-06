@@ -6,9 +6,9 @@ namespace KZLib.KZUtility
 {
 	public class LuaManager : Singleton<LuaManager>
 	{
-		private Script? m_luaScript = null;
+		private Script m_luaScript = null!;
 
-		private readonly Dictionary<string,DynValue> m_functionDict = new Dictionary<string,DynValue>();
+		private readonly Dictionary<string,DynValue> m_functionDict = new();
 
 		private bool m_disposed = false;
 
@@ -67,7 +67,7 @@ namespace KZLib.KZUtility
 			var function = _GetFunctionOrThrow(functionName);
 
 			var valueArray = argumentArray?.Length > 0 ? Array.ConvertAll(argumentArray,x => DynValue.FromObject(m_luaScript,x)) : Array.Empty<DynValue>();
-			var result = m_luaScript!.Call(function,valueArray);
+			var result = m_luaScript.Call(function,valueArray);
 
 			_CheckVoid(result,functionName);
 
@@ -85,7 +85,7 @@ namespace KZLib.KZUtility
 
 			var valueArray = argumentArray?.Length > 0 ? Array.ConvertAll(argumentArray,x => DynValue.FromObject(m_luaScript,x)) : Array.Empty<DynValue>();
 
-			m_luaScript!.Call(function,valueArray);
+			m_luaScript.Call(function,valueArray);
 		}
 
 		private DynValue _GetFunctionOrThrow(string functionName)
