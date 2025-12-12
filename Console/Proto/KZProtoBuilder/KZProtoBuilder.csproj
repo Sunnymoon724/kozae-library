@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resource\Proto\ColorProto.cs" />
+    <EmbeddedResource Include="Resource\Proto\MotionProto.cs" />
+    <EmbeddedResource Include="Resource\Proto\NetworkErrorProto.cs" />
+
+    <EmbeddedResource Include="Resource\Project\ProtoProject.txt" />
+    <EmbeddedResource Include="Resource\Project\Global.cs" />
+
+    <EmbeddedResource Include="Resource\Template\ProtoTemplate.txt" />
+    <EmbeddedResource Include="Resource\Template\EnumTemplate.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../Helper/KZTool/KZTool.csproj" />
+    <ProjectReference Include="../../../Helper/KZUtility/KZUtility.csproj" />
+    <ProjectReference Include="../../../Helper/KZData/KZData.csproj" />
+
+    <ProjectReference Include="../../Etc/KZCommon/KZCommon.csproj" />
+  </ItemGroup>
+
+</Project>

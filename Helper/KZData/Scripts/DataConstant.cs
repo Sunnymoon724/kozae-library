@@ -21,4 +21,12 @@
 		VisualEffect,
 		SoundEffect,
 	}
+	
+	public enum NetworkErrorResultType
+	{
+		None,
+		Popup,
+		Toast,
+		Title,
+	}
 }

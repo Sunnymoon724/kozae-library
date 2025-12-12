@@ -1,5 +1,0 @@
-GenerateType Object KZLib.KZData.MotionProto
----
-int Num
-string StateName
-KZLib.KZData.MotionEvent[] EventArray

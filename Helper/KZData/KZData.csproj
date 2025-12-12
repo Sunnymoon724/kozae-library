@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <CompilerVisibleProperty Include="MemoryPackGenerator_SerializationInfoOutputDirectory" />
     <PackageReference Include="MemoryPack" Version="1.21.4" />
     <PackageReference Include="Unity3D.SDK" Version="2021.1.14.1" />
   </ItemGroup>

@@ -1,5 +1,0 @@
-GenerateType unmanaged KZLib.KZData.ScreenResolution
----
-int width
-int height
-bool fullscreen

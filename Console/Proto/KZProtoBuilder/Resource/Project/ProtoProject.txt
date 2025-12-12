@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>KZProto</AssemblyName>
+    <TargetFrameworks>netstandard2.1;net9.0</TargetFrameworks>
+    <LangVersion>11.0</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <OutputPath>$(MSBuildThisFileDirectory)..\ProtoOutput\Plugin\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <OutputPath>$(MSBuildThisFileDirectory)..\KZProtoExtractor\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MemoryPack" Version="1.21.4" />
+    <PackageReference Include="MemoryPack.Generator" Version="1.21.4" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <CompilerVisibleProperty Include="MemoryPackGenerator_SerializationInfoOutputDirectory" />
+    <PackageReference Include="Unity3D.SDK" Version="2021.1.14.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="KZData"><HintPath>.KZData.dll</HintPath></Reference>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <NoWarn>NU1701</NoWarn><!-- Unity warning -->
+  </PropertyGroup>
+
+</Project>

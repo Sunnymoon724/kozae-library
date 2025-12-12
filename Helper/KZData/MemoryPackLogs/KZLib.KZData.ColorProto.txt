@@ -1,5 +1,0 @@
-GenerateType Object KZLib.KZData.ColorProto
----
-int Num
-string NameKey
-string[] ColorArray

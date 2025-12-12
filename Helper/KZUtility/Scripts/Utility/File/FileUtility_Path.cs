@@ -6,8 +6,6 @@ namespace KZLib.KZUtility
 {
 	public static partial class FileUtility
 	{
-		private readonly static string s_projectParentPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(),".."));
-
 		/// <summary>
 		/// It is based on the Assets folder.
 		/// </summary>
@@ -30,7 +28,7 @@ namespace KZLib.KZUtility
 			}
 			else
 			{
-				return NormalizePath(Path.GetFullPath(path,s_projectParentPath));
+				return NormalizePath(Path.GetFullPath(path,GetProjectParentPath()));
 			}
 		}
 
@@ -70,7 +68,16 @@ namespace KZLib.KZUtility
 			}
 
 			return string.Empty;
+		}
 
+		public static string GetProjectPath()
+		{
+			return Directory.GetCurrentDirectory();
+		}
+
+		public static string GetProjectParentPath()
+		{
+			return Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(),".."));
 		}
 
 		/// <summary>
