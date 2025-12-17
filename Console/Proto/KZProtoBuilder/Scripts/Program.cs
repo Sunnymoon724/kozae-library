@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
+using KZConsole.KZUtility;
 using KZLib.KZUtility;
 
 namespace KZConsole
@@ -23,7 +23,7 @@ namespace KZConsole
 			var protoFolderAbsolutePath = argumentArray[0];
 			var projectPluginAbsolutePath = argumentArray[1];
 
-			Console.WriteLine($"Proto folder path : {protoFolderAbsolutePath}");
+			CommonUtility.WriteLog($"Proto folder path : {protoFolderAbsolutePath}",LogType.Info);
 
 			var protoFilePathList = new List<string>(FileUtility.FindAllExcelFileGroupByFolderPath(protoFolderAbsolutePath));
 
@@ -38,14 +38,14 @@ namespace KZConsole
 
 			builder.GenerateAllProtoCode();
 
-			Console.WriteLine("Build project");
+			CommonUtility.WriteLog("Build project",LogType.Info);
 
 			//? Build Project
 			projectManager.BuildProject();
 
-			Console.WriteLine("Move dll & pdb file");
+			CommonUtility.WriteLog("Move dll & pdb file",LogType.Info);
 			
-			Console.WriteLine($"project plugin path : {projectPluginAbsolutePath}");
+			CommonUtility.WriteLog($"project plugin path : {projectPluginAbsolutePath}",LogType.Info);
 
 			FileUtility.CreateFolder(projectPluginAbsolutePath);
 
@@ -57,7 +57,7 @@ namespace KZConsole
 			FileUtility.MoveFile(sourceDllFilePath,projectPluginAbsolutePath,true);
 			FileUtility.MoveFile(sourcePdbFilePath,projectPluginAbsolutePath,true);
 
-			Console.WriteLine("Delete project");
+			CommonUtility.WriteLog("Delete project",LogType.Info);
 
 			//? Delete Project
 			FileUtility.DeleteFolder(projectFolderPath,true);

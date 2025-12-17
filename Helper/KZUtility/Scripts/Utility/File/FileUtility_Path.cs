@@ -153,7 +153,7 @@ namespace KZLib.KZUtility
 
 		public static string[] GetFilePathArray(string folderPath,string pattern = "")
 		{
-			if(!IsPathExist(folderPath))
+			if(!IsFileExist(folderPath))
 			{
 				return Array.Empty<string>();
 			}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Threading;
+using KZConsole.KZUtility;
 
 namespace KZConsole
 {
@@ -16,19 +17,13 @@ namespace KZConsole
 
 				onPlayProgram(argumentArray); 
 
-				Console.WriteLine("Program is done");
+				CommonUtility.WriteLog("Program is done",LogType.Info);
 
 				Console.ReadLine();
 			}
 			catch(Exception exception)
 			{
-				var color = Console.ForegroundColor;
-
-				Console.ForegroundColor = ConsoleColor.Red;
-
-				Console.WriteLine($"{exception}");
-
-				Console.ForegroundColor = color;
+				CommonUtility.WriteLog($"Exception : {exception}",LogType.Error);
 
 				Environment.Exit(-1);
 			}

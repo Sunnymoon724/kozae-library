@@ -1,5 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
+using KZConsole.KZUtility;
 using KZLib.KZUtility;
 
 namespace KZConsole
@@ -18,7 +18,7 @@ namespace KZConsole
 		{
 			var keyInfo = Encryptor.GenerateKey();
 
-			Console.WriteLine("Save keys");
+			CommonUtility.WriteLog("Save keys",LogType.Info);
 
 			var resultFolderPath = argumentArray[0];
 

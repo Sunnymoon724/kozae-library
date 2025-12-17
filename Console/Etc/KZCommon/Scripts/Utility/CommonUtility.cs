@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
 namespace KZConsole.KZUtility
 {
+	public enum LogType { Info, Warning, Error, }
+
     public static class CommonUtility
 	{
 		public static Dictionary<string, string> ReadEmbeddedResourcesFromExtension(Assembly assembly, string extension)
@@ -35,7 +38,7 @@ namespace KZConsole.KZUtility
 
 			return resourceDict;
 		}
-		
+
 		private static string _GetFileName(string resourceName)
 		{
 			var resourceArray = resourceName.Split('.');
@@ -54,6 +57,33 @@ namespace KZConsole.KZUtility
 			using var streamReader = new StreamReader(stream);
 
 			return streamReader.ReadToEnd();
+		}
+
+		public static void WriteLog(string message,LogType logType)
+		{
+			switch(logType)
+			{
+				case LogType.Info:
+					Console.WriteLine(message);
+					break;
+				case LogType.Warning:
+					_WriteColorLog(message,ConsoleColor.Yellow);
+					break;
+				case LogType.Error:
+					_WriteColorLog(message,ConsoleColor.Red);
+					break;
+			}
+		}
+
+		private static void _WriteColorLog(string message,ConsoleColor consoleColor)
+		{
+			var tempColor = Console.ForegroundColor;
+
+			Console.ForegroundColor = consoleColor;
+
+			Console.WriteLine(message);
+
+			Console.ForegroundColor = tempColor;
 		}
 	}
 }

@@ -85,13 +85,16 @@ namespace KZLib.KZUtility
 
 		public static IEnumerable<string> FindAllFileGroupByFolderPath(string absoluteFolderPath,string[] extensionArray)
 		{
-			foreach(var extension in extensionArray)
+			if(IsFolderExist(absoluteFolderPath))
 			{
-				foreach(var filePath in GetFilePathArray(absoluteFolderPath,extension))
+				foreach(var extension in extensionArray)
 				{
-					if(!string.IsNullOrEmpty(filePath))
+					foreach(var filePath in GetFilePathArray(absoluteFolderPath,extension))
 					{
-						yield return filePath;
+						if(!string.IsNullOrEmpty(filePath))
+						{
+							yield return filePath;
+						}
 					}
 				}
 			}

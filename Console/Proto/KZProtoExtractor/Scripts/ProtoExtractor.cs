@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using KZConsole.KZUtility;
 using KZLib.KZTool;
 using KZLib.KZUtility;
 using MemoryPack;
@@ -19,7 +20,7 @@ namespace KZConsole.KZProto
 
 		public void ExtractAllProto(List<string> protoFilePathList)
 		{
-			Console.WriteLine("Extract all proto.");
+			CommonUtility.WriteLog("Extract all proto.",LogType.Info);
 
 			_GenerateBranch();
 			_ExtractProtoAllFiles(protoFilePathList);
@@ -27,14 +28,14 @@ namespace KZConsole.KZProto
 
 		private void _GenerateBranch()
 		{
-			Console.WriteLine("-Make branch.");
+			CommonUtility.WriteLog("-Make branch.",LogType.Info);
 
 			m_branchGenerator.GenerateBranch();
 		}
 
 		private void _ExtractProtoAllFiles(List<string> protoFilePathList)
 		{
-			Console.WriteLine("Extract proto.");
+			CommonUtility.WriteLog("Extract proto.",LogType.Info);
 
 			var outputFolderPath = Path.Combine(FileUtility.GetProjectParentPath(),"ProtoOutput");
 
@@ -72,7 +73,7 @@ namespace KZConsole.KZProto
 				_SaveCsvFile(csvFolderPath,fileName,backupText);
 				_SaveProto(fileName,protoArray,byteFolderPath);
 
-				Console.WriteLine($"-Save {fileName} proto");
+				CommonUtility.WriteLog($"-Save {fileName} proto",LogType.Info);
 			}
 		}
 
@@ -96,14 +97,14 @@ namespace KZConsole.KZProto
 
 		private bool _TryExtractProtoArray(string fileName,Type protoType,ExcelReader excelReader,out Array protoArray,out string backupText)
 		{
-			Console.WriteLine($"-Extract {fileName}");
+			CommonUtility.WriteLog($"-Extract {fileName}",LogType.Info);
 
 			// extract is only +sheet
 			var sheetNameArray = excelReader.FindSheetNameArray(x => x.StartsWith('+'));
 
 			if(sheetNameArray.Length < 1)
 			{
-				Console.WriteLine($"Warning : {fileName} is not include +Sheet");
+				CommonUtility.WriteLog($"Warning : {fileName} is not include +Sheet",LogType.Info);
 
 				backupText = string.Empty;
 				protoArray = Array.Empty<object>();

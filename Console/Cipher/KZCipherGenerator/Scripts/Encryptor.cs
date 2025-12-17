@@ -1,4 +1,5 @@
 ﻿using System;
+using KZConsole.KZUtility;
 using KZLib.KZUtility;
 
 namespace KZConsole
@@ -28,7 +29,7 @@ namespace KZConsole
 			var encryptKey = CryptoUtility.AES.EncryptToString(privateKey,randomKey);
 			var convertKey = Convert.ToBase64String(randomKey);
 
-			Console.WriteLine($"Public Key : {publicKey}\n\nPrivate Key : {privateKey}\n\nEncrypt Key : {encryptKey}\n\nRandom Key : {convertKey}");
+			CommonUtility.WriteLog($"Public Key : {publicKey}\n\nPrivate Key : {privateKey}\n\nEncrypt Key : {encryptKey}\n\nRandom Key : {convertKey}",LogType.Info);
 
 			return new KeyInfo(publicKey,encryptKey,convertKey);
 		}

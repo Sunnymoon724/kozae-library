@@ -76,7 +76,7 @@ namespace KZConsole
 			process.StartInfo.RedirectStandardError = true;
 			process.StartInfo.UseShellExecute = false;
 
-			Console.WriteLine("-Build start");
+			CommonUtility.WriteLog("-Build start",LogType.Info);
 
 			try
 			{
@@ -87,18 +87,16 @@ namespace KZConsole
 
 				process.WaitForExit();
 
-				Console.WriteLine("-Build Output:");
-				Console.WriteLine(output);
+				CommonUtility.WriteLog($"-Build Output: \n{output}",LogType.Info);
 
 				if(!string.IsNullOrEmpty(error))
 				{
-					Console.WriteLine("-Build Error:");
-					Console.WriteLine(error);
+					CommonUtility.WriteLog($"-Build Error: \n{error}",LogType.Error);
 				}
 			}
 			catch(Exception exception)
 			{
-				Console.WriteLine($"Error executing build: {exception.Message}");
+				CommonUtility.WriteLog($"Error executing build: {exception.Message}",LogType.Error);
 			}
 		}
 	}

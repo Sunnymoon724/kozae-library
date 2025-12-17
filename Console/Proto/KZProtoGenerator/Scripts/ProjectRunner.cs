@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using KZConsole.KZUtility;
 using KZLib.KZUtility;
 
 namespace KZConsole
@@ -10,7 +11,7 @@ namespace KZConsole
 		{
 			if (!FileUtility.IsFileExist(projectPath))
 			{
-				_WriteLog($"Project not found: {projectPath}",true);
+				CommonUtility.WriteLog($"Warning : Project not found: {projectPath}",LogType.Warning);
 
 				return;
 			}
@@ -33,7 +34,7 @@ namespace KZConsole
 
 			try
 			{
-				_WriteLog($"-{name} Run Start",false);
+				CommonUtility.WriteLog($"-{name} Run Start",LogType.Info);
 
 				process.Start();
 
@@ -44,14 +45,12 @@ namespace KZConsole
 
 				process.CancelOutputRead();
 				process.CancelErrorRead();
-				
-				_WriteLog($"-{name} Run End.",false);
 
-				Console.WriteLine();
+				CommonUtility.WriteLog($"-{name} Run End.",LogType.Info);
 			}
 			catch(Exception exception)
 			{
-				_WriteLog($"Error executing build: {exception.Message}",true);
+				CommonUtility.WriteLog($"Error executing build : {exception.Message}",LogType.Error);
 			}
 		}
 		
@@ -59,7 +58,7 @@ namespace KZConsole
 		{
 			if(argument.Data != null)
 			{
-				_WriteLog($"{argument.Data}",false);
+				CommonUtility.WriteLog($"{argument.Data}",LogType.Info);
 			}
 		}
 
@@ -67,27 +66,7 @@ namespace KZConsole
 		{
 			if(argument.Data != null)
 			{
-				_WriteLog($"-Error: {argument.Data}",true);
-			}
-		}
-		
-		private static void _WriteLog(string message,bool isError)
-		{
-			if(isError)
-			{
-				var color = Console.ForegroundColor;
-
-				Console.ForegroundColor = ConsoleColor.Red;
-
-				Console.WriteLine(message);
-
-				Console.ForegroundColor = color;
-
-				return;
-			}
-			else
-			{
-				Console.WriteLine(message);
+				CommonUtility.WriteLog($"-Error : {argument.Data}",LogType.Error);
 			}
 		}
 	}

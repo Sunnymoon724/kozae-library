@@ -9,7 +9,7 @@ using KZLib.KZUtility;
 
 namespace KZConsole
 {
-	public class ProtoBuilder(List<string> protoFilePathList, string projectFolderPath)
+	public class ProtoBuilder(List<string> protoFilePathList,string projectFolderPath)
 	{
 		private struct EnumScheme
 		{
@@ -25,16 +25,16 @@ namespace KZConsole
 
 		public void GenerateAllProtoCode()
 		{
-			Console.WriteLine("Generate all proto code.");
-			Console.WriteLine("-Copy default proto code.");
-			
+			CommonUtility.WriteLog("Generate all proto code.",LogType.Info);
+			CommonUtility.WriteLog("-Copy default proto code.",LogType.Info);
+
 			Assembly assembly = Assembly.GetExecutingAssembly();
 
 			_CopyDefaultProtoCode(assembly);
 
 			var templateFileDict = CommonUtility.ReadEmbeddedResourcesFromExtension(assembly,".txt");
 
-			Console.WriteLine("-Generate enum code.");
+			CommonUtility.WriteLog("-Generate enum code.",LogType.Info);
 			
 			if(templateFileDict.TryGetValue("EnumTemplate.txt",out var enumTemplate))
 			{
@@ -45,8 +45,8 @@ namespace KZConsole
 				throw new FileNotFoundException("Enum template file not found.");
 			}
 
-			Console.WriteLine("-Generate proto code.");
-			
+			CommonUtility.WriteLog("-Generate proto code.",LogType.Info);
+
 			if(templateFileDict.TryGetValue("ProtoTemplate.txt",out var protoTemplate))
 			{
 				_GenerateProtoCode(protoTemplate);
@@ -69,6 +69,13 @@ namespace KZConsole
 
 		private void _GenerateEnumCode(string templateFile)
 		{
+			if(!FileUtility.IsFileExist(m_enumExcelFilePath))
+			{
+				CommonUtility.WriteLog("Warning : Enum excel file not found.",LogType.Warning);
+
+				return;
+			}
+
 			var enumBuilder = new StringBuilder();
 			var excelReader = new ExcelReader(m_enumExcelFilePath);
 			var collection = excelReader.SheetNameGroup;
@@ -141,7 +148,7 @@ namespace KZConsole
 
 				if(nameCount < 1)
 				{
-					Console.WriteLine($"Warning : {fileName} is not include +Sheet");
+					CommonUtility.WriteLog($"Warning : {fileName} is not include +Sheet", LogType.Warning);
 
 					continue;
 				}

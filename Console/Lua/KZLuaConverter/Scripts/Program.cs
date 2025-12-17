@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using KZConsole.KZUtility;
 using KZLib.KZUtility;
 
 namespace KZConsole
@@ -19,7 +20,7 @@ namespace KZConsole
 			var currentPath = Directory.GetCurrentDirectory();
 			var luaFolderPath = Path.GetFullPath(Path.Combine(currentPath,argumentArray[0]));
 
-			Console.WriteLine($"Lua folder path : {luaFolderPath}");
+			CommonUtility.WriteLog($"Lua folder path : {luaFolderPath}",LogType.Info);
 
 			var resultFolderPath = argumentArray[1];
 
