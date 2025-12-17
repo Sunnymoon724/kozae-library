@@ -27,7 +27,7 @@ namespace KZLib.KZTool
 
 		public string FilePath { get; }
 
-		private readonly Dictionary<string,string[][]> m_sheetDict = new Dictionary<string,string[][]>();
+		private readonly Dictionary<string,string[][]> m_sheetDict = new();
 
 		public ExcelReader(string filePath)
 		{

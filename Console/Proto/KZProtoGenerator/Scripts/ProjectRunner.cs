@@ -23,13 +23,12 @@ namespace KZConsole
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
-				CreateNoWindow = true
+				CreateNoWindow = true,
 			};
 
 			using Process process = new() { StartInfo = startInfo };
 
 			process.OutputDataReceived += _CreateOutputHandler;
-
 			process.ErrorDataReceived += _CreateErrorHandler;
 
 			try
