@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 
 namespace KZLib.KZUtility
 {
@@ -128,13 +129,20 @@ namespace KZLib.KZUtility
 			}
 		}
 
-		public static string FindFilePath(List<string> filePathList,string text)
+		public static string FindFilePath(List<string> filePathList,string name)
 		{
 			for(var i=0;i<filePathList.Count;i++)
 			{
 				var filePath = filePathList[i];
 
-				if(filePath.Contains(text) && IsPathExist(filePath))
+				if(!IsFilePath(filePath))
+				{
+					continue;
+				}
+
+				var fileName = GetOnlyName(filePath);
+
+				if(string.Equals(fileName,name))
 				{
 					return filePath;
 				}

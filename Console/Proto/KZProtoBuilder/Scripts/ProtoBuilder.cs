@@ -19,7 +19,6 @@ namespace KZConsole
 		}
 
 		private readonly List<string> m_protoFilePathList = protoFilePathList;
-		private readonly string m_enumExcelFilePath = FileUtility.FindFilePath(protoFilePathList,"Enum");
 		private readonly string m_projectFolderPath = projectFolderPath;
 		private readonly string m_newLine = Environment.NewLine;
 
@@ -69,7 +68,9 @@ namespace KZConsole
 
 		private void _GenerateEnumCode(string templateFile)
 		{
-			if(!FileUtility.IsFileExist(m_enumExcelFilePath))
+			var enumExcelFilePath = FileUtility.FindFilePath(m_protoFilePathList,"Enum");
+			
+			if(string.IsNullOrEmpty(enumExcelFilePath))
 			{
 				CommonUtility.WriteLog("Warning : Enum excel file not found.",LogType.Warning);
 
@@ -77,7 +78,7 @@ namespace KZConsole
 			}
 
 			var enumBuilder = new StringBuilder();
-			var excelReader = new ExcelReader(m_enumExcelFilePath);
+			var excelReader = new ExcelReader(enumExcelFilePath);
 			var collection = excelReader.SheetNameGroup;
 			var currentIndex = 0;
 
@@ -115,7 +116,7 @@ namespace KZConsole
 			var enumCode = enumBuilder.ToString();
 			var enumFile = templateFile;
 
-			enumFile = enumFile.Replace("$Enums",enumCode);
+			enumFile = enumFile.Replace("$Enum",enumCode);
 
 			_WriteTextToFile("Enum.cs",enumFile);
 		}
