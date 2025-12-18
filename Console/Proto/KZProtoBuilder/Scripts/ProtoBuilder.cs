@@ -144,7 +144,13 @@ namespace KZConsole
 				}
 
 				var excelReader = new ExcelReader(protoFilePath);
-				var sheetNameArray = excelReader.FindSheetNameArray(x=>x.StartsWith('+'));
+
+				static bool _FindPlus(string sheetName)
+				{
+					return sheetName.StartsWith('+');
+				}
+
+				var sheetNameArray = excelReader.FindSheetNameArray(_FindPlus);
 				var nameCount = sheetNameArray.Length;
 
 				if(nameCount < 1)
@@ -209,12 +215,13 @@ namespace KZConsole
 			var propertyBuilder = new StringBuilder();
 			var protoJaggedArray = excelReader.MergeCellArrayInRows(sheetName,[0,1]);
 			var schemeArray = protoJaggedArray[0];
+			var typeArray = protoJaggedArray[1];
 			var schemeLength = schemeArray.Length;
 			var keyIndex = 0;
 
 			for(int i=0;i<schemeLength;i++)
 			{
-				var property = schemeArray[i].Split(':')[0];
+				var property = schemeArray[i];
 
 				// remove overlap
 				if(string.IsNullOrEmpty(property) || property.StartsWith('%') || propertyList.Contains(property))
@@ -222,7 +229,7 @@ namespace KZConsole
 					continue;
 				}
 
-				var type = protoJaggedArray[1][i];
+				var type = typeArray[i].Split(':')[0];
 
 				propertyBuilder.Append($"\t\t[MemoryPackOrder({keyIndex++})]{m_newLine}");
 				propertyBuilder.Append($"\t\tpublic {type} {property} {{ get; init; }}{m_newLine}");

@@ -66,8 +66,7 @@ namespace KZLib.KZUtility
 
 			var function = _GetFunctionOrThrow(functionName);
 
-			var valueArray = argumentArray?.Length > 0 ? Array.ConvertAll(argumentArray,x => DynValue.FromObject(m_luaScript,x)) : Array.Empty<DynValue>();
-			var result = m_luaScript.Call(function,valueArray);
+			var result = m_luaScript.Call(function,_ConvertToValueArray(argumentArray));
 
 			_CheckVoid(result,functionName);
 
@@ -83,9 +82,17 @@ namespace KZLib.KZUtility
 
 			var function = _GetFunctionOrThrow(functionName);
 
-			var valueArray = argumentArray?.Length > 0 ? Array.ConvertAll(argumentArray,x => DynValue.FromObject(m_luaScript,x)) : Array.Empty<DynValue>();
+			m_luaScript.Call(function,_ConvertToValueArray(argumentArray));
+		}
+		
+		private DynValue[] _ConvertToValueArray(object[] argumentArray)
+		{
+			DynValue _ConvertToValue(object argument)
+			{
+				return DynValue.FromObject(m_luaScript,argument);
+			}
 
-			m_luaScript.Call(function,valueArray);
+			return argumentArray?.Length > 0 ? Array.ConvertAll(argumentArray,_ConvertToValue) : Array.Empty<DynValue>();
 		}
 
 		private DynValue _GetFunctionOrThrow(string functionName)

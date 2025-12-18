@@ -28,8 +28,15 @@ namespace KZLib.KZUtility
 			{
 				_ValidateType(eventName,callback,listener);
 
+				var listenerArray = listener.GetInvocationList();
+
+				bool _IsEqual(Delegate x)
+				{
+					return x == callback;
+				}
+
 				// If the callback is already in the listener, do not add it again
-				if(Array.Exists(listener.GetInvocationList(),x => x == callback))
+				if(Array.Exists(listenerArray,_IsEqual))
 				{
 					return;
 				}

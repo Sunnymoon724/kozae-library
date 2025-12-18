@@ -99,8 +99,13 @@ namespace KZConsole.KZProto
 		{
 			CommonUtility.WriteLog($"-Extract {fileName}",LogType.Info);
 
+			static bool _FindPlus(string sheetName)
+			{
+				return sheetName.StartsWith('+');
+			}
+
 			// extract is only +sheet
-			var sheetNameArray = excelReader.FindSheetNameArray(x => x.StartsWith('+'));
+			var sheetNameArray = excelReader.FindSheetNameArray(_FindPlus);
 
 			if(sheetNameArray.Length < 1)
 			{
@@ -235,19 +240,17 @@ namespace KZConsole.KZProto
 
 		private static int _FindBranchIndex(string[] schemeArray,string filePath,string sheetName)
 		{
-			var branchTag = "%Branch";
-			
 			for(var i=0;i<schemeArray.Length;i++)
 			{
 				var scheme = schemeArray[i];
 
-				if(string.Equals(scheme,$"{branchTag}"))
+				if(string.Equals(scheme,"%Branch"))
 				{
 					return i;
 				}
 			}
 
-			throw new KZSheetException($"{branchTag} is not included.",filePath,sheetName,0);
+			throw new KZSheetException("%Branch is not included.",filePath,sheetName,0);
 		}
 
 		private string[][] _ExtractRowArray(ExcelReader excelReader,string sheetName,Dictionary<Type,List<int>> schemeIndexListDict)

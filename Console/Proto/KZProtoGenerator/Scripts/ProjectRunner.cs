@@ -52,8 +52,8 @@ namespace KZConsole
 				CommonUtility.WriteLog($"Error executing build : {exception.Message}",LogType.Error);
 			}
 		}
-		
-		private static void _CreateOutputHandler(object sender, DataReceivedEventArgs argument)
+
+		private static void _CreateOutputHandler(object sender,DataReceivedEventArgs argument)
 		{
 			if(argument.Data != null)
 			{
@@ -61,7 +61,7 @@ namespace KZConsole
 			}
 		}
 
-		private static void _CreateErrorHandler(object sender, DataReceivedEventArgs argument)
+		private static void _CreateErrorHandler(object sender,DataReceivedEventArgs argument)
 		{
 			if(argument.Data != null)
 			{

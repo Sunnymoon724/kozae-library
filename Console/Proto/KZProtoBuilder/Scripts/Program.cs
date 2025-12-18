@@ -26,8 +26,6 @@ namespace KZConsole
 			CommonUtility.WriteLog($"Proto folder path : {protoFolderAbsolutePath}",LogType.Info);
 
 			var protoFilePathList = new List<string>(FileUtility.FindAllExcelFileGroupByFolderPath(protoFolderAbsolutePath));
-			
-			CommonUtility.WriteLog($"Proto file count : {protoFilePathList.Count}", LogType.Info);
 
 			var parentPath = FileUtility.GetProjectParentPath();
 			var projectFolderPath = Path.Combine(parentPath,"ProtoProject");

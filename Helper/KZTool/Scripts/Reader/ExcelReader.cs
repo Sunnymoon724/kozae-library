@@ -23,8 +23,6 @@ namespace KZLib.KZTool
 			}
 		}
 
-		private const int c_schemeIndex = 0;
-
 		public string FilePath { get; }
 
 		private readonly Dictionary<string,string[][]> m_sheetDict = new();
@@ -128,11 +126,11 @@ namespace KZLib.KZTool
 
 		public int FindPrimaryKeyIndex(string sheetName)
 		{
-			var schemeArray = FindSchemeArray(sheetName);
+			var typeArray = FindCellArrayInRow(sheetName,1);
 
-			for(var i=0;i<schemeArray.Length;i++)
+			for(var i=0;i<typeArray.Length;i++)
 			{
-				if(schemeArray[i].Contains(":pk"))
+				if(typeArray[i].Contains(":pk"))
 				{
 					return i;
 				}
@@ -254,7 +252,7 @@ namespace KZLib.KZTool
 
 				for(var i=0;i<schemeArray.Length;i++)
 				{
-					var scheme = schemeArray[i].Split(':')[0];
+					var scheme = schemeArray[i];
 
 					if(string.Equals(scheme,propertyName))
 					{
@@ -422,7 +420,7 @@ namespace KZLib.KZTool
 		/// </summary>
 		public string[] FindSchemeArray(string sheetName)
 		{
-			return FindCellArrayInRow(sheetName,c_schemeIndex) ?? throw new NullReferenceException($"Scheme is not included in {sheetName}");
+			return FindCellArrayInRow(sheetName,0) ?? throw new NullReferenceException($"Scheme is not included in {sheetName}");
 		}
 
 		/// <summary>
@@ -447,7 +445,7 @@ namespace KZLib.KZTool
 				throw new IndexOutOfRangeException($"{index} is out of range in {sheetName}");
 			}
 		}
-		
+
 		private bool _IsValidCellArray(string[] cellArray)
 		{
 			return cellArray != null && cellArray.Length != 0;

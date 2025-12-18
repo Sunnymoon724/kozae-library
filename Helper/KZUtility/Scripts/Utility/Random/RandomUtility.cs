@@ -7,6 +7,70 @@ namespace KZLib.KZUtility
 	{
 		private static readonly Randomizer s_randomizer = new();
 
+		/// <summary>
+		/// min <= n <= max
+		/// </summary>
+		public static int PickInteger(int minValue,int maxValue)
+		{
+			return s_randomizer.PickInteger(minValue,maxValue);
+		}
+
+		/// <summary>
+		/// 0<= n < 1
+		/// </summary>
+		public static float PickSingle()
+		{
+			return s_randomizer.PickSingle();
+		}
+
+		/// <summary>
+		/// -value <= n <= +value
+		/// </summary>
+		public static float PickSingle(float value)
+		{
+			return s_randomizer.PickSingle(value);
+		}
+
+		/// <summary>
+		/// min <= n <= max
+		/// </summary>
+		public static float PickSingle(float minValue,float maxValue)
+		{
+			return s_randomizer.PickSingle(minValue,maxValue);
+		}
+
+		/// <summary>
+		/// 0<= n < 1
+		/// </summary>
+		public static double PickDouble()
+		{
+			return s_randomizer.PickDouble();
+		}
+
+		/// <summary>
+		/// -value <= n <= +value
+		/// </summary>
+		public static double PickDouble(double value)
+		{
+			return s_randomizer.PickDouble(value);
+		}
+
+		/// <summary>
+		/// min <= n <= max
+		/// </summary>
+		public static double PickDouble(double minValue,double maxValue)
+		{
+			return s_randomizer.PickDouble(minValue,maxValue);
+		}
+
+		/// <summary>
+		/// true or false
+		/// </summary>
+		public static bool PickBoolean()
+		{
+			return s_randomizer.PickBoolean();
+		}
+
 		#region Gaussian
 		public static int GenerateGaussian(int mean,int deviation)
 		{
@@ -144,7 +208,7 @@ namespace KZLib.KZUtility
 		/// </summary>
 		public static bool HitRate(float percent)
 		{
-			return s_randomizer.PickSingle() <= percent;
+			return s_randomizer.HitRate(percent);
 		}
 
 		/// <summary>
@@ -152,11 +216,7 @@ namespace KZLib.KZUtility
 		/// </summary>
 		public static bool HitRateInRange(float minValue,float maxValue)
 		{
-			var value = s_randomizer.PickSingle();
-
-			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
-
-			return minValue <= value && value <= maxValue;
+			return s_randomizer.HitRateInRange(minValue,maxValue);
 		}
 		
 		/// <summary>
@@ -164,7 +224,7 @@ namespace KZLib.KZUtility
 		/// </summary>
 		public static bool HitRate(double percent)
 		{
-			return s_randomizer.PickDouble() <= percent;
+			return s_randomizer.HitRate(percent);
 		}
 
 		/// <summary>
@@ -172,21 +232,12 @@ namespace KZLib.KZUtility
 		/// </summary>
 		public static bool HitRateInRange(double minValue,double maxValue)
 		{
-			var value = s_randomizer.PickDouble();
-
-			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
-
-			return minValue <= value && value <= maxValue;
+			return s_randomizer.HitRateInRange(minValue,maxValue);
 		}
 
 		public static int GetRandomSign(bool includeZero = true)
 		{
 			return includeZero ? s_randomizer.PickInteger(0,2)-1 : s_randomizer.PickDouble() < 0.5d ? -1 : 1;
-		}
-
-		private static (TValue min,TValue max) _NormalizeRange<TValue>(TValue minValue,TValue maxValue) where TValue : IComparable<TValue>
-		{
-			return minValue.CompareTo(maxValue) > 0 ? (maxValue,minValue) : (minValue,maxValue);
 		}
 
 		private static bool _IsValidList<TValue>(IList<TValue> list)

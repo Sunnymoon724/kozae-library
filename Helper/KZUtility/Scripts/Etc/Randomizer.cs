@@ -236,9 +236,51 @@ namespace KZLib.KZUtility
 		}
 		#endregion Boolean
 
-		private (TValue min,TValue max) _NormalizeRange<TValue>(TValue minValue,TValue maxValue) where TValue : IComparable<TValue>
+		/// <summary>
+		/// Check value in [0,1].
+		/// </summary>
+		public bool HitRate(float percent)
 		{
-			return minValue.CompareTo(maxValue) > 0 ? (maxValue,minValue) : (minValue,maxValue);
+			return PickSingle() <= percent;
 		}
+
+		/// <summary>
+		/// Check value in [minValue,maxValue].
+		/// </summary>
+		public bool HitRateInRange(float minValue,float maxValue)
+		{
+			var value = PickSingle();
+
+			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
+
+			return minValue <= value && value <= maxValue;
+		}
+		
+		/// <summary>
+		/// Check value in [0,1].
+		/// </summary>
+		public bool HitRate(double percent)
+		{
+			return PickDouble() <= percent;
+		}
+
+		/// <summary>
+		/// Check value in [minValue,maxValue].
+		/// </summary>
+		public bool HitRateInRange(double minValue,double maxValue)
+		{
+			var value = PickDouble();
+
+			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
+
+			return minValue <= value && value <= maxValue;
+		}
+
+		private CompareValue<TValue> _NormalizeRange<TValue>(TValue minValue,TValue maxValue) where TValue : IComparable<TValue>
+		{
+			return minValue.CompareTo(maxValue) > 0 ? new CompareValue<TValue>(maxValue,minValue) : new CompareValue<TValue>(minValue,maxValue);
+		}
+
+		private record CompareValue<TValue>(TValue minValue,TValue maxValue);
 	}
 }

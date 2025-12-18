@@ -26,7 +26,7 @@ namespace KZConsole
 
 			_CopyPluginFile();
 		}
-		
+
 		private void _CreateProjectFile(Assembly assembly)
 		{
 			var projectFileDict = CommonUtility.ReadEmbeddedResourcesFromExtension(assembly,".txt");

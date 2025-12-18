@@ -140,7 +140,7 @@ namespace System.Collections.Generic
 					}
 				}
 
-				DepthFirstSearch(node,prefix,resultList);
+				_DepthFirstSearch(node,prefix,resultList);
 
 				return resultList;
 			}
@@ -152,13 +152,13 @@ namespace System.Collections.Generic
 			{
 				var resultList = new List<string>();
 
-				DepthFirstSearch(m_root,"",resultList);
+				_DepthFirstSearch(m_root,"",resultList);
 
 				return resultList;
 			}
 		}
-		
-		private void DepthFirstSearch(TrieNode startNode,string prefix,List<string> result)
+
+		private void _DepthFirstSearch(TrieNode startNode,string prefix,List<string> result)
 		{
 			var itemStack = new Stack<StackItem>();
 
