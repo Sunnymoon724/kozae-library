@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 /// <summary>
@@ -11,6 +12,7 @@ namespace KZLib.KZUtility
 	public abstract class CustomTag : IComparable,IComparable<CustomTag>,IEquatable<CustomTag>
 	{
 		private const BindingFlags c_tagFlag = BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly;
+		private static readonly Type s_baseType = typeof(CustomTag);
 
 		protected readonly string m_name = string.Empty;
 
@@ -18,15 +20,14 @@ namespace KZLib.KZUtility
 
 		protected CustomTag(string name)
 		{
-			m_name = name;
+			m_name = name ?? throw new ArgumentNullException(nameof(name));
 		}
 
 		public static List<TTag> CollectCustomTagList<TTag>(bool isIncludeDerivedType) where TTag : CustomTag
 		{
-			var tagType = typeof(CustomTag);
 			var tagList = new List<TTag>();
 
-			_CollectCustomTagGroup(tagList,tagType);
+			_CollectCustomTagGroup(tagList,s_baseType);
 
 			if(isIncludeDerivedType)
 			{
@@ -34,7 +35,7 @@ namespace KZLib.KZUtility
 				{
 					foreach(var assemblyType in assembly.GetTypes())
 					{
-						if(tagType.IsAssignableFrom(assemblyType) && assemblyType != tagType)
+						if(assemblyType != s_baseType && s_baseType.IsAssignableFrom(assemblyType))
 						{
 							_CollectCustomTagGroup(tagList,assemblyType);
 						}
@@ -65,17 +66,17 @@ namespace KZLib.KZUtility
 		{
 			if(!TryParse<TTag>(name,out var tag))
 			{
-				throw new NullReferenceException($"{name} is not included in CustomType. [Type : {nameof(TTag)}]");
+				throw new ArgumentException($"{name} is not included in CustomTag. [Type : {typeof(TTag).Name}]");
 			}
 
 			return tag;
 		}
 
-		public static bool TryParse<TTag>(string name,out TTag resultTag) where TTag : CustomTag
+		public static bool TryParse<TTag>(string name,[NotNullWhen(true)] out TTag? resultTag) where TTag : CustomTag
 		{
 			foreach(var customTag in CollectCustomTagList<TTag>(true))
 			{
-				if(string.Equals(customTag.m_name,name))
+				if(string.Equals(customTag.m_name,name,StringComparison.Ordinal))
 				{
 					resultTag = customTag;
 
@@ -83,7 +84,7 @@ namespace KZLib.KZUtility
 				}
 			}
 
-			resultTag = default!;
+			resultTag = null;
 
 			return false;
 		}
@@ -93,17 +94,17 @@ namespace KZLib.KZUtility
 			return other is CustomTag tag && Equals(tag);
 		}
 
-		public bool Equals(CustomTag? tag)
+		public bool Equals(CustomTag? other)
 		{
-			if(tag is null)
+			if(other is null)
 			{
 				return false;
 			}
 
-			return string.Equals(m_name,tag.m_name,StringComparison.Ordinal);
+			return string.Equals(m_name,other.m_name,StringComparison.Ordinal);
 		}
 
-		public static bool operator ==(CustomTag left,CustomTag right)
+		public static bool operator ==(CustomTag? left,CustomTag? right)
 		{
 			if(ReferenceEquals(left,right))
 			{
@@ -118,7 +119,7 @@ namespace KZLib.KZUtility
 			return left.Equals(right);
 		}
 
-		public static bool operator !=(CustomTag left,CustomTag right)
+		public static bool operator !=(CustomTag? left,CustomTag? right)
 		{
 			return !(left == right);
 		}
@@ -129,17 +130,22 @@ namespace KZLib.KZUtility
 
 		public int CompareTo(object? other)
 		{
-			return other is CustomTag tag ? CompareTo(tag) : throw new ArgumentException($"{other} is not a CustomTag");
+			if(other is CustomTag tag)
+			{
+				return CompareTo(tag);
+			}
+
+			throw new ArgumentException($"{other} is not a CustomTag");
 		}
 
 		public int CompareTo(CustomTag? tag)
 		{
 			if(tag is null)
 			{
-				throw new ArgumentException($"{tag} can not be null");
+				return 1;
 			}
 
-			return m_name.CompareTo(tag.m_name);
+			return string.Compare(m_name,tag.m_name,StringComparison.Ordinal);
 		}
 	}
 }

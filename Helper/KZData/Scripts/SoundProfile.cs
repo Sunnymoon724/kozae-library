@@ -26,22 +26,5 @@ namespace KZLib.KZData
 
 			return new SoundVolume(outputLevel, outputMute);
 		}
-
-		// public SoundProfile ScaleAllLevels(float scaleFactor,bool includeMaster)
-		// {
-		// 	return this with 
-		// 	{
-		// 		Master = Master.WithLevel(Master.level * scaleFactor),
-		// 		Music = Music.WithLevel(Music.level * scaleFactor),
-		// 		Effect = Effect.WithLevel(Effect.level * scaleFactor)
-		// 	};
-		// }
-
-		// public void MuteAll(bool mute)
-		// {
-		// 	Master.Set(Master.level,mute);
-		// 	Music.Set(Music.level,mute);
-		// 	Effect.Set(Effect.level,mute);
-		// }
 	}
 }
