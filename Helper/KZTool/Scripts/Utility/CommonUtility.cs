@@ -19,5 +19,15 @@ namespace KZLib.KZTool
 		{
 			FileUtility.WriteTextToFile(filePath,text);
 		}
+
+		internal static int ReadInt32(BinaryReader binaryReader)
+		{
+			return (binaryReader.ReadByte() << 24) | (binaryReader.ReadByte() << 16) | (binaryReader.ReadByte() << 8) | binaryReader.ReadByte();
+		}
+
+		internal static short ReadInt16(BinaryReader binaryReader)
+		{
+			return (short)((binaryReader.ReadByte() << 8) | binaryReader.ReadByte());
+		}
 	}
 }
