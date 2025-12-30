@@ -1,16 +1,16 @@
 
 namespace System.Collections.Generic
 {
-	public class CircularQueue<TData> : IEnumerable<TData>,IEnumerable,IReadOnlyCollection<TData>,ICollection
+	public sealed class CircularQueue<TValue> : IEnumerable<TValue>,IEnumerable,IReadOnlyCollection<TValue>,ICollection
 	{
-		private readonly TData[] m_dataArray = Array.Empty<TData>();
+		private readonly TValue[] m_valueArray = Array.Empty<TValue>();
 		private readonly int m_capacity = 0;
 		private readonly object m_syncRoot = new();
 
 		private int m_front = -1;
 		private int m_rear = -1;
 
-		public int Size => m_dataArray.Length;
+		public int Size => m_valueArray.Length;
 		public int Capacity => m_capacity;
 
 		public CircularQueue(int capacity)
@@ -21,21 +21,21 @@ namespace System.Collections.Generic
 			}
 
 			m_capacity = capacity;
-			m_dataArray = new TData[capacity];
+			m_valueArray = new TValue[capacity];
 		}
 
-		public CircularQueue(ICollection<TData> collection) : this(collection.Count)
+		public CircularQueue(ICollection<TValue> collection) : this(collection.Count)
 		{
-			collection.CopyTo(m_dataArray,0);
+			collection.CopyTo(m_valueArray,0);
 
 			m_rear = m_capacity-1;
 		}
 
-		public void Enqueue(TData data)
+		public void Enqueue(TValue value)
 		{
-			if(data == null)
+			if(value == null)
 			{
-				throw new NullReferenceException("Data cannot be null.");
+				throw new NullReferenceException("Value cannot be null.");
 			}
 
 			lock(m_syncRoot)
@@ -50,11 +50,11 @@ namespace System.Collections.Generic
 				}
 
 				m_rear = (m_rear+1)%m_capacity;
-				m_dataArray[m_rear] = data;
+				m_valueArray[m_rear] = value;
 			}
 		}
 
-		public TData Peek()
+		public TValue Peek()
 		{
 			lock(m_syncRoot)
 			{
@@ -63,11 +63,11 @@ namespace System.Collections.Generic
 					throw new ArgumentOutOfRangeException("Queue is empty.");
 				}
 
-				return m_dataArray[m_front];
+				return m_valueArray[m_front];
 			}
 		}
 
-		public TData Dequeue()
+		public TValue Dequeue()
 		{
 			lock(m_syncRoot)
 			{
@@ -76,7 +76,7 @@ namespace System.Collections.Generic
 					throw new ArgumentOutOfRangeException("Queue is empty.");
 				}
 
-				var data = m_dataArray[m_front];
+				var value = m_valueArray[m_front];
 
 				if(m_front == m_rear)
 				{
@@ -88,7 +88,7 @@ namespace System.Collections.Generic
 					m_front = (m_front+1)%m_capacity;
 				}
 
-				return data;
+				return value;
 			}
 		}
 
@@ -113,11 +113,11 @@ namespace System.Collections.Generic
 				m_front = -1;
 				m_rear = -1;
 
-				Array.Clear(m_dataArray,0,m_capacity);
+				Array.Clear(m_valueArray,0,m_capacity);
 			}
 		}
 
-		public IEnumerator<TData> GetEnumerator()
+		public IEnumerator<TValue> GetEnumerator()
 		{
 			lock(m_syncRoot)
 			{
@@ -130,12 +130,12 @@ namespace System.Collections.Generic
 
 				while(index != m_rear)
 				{
-					yield return m_dataArray[index];
+					yield return m_valueArray[index];
 
 					index = (index+1)%m_capacity;
 				}
 
-				yield return m_dataArray[index];
+				yield return m_valueArray[index];
 			}
 		}
 
@@ -144,11 +144,11 @@ namespace System.Collections.Generic
 			return GetEnumerator();
 		}
 
-		public bool Contains(TData data)
+		public bool Contains(TValue value)
 		{
-			if(data == null)
+			if(value == null)
 			{
-				throw new NullReferenceException("Data cannot be null.");
+				throw new NullReferenceException("Value cannot be null.");
 			}
 
 			lock(m_syncRoot)
@@ -157,7 +157,7 @@ namespace System.Collections.Generic
 
 				for(var i=0;i<Count;i++)
 				{
-					if(EqualityComparer<TData>.Default.Equals(m_dataArray[index],data))
+					if(EqualityComparer<TValue>.Default.Equals(m_valueArray[index],value))
 					{
 						return true;
 					}
@@ -189,7 +189,7 @@ namespace System.Collections.Generic
 
 					for(var i=0;i<Count;i++)
 					{
-						array.SetValue(m_dataArray[front],index+i);
+						array.SetValue(m_valueArray[front],index+i);
 						front = (front+1)%m_capacity;
 					}
 				}

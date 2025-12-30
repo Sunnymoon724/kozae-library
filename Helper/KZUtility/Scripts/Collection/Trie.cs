@@ -1,7 +1,7 @@
 
 namespace System.Collections.Generic
 {
-	public class Trie
+	public sealed class Trie
 	{
 		private class TrieNode
 		{
@@ -32,7 +32,7 @@ namespace System.Collections.Generic
 				if(m_childDict.TryGetValue(letter,out var trieNode) && trieNode != null)
 				{
 					node = trieNode;
-					
+
 					return true;
 				}
 
@@ -79,27 +79,104 @@ namespace System.Collections.Generic
 			}
 		}
 
-		public bool Search(string word)
+		public int Search(string word,int start = 0,bool onlyLetter = true)
 		{
-			if(string.IsNullOrWhiteSpace(word))
+			if(string.IsNullOrWhiteSpace(word) || start >= word.Length )
 			{
-				return false;
+				return 0;
 			}
 
 			var node = m_root;
+			var matchLength = 0;
+			var length = 0;
 
 			lock(m_syncRoot)
 			{
-				foreach(char letter in word)
+				for( int i = start; i < word.Length; i++ )
 				{
+					char letter = word[ i ];
+
+					if( onlyLetter && !char.IsLetter( letter ) )
+					{
+						continue; // Skip non-letters
+					}
+
 					if(!node.TryGetTrieNode(letter,out node))
 					{
-						return false;
+						break;
+					}
+
+					length++;
+
+					if(node.IsEndOfWord)
+					{
+						matchLength = length;
 					}
 				}
 
-				return node.IsEndOfWord;
+				return matchLength;
 			}
+		}
+		
+		public List<int> ExtractWordIndexList(string input,bool skipDigit)
+		{
+            var indexList = new List<int>();
+
+			if(!string.IsNullOrWhiteSpace(input))
+			{
+				var lower = input.ToLowerInvariant();
+				var index = 0;
+
+				while(index < lower.Length)
+				{
+					var node = m_root;
+					var tempIndex = index;
+                    var tempIndexList = new List<int>();
+
+					while(tempIndex < lower.Length)
+					{
+						var letter = lower[tempIndex];
+
+						if(skipDigit)
+						{
+							if(!char.IsLetter(letter))
+							{
+								tempIndex++;
+
+								continue;
+							}
+						}
+						else
+						{
+							if(!char.IsLetterOrDigit(letter))
+							{
+								tempIndex++;
+
+								continue;
+							}
+						}
+
+						if(!node.TryGetTrieNode(letter,out node))
+						{
+							break;
+						}
+
+						tempIndexList.Add(tempIndex);
+						tempIndex++;
+
+						if(node.IsEndOfWord)
+						{
+							indexList.AddRange(tempIndexList);
+
+							break;
+						}
+					}
+
+					index++;
+				}
+			}
+
+			return indexList;
 		}
 
 		public bool StartsWith(string prefix)
@@ -108,7 +185,7 @@ namespace System.Collections.Generic
 			{
 				return false;
 			}
-			
+
 			lock(m_syncRoot)
 			{
 				var node = m_root;
@@ -127,6 +204,11 @@ namespace System.Collections.Generic
 		
 		public List<string> AutoComplete(string prefix)
 		{
+			if(string.IsNullOrWhiteSpace(prefix))
+			{
+				return new List<string>();
+			}
+
 			lock(m_syncRoot)
 			{
 				var resultList = new List<string>();
@@ -145,14 +227,14 @@ namespace System.Collections.Generic
 				return resultList;
 			}
 		}
-		
+
 		public List<string> ToList()
 		{
 			lock(m_syncRoot)
 			{
 				var resultList = new List<string>();
 
-				_DepthFirstSearch(m_root,"",resultList);
+				_DepthFirstSearch(m_root,string.Empty,resultList);
 
 				return resultList;
 			}
@@ -180,16 +262,6 @@ namespace System.Collections.Generic
 			}
 		}
 
-		private class StackItem
-		{
-			public TrieNode Node { get; }
-			public string Current { get; }
-
-			public StackItem(TrieNode node,string current)
-			{
-				Node = node;
-				Current = current;
-			}
-		}
+		private record StackItem(TrieNode Node,string Current);
 	}
 }

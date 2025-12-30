@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using ClosedXML.Excel;
@@ -9,20 +10,20 @@ using UnityEngine;
 
 namespace KZLib.KZTool
 {
+	public record ExcelSchemeInfo
+	{
+		public string Title { get; }
+		public int Index { get; }
+
+		public ExcelSchemeInfo(string title,int index)
+		{
+			Title = title;
+			Index = index;
+		}
+	}
+
 	public class ExcelReader
 	{
-		public readonly struct SchemeInfo
-		{
-			public string Title { get; }
-			public int Index { get; }
-
-			public SchemeInfo(string title,int index)
-			{
-				Title = title;
-				Index = index;
-			}
-		}
-
 		public string FilePath { get; }
 
 		private readonly Dictionary<string,string[][]> m_sheetDict = new();
@@ -113,7 +114,7 @@ namespace KZLib.KZTool
 		{
 			if(!m_sheetDict.TryGetValue(sheetName,out var sheet))
 			{
-				throw new KeyNotFoundException($"Sheet '{sheetName}' does not exist.");
+				throw new KeyNotFoundException($"Sheet {sheetName} does not exist.");
 			}
 
 			return sheet;
@@ -305,7 +306,7 @@ namespace KZLib.KZTool
 				}
 				else
 				{
-					throw new InvalidCastException($"{cell} is not include in {targetType.Name}. [line : {line} / type : {targetType}]");
+					throw new InvalidCastException(_CreateLog($"{cell} is not include in {targetType.Name}.",line,targetType));
 				}
 			}
 
@@ -327,17 +328,31 @@ namespace KZLib.KZTool
 						return new Vector3(valueArray[0],valueArray[1],valueArray[2]);
 					}
 
-					throw new FormatException($"{cell} is not a valid {targetType.Name}. [line: {line} / type: {targetType}]");
+					throw new FormatException(_CreateLog($"{cell} is not a valid {targetType.Name}.",line,targetType));
 				}
 				catch(Exception exception)
 				{
-					throw new FormatException($"{exception.Message} in {cell}. [line: {line} / type: {targetType}]");
+					throw new FormatException(_CreateLog($"{exception.Message} in {cell}.",line,targetType));
 				}
 			}
 
 			if(targetType == typeof(DateTime))
 			{
-				return string.Equals(cell,"DateTime.Now") ? DateTime.Now : DateTime.Parse(cell);
+				if(string.Equals(cell,"DateTime.Now",StringComparison.OrdinalIgnoreCase))
+				{
+					return DateTime.Now;
+				}
+
+				var formatArray = new string[] {"yyyy-MM-dd HH:mm:ss","yyyy/MM/dd HH:mm:ss", };
+
+				if(DateTime.TryParseExact(cell,formatArray,CultureInfo.InvariantCulture,DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,out DateTime parsedDate))
+				{
+					return parsedDate;
+				}
+				else
+				{
+					throw new InvalidCastException(_CreateLog($"{cell} is not a valid DateTime format.",line,targetType));
+				}
 			}
 
 			if(targetType.IsPrimitive)
@@ -363,10 +378,10 @@ namespace KZLib.KZTool
 			}
 			catch(JsonException exception)
 			{
-				throw new InvalidCastException($"{cell} convert is failed by json. [line : {line} / type : {targetType}] ({exception.Message})");
+				throw new InvalidCastException(_CreateLog($"{cell} convert is failed by json. ( exception : {exception.Message})",line,targetType));
 			}
 
-			throw new NotSupportedException($"{cell} is not supported type. [line: {line} / type: {targetType}]");
+			throw new NotSupportedException(_CreateLog($"{cell} is not supported type.",line,targetType));
 		}
 
 		/// <summary>
@@ -390,7 +405,7 @@ namespace KZLib.KZTool
 			return resultArray;
 		}
 
-		public IEnumerable<SchemeInfo> FindSchemeInfoGroup(string sheetName)
+		public IEnumerable<ExcelSchemeInfo> FindSchemeInfoGroup(string sheetName)
 		{
 			var schemeArray = FindSchemeArray(sheetName);
 
@@ -411,7 +426,7 @@ namespace KZLib.KZTool
 					}
 				}
 
-				yield return new SchemeInfo(scheme,i);
+				yield return new ExcelSchemeInfo(scheme,i);
 			}
 		}
 
@@ -444,6 +459,11 @@ namespace KZLib.KZTool
 			{
 				throw new IndexOutOfRangeException($"{index} is out of range in {sheetName}");
 			}
+		}
+
+		private string _CreateLog(string log,int line,Type targetType)
+		{
+			return $"{log} [line: {line} / type: {targetType}]";
 		}
 
 		private bool _IsValidCellArray(string[] cellArray)
