@@ -1,5 +1,8 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
-namespace System.Collections.Generic
+namespace KZLib.Collections.Generic
 {
 	public sealed class CircularQueue<TValue> : IEnumerable<TValue>,IEnumerable,IReadOnlyCollection<TValue>,ICollection
 	{
@@ -10,34 +13,42 @@ namespace System.Collections.Generic
 		private int m_front = -1;
 		private int m_rear = -1;
 
-		public int Size => m_valueArray.Length;
 		public int Capacity => m_capacity;
 
 		public CircularQueue(int capacity)
 		{
 			if(capacity <= 0)
 			{
-				throw new ArgumentOutOfRangeException($"The capacity is {capacity}.");
+				throw new ArgumentOutOfRangeException(nameof(capacity));
 			}
 
 			m_capacity = capacity;
 			m_valueArray = new TValue[capacity];
 		}
 
-		public CircularQueue(ICollection<TValue> collection) : this(collection.Count)
+		public CircularQueue(ICollection<TValue> collection)
 		{
+			if(collection == null)
+			{
+				throw new ArgumentNullException(nameof(collection));
+			}
+
+			if(collection.Count == 0)
+			{
+				throw new ArgumentException("Collection must not be empty.", nameof(collection));
+			}
+
+			m_capacity = collection.Count;
+			m_valueArray = new TValue[m_capacity];
+
 			collection.CopyTo(m_valueArray,0);
 
+			m_front = 0;
 			m_rear = m_capacity-1;
 		}
 
 		public void Enqueue(TValue value)
 		{
-			if(value == null)
-			{
-				throw new NullReferenceException("Value cannot be null.");
-			}
-
 			lock(m_syncRoot)
 			{
 				if(IsFull)
@@ -60,7 +71,7 @@ namespace System.Collections.Generic
 			{
 				if(IsEmpty)
 				{
-					throw new ArgumentOutOfRangeException("Queue is empty.");
+					throw new InvalidOperationException("Queue is empty.");
 				}
 
 				return m_valueArray[m_front];
@@ -73,7 +84,7 @@ namespace System.Collections.Generic
 			{
 				if(IsEmpty)
 				{
-					throw new ArgumentOutOfRangeException("Queue is empty.");
+					throw new InvalidOperationException("Queue is empty.");
 				}
 
 				var value = m_valueArray[m_front];
@@ -92,13 +103,15 @@ namespace System.Collections.Generic
 			}
 		}
 
+		int ICollection.Count => Count;
+
 		public int Count
 		{
 			get
 			{
 				lock(m_syncRoot)
 				{
-					return IsEmpty ? 0 : (m_rear >= m_front ? m_rear-m_front+1 : m_capacity-m_front+m_rear+1);
+					return m_front == -1 ? 0 : (m_rear >= m_front ? m_rear-m_front+1 : m_capacity-m_front+m_rear+1);
 				}
 			}
 		}
@@ -119,23 +132,25 @@ namespace System.Collections.Generic
 
 		public IEnumerator<TValue> GetEnumerator()
 		{
+			TValue[] snapshotArray;
+
 			lock(m_syncRoot)
 			{
-				if(IsEmpty)
-				{
-					yield break;
-				}
+				var count = Count;
+				snapshotArray = new TValue[count];
 
 				var index = m_front;
 
-				while(index != m_rear)
+				for(var i=0;i<count;i++)
 				{
-					yield return m_valueArray[index];
-
+					snapshotArray[i] = m_valueArray[index];
 					index = (index+1)%m_capacity;
 				}
+			}
 
-				yield return m_valueArray[index];
+			for(var i=0;i<snapshotArray.Length;i++)
+			{
+				yield return snapshotArray[i];
 			}
 		}
 
@@ -146,18 +161,15 @@ namespace System.Collections.Generic
 
 		public bool Contains(TValue value)
 		{
-			if(value == null)
-			{
-				throw new NullReferenceException("Value cannot be null.");
-			}
-
 			lock(m_syncRoot)
 			{
 				var index = m_front;
+				var comparer = EqualityComparer<TValue>.Default;
+				var count = Count;
 
-				for(var i=0;i<Count;i++)
+				for(var i=0;i<count;i++)
 				{
-					if(EqualityComparer<TValue>.Default.Equals(m_valueArray[index],value))
+					if(comparer.Equals(m_valueArray[index],value))
 					{
 						return true;
 					}
@@ -173,7 +185,7 @@ namespace System.Collections.Generic
 		{
 			if(array == null)
 			{
-				throw new NullReferenceException("Array cannot be null.");
+				throw new ArgumentNullException(nameof(array));
 			}
 
 			if(index < 0 || index >= array.Length)
@@ -181,13 +193,20 @@ namespace System.Collections.Generic
 				throw new ArgumentOutOfRangeException($"Index {index} is out of bounds for the array.");
 			}
 
-			if(Count > 0)
+			var count = Count;
+
+			if(index+count > array.Length)
+			{
+				throw new ArgumentException("Destination array is too small.");
+			}
+
+			if(count > 0)
 			{
 				lock(m_syncRoot)
 				{
 					var front = m_front;
 
-					for(var i=0;i<Count;i++)
+					for(var i=0;i<count;i++)
 					{
 						array.SetValue(m_valueArray[front],index+i);
 						front = (front+1)%m_capacity;
@@ -196,7 +215,7 @@ namespace System.Collections.Generic
 			}
 		}
 
-		public bool IsSynchronized => true;
+		public bool IsSynchronized => false;
 		public object SyncRoot => m_syncRoot;
 	}
 }

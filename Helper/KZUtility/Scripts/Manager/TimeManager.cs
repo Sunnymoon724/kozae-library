@@ -10,13 +10,13 @@ namespace KZLib.KZUtility
 
 		private bool m_disposed = false;
 
-		protected override void Initialize()
+		protected override void _Initialize()
 		{
 			ServerTime = DateTime.UtcNow;
 			m_timeDifference = TimeSpan.Zero;
 		}
 
-		protected override void Release(bool disposing)
+		protected override void _Release(bool disposing)
 		{
 			if(m_disposed)
 			{
@@ -27,7 +27,7 @@ namespace KZLib.KZUtility
 
 			m_disposed = true;
 
-			base.Release(disposing);
+			base._Release(disposing);
 		}
 
 		public void SyncServerTime(DateTime newServerTime)

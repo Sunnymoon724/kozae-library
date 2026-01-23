@@ -14,7 +14,7 @@ namespace KZLib.KZUtility
 
 		private bool m_initialized = false;
 
-		protected override void Release(bool disposing)
+		protected override void _Release(bool disposing)
 		{
 			if(m_disposed)
 			{
@@ -28,7 +28,7 @@ namespace KZLib.KZUtility
 
 			m_disposed = true;
 
-			base.Release(disposing);
+			base._Release(disposing);
 		}
 
 		public void LoadLuaScript(string[] luaTextArray)

@@ -1,21 +1,16 @@
+using System;
+using System.Collections.Generic;
 
-namespace System.Collections.Generic
+namespace KZLib.Collections.Generic
 {
 	public sealed class Trie
 	{
 		private class TrieNode
 		{
-			private readonly Dictionary<char,TrieNode> m_childDict;
-
+			private readonly Dictionary<char,TrieNode> m_childDict = new();
 			public bool IsEndOfWord { get; set; }
 
-			public TrieNode()
-			{
-				m_childDict = new Dictionary<char,TrieNode>();
-				IsEndOfWord = false;
-			}
-
-			public TrieNode GetOrCreateTrieNode(char letter)
+			public TrieNode GetOrCreate(char letter)
 			{
 				if(!m_childDict.TryGetValue(letter,out var node))
 				{
@@ -27,28 +22,22 @@ namespace System.Collections.Generic
 				return node;
 			}
 			
-			public bool TryGetTrieNode(char letter, out TrieNode node)
+			public bool TryGetNode(char letter,out TrieNode node) => m_childDict.TryGetValue(letter,out node!);
+
+			public IEnumerable<KeyValuePair<char,TrieNode>> Children
 			{
-				if(m_childDict.TryGetValue(letter,out var trieNode) && trieNode != null)
+				get
 				{
-					node = trieNode;
-
-					return true;
+					foreach(var pair in m_childDict)
+					{
+						yield return pair;
+					}
 				}
-
-				node = null!;
-	
-				return false;
 			}
-
-			public IEnumerable<KeyValuePair<char,TrieNode>> GetChildren()
-            {
-                return m_childDict;
-            }
 		}
-		
+
 		private readonly object m_syncRoot = new();
-		
+
 		private readonly TrieNode m_root = new();
 
 		public bool Insert(string word)
@@ -57,14 +46,16 @@ namespace System.Collections.Generic
 			{
 				return false;
 			}
-			
+
+			var lower = word.ToLowerInvariant();
+
 			lock(m_syncRoot)
 			{
 				var node = m_root;
 
-				foreach(char letter in word)
+				foreach(char letter in lower)
 				{
-					node = node.GetOrCreateTrieNode(letter);
+					node = node.GetOrCreate(letter);
 				}
 
 				if(node.IsEndOfWord)
@@ -86,97 +77,92 @@ namespace System.Collections.Generic
 				return 0;
 			}
 
-			var node = m_root;
-			var matchLength = 0;
-			var length = 0;
+			var lower = word.ToLowerInvariant();
 
 			lock(m_syncRoot)
 			{
-				for( int i = start; i < word.Length; i++ )
+				var node = m_root;
+				var matched = 0;
+
+				for(var i=start;i<lower.Length;i++)
 				{
-					char letter = word[ i ];
+					var letter = lower[i];
 
-					if( onlyLetter && !char.IsLetter( letter ) )
-					{
-						continue; // Skip non-letters
-					}
-
-					if(!node.TryGetTrieNode(letter,out node))
+					if(onlyLetter && !char.IsLetter(letter))
 					{
 						break;
 					}
-
-					length++;
-
+					
+					if(!node.TryGetNode(letter,out node))
+					{
+						break;
+					}
+					
 					if(node.IsEndOfWord)
 					{
-						matchLength = length;
+						matched = i-start+1;
 					}
 				}
 
-				return matchLength;
+				return matched;
 			}
 		}
 		
-		public List<int> ExtractWordIndexList(string input,bool skipDigit)
+		public List<int> ExtractWordIndexList(string word,bool allowDigit = false)
 		{
-            var indexList = new List<int>();
+            var resultList = new List<int>();
 
-			if(!string.IsNullOrWhiteSpace(input))
+			if(string.IsNullOrWhiteSpace(word))
 			{
-				var lower = input.ToLowerInvariant();
-				var index = 0;
+				return resultList;
+			}
 
-				while(index < lower.Length)
+			var lower = word.ToLowerInvariant();
+
+			lock(m_syncRoot)
+			{
+				for(var i=0;i<lower.Length;i++)
 				{
 					var node = m_root;
-					var tempIndex = index;
-                    var tempIndexList = new List<int>();
-
-					while(tempIndex < lower.Length)
+					
+					for(var j=i;j<lower.Length;j++)
 					{
-						var letter = lower[tempIndex];
+						var letter = lower[j];
 
-						if(skipDigit)
+						if(allowDigit)
 						{
-							if(!char.IsLetter(letter))
+							if(!char.IsLetterOrDigit(letter))
 							{
-								tempIndex++;
-
-								continue;
+								break;
 							}
 						}
 						else
 						{
-							if(!char.IsLetterOrDigit(letter))
+							if(!char.IsLetter(letter))
 							{
-								tempIndex++;
-
-								continue;
+								break;
 							}
 						}
 
-						if(!node.TryGetTrieNode(letter,out node))
+						if(!node.TryGetNode(letter,out node))
 						{
 							break;
 						}
-
-						tempIndexList.Add(tempIndex);
-						tempIndex++;
 
 						if(node.IsEndOfWord)
 						{
-							indexList.AddRange(tempIndexList);
+							for(var k=i;k<=j;k++)
+							{
+								resultList.Add(k);
+							}
 
-							break;
+							return resultList;
 						}
 					}
-
-					index++;
 				}
 			}
 
-			return indexList;
+			return resultList;
 		}
 
 		public bool StartsWith(string prefix)
@@ -186,13 +172,15 @@ namespace System.Collections.Generic
 				return false;
 			}
 
+			var lower = prefix.ToLowerInvariant();
+
 			lock(m_syncRoot)
 			{
 				var node = m_root;
 
-				foreach(char letter in prefix)
+				foreach(var letter in lower)
 				{
-					if(!node.TryGetTrieNode(letter,out node))
+					if(!char.IsLetter(letter) || !node.TryGetNode(letter,out node))
 					{
 						return false;
 					}
@@ -204,25 +192,28 @@ namespace System.Collections.Generic
 		
 		public List<string> AutoComplete(string prefix)
 		{
+			var resultList = new List<string>();
+
 			if(string.IsNullOrWhiteSpace(prefix))
 			{
-				return new List<string>();
+				return resultList;
 			}
+
+			var lower = prefix.ToLowerInvariant();
 
 			lock(m_syncRoot)
 			{
-				var resultList = new List<string>();
 				var node = m_root;
 
-				foreach(char letter in prefix)
+				foreach(char letter in lower)
 				{
-					if(!node.TryGetTrieNode(letter,out node))
+					if(!char.IsLetter(letter) || !node.TryGetNode(letter,out node))
 					{
 						return resultList;
 					}
 				}
 
-				_DepthFirstSearch(node,prefix,resultList);
+				_DepthFirstSearch(node,lower,resultList);
 
 				return resultList;
 			}
@@ -242,26 +233,54 @@ namespace System.Collections.Generic
 
 		private void _DepthFirstSearch(TrieNode startNode,string prefix,List<string> result)
 		{
-			var itemStack = new Stack<StackItem>();
+			var bufferArray = new char[Math.Max(16,prefix.Length*2)];
+			prefix.CopyTo(0,bufferArray,0,prefix.Length);
 
-			itemStack.Push(new StackItem(startNode,prefix));
+			var stack = new Stack<(TrieNode node,int length,char letter)>();
 
-			while(itemStack.Count > 0)
+			stack.Push((startNode,prefix.Length,'\0'));
+
+			while(stack.Count > 0)
 			{
-				var item = itemStack.Pop();
+				var (node,length,letter) = stack.Pop();
 
-				if(item.Node.IsEndOfWord)
+				if(letter != '\0')
 				{
-					result.Add(item.Current);
+					_EnsureCapacity(ref bufferArray,length);
+
+					bufferArray[length-1] = letter;
 				}
 
-				foreach(var pair in item.Node.GetChildren())
+				if(node.IsEndOfWord)
 				{
-					itemStack.Push(new StackItem(pair.Value,item.Current+pair.Key));
+					result.Add(new string(bufferArray,0,length));
+				}
+
+				foreach(var pair in node.Children)
+				{
+					stack.Push((pair.Value,length+1,pair.Key));
 				}
 			}
 		}
 
-		private record StackItem(TrieNode Node,string Current);
+		private void _EnsureCapacity(ref char[] bufferArray,int required)
+		{
+			if(bufferArray.Length >= required)
+			{
+				return;
+			}
+
+			var newSize = bufferArray.Length*2;
+
+			while(newSize < required)
+			{
+				newSize *= 2;
+			}
+
+			var newBuffer = new char[newSize];
+
+			bufferArray.CopyTo(newBuffer,0);
+			bufferArray = newBuffer;
+		}
 	}
 }

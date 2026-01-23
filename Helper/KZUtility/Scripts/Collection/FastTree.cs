@@ -1,6 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace System.Collections.Generic
+namespace KZLib.Collections.Generic
 {
 	public sealed class FastTree<TValue>
 	{

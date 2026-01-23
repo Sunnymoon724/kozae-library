@@ -22,7 +22,7 @@ namespace KZLib.KZUtility
 
 				if(!s_instance)
 				{
-					var path = Path.Combine("ScriptableObject",typeof(TScriptable).Name);
+					var path = Path.Combine("ScriptableObject",typeName);
 
 					s_instance = Resources.Load<TScriptable>(path);
 				}

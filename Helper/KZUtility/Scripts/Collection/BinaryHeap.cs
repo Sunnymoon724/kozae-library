@@ -1,16 +1,19 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
-namespace System.Collections.Generic
+namespace KZLib.Collections.Generic
 {
 	public abstract class BinaryHeap<TValue> : IEnumerable<TValue>,IEnumerable,IReadOnlyCollection<TValue>,ICollection where TValue : IComparable<TValue>
 	{
-		private readonly List<TValue> m_valueList = new();
+		private readonly List<TValue> m_valueList;
 		private readonly object m_syncRoot = new();
 
 		protected abstract int Compare(TValue first,TValue second);
 
 		public BinaryHeap(int capacity = 0)
 		{
-			if(capacity <= 0)
+			if(capacity < 0)
 			{
 				throw new ArgumentOutOfRangeException($"The capacity is {capacity}.");
 			}
@@ -18,8 +21,15 @@ namespace System.Collections.Generic
 			m_valueList = new List<TValue>(capacity);
 		}
 
-		public BinaryHeap(ICollection<TValue> collection) : this(collection.Count)
+		public BinaryHeap(ICollection<TValue> collection)
 		{
+			if(collection == null)
+			{
+				throw new ArgumentNullException(nameof(collection));
+			}
+
+			m_valueList = new List<TValue>(collection);
+
 			for(var i=m_valueList.Count/2-1;i>=0;i--)
 			{
 				_HeapifyDown(i);
@@ -42,7 +52,7 @@ namespace System.Collections.Generic
 			{
 				if(IsEmpty)
 				{
-					throw new ArgumentOutOfRangeException("Heap is empty.");
+					throw new InvalidOperationException("Heap is empty.");
 				}
 
 				var top = m_valueList[0];
@@ -65,7 +75,7 @@ namespace System.Collections.Generic
 			{
 				if(IsEmpty)
 				{
-					throw new ArgumentOutOfRangeException("Heap is empty.");
+					throw new InvalidOperationException("Heap is empty.");
 				}
 
 				return m_valueList[0];
@@ -151,9 +161,16 @@ namespace System.Collections.Generic
 
 		public IEnumerator<TValue> GetEnumerator()
 		{
+			TValue[] snapshotArray;
+
 			lock(m_syncRoot)
 			{
-				return m_valueList.GetEnumerator();
+				snapshotArray = m_valueList.ToArray();
+			}
+
+			for(var i=0;i<snapshotArray.Length;i++)
+			{
+				yield return snapshotArray[i];
 			}
 		}
 
@@ -166,7 +183,7 @@ namespace System.Collections.Generic
 		{
 			if(array == null)
 			{
-				throw new NullReferenceException("Array cannot be null.");
+				throw new ArgumentNullException(nameof(array));
 			}
 
 			if(index < 0 || index >= array.Length)
@@ -189,11 +206,6 @@ namespace System.Collections.Generic
 
 		public bool Contains(TValue value)
 		{
-			if(value == null)
-			{
-				throw new NullReferenceException("Value cannot be null.");
-			}
-
 			lock(m_syncRoot)
 			{
 				return m_valueList.Contains(value);
@@ -204,7 +216,7 @@ namespace System.Collections.Generic
 
 		public int Count => m_valueList.Count;
 
-		public bool IsSynchronized => true;
+		public bool IsSynchronized => false;
 		public object SyncRoot => m_syncRoot;
 	}
 

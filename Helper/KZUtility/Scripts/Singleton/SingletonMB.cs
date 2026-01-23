@@ -3,19 +3,89 @@ using UnityEngine;
 
 namespace KZLib.KZUtility
 {
-	/// <summary>
-	/// Not exist in scene -> error
-	/// </summary>
+	[AttributeUsage(AttributeTargets.Class)]
+	public class SingletonConfigAttribute : Attribute
+	{
+		public bool AutoCreate { get; set; } = false;
+		public bool DontDestroy { get; set; } = false;
+		public string PrefabPath { get; set; } = "";
+	}
+
 	public abstract class SingletonMB<TBehaviour> : MonoBehaviour where TBehaviour : MonoBehaviour
 	{
 		protected static TBehaviour? s_instance = null;
+		private static SingletonConfigAttribute? s_config = null;
 
-		public static TBehaviour In => s_instance ?? throw new NullReferenceException($"{typeof(TBehaviour)} is not exist.");
-
-		protected void Awake()
+		private static SingletonConfigAttribute SingletonConfig
 		{
-			//! Check only one
-			if(s_instance)
+			get
+			{
+				if(s_config == null)
+				{
+					var attribute = Attribute.GetCustomAttribute(typeof(TBehaviour),typeof(SingletonConfigAttribute));
+
+					if(attribute != null)
+					{
+						s_config = attribute as SingletonConfigAttribute;
+					}
+
+					s_config ??= new SingletonConfigAttribute();
+				}
+
+				return s_config;
+			}
+		}
+
+		public static TBehaviour In
+		{
+			get
+			{
+				if(s_instance == null)
+				{
+					s_instance = FindObjectOfType<TBehaviour>();
+
+					if(s_instance == null)
+					{
+						var config = SingletonConfig;
+
+						if(config.AutoCreate)
+						{
+							var prefabPath = config.PrefabPath;
+
+							if(string.IsNullOrEmpty(prefabPath))
+							{
+								var instance = new GameObject(typeof(TBehaviour).Name);
+
+								s_instance = instance.AddComponent<TBehaviour>();
+							}
+							else
+							{
+								var instance = Resources.Load<TBehaviour>(prefabPath);
+
+								if(instance != null)
+								{
+									s_instance = Instantiate(instance);
+									s_instance.name = instance.name;
+								}
+							}
+						}
+					}
+
+					if(s_instance == null)
+					{
+						throw new NullReferenceException($"{typeof(TBehaviour)} is not exist.");
+					}
+				}
+
+				return s_instance;
+			}
+		}
+
+		public static bool HasInstance => s_instance != null;
+
+		protected virtual void Awake()
+		{
+			if(s_instance != null && s_instance != this)
 			{
 				if(Application.isPlaying)
 				{
@@ -29,112 +99,27 @@ namespace KZLib.KZUtility
 				return;
 			}
 
-			s_instance = gameObject.GetComponent<TBehaviour>();
+			s_instance = this as TBehaviour;
 
-			if(!s_instance)
+			if(SingletonConfig.DontDestroy)
 			{
-				throw new NullReferenceException($"{typeof(TBehaviour)} is not exist.");
+				DontDestroyOnLoad(gameObject);
 			}
 
-			Initialize();
+			_Initialize();
 		}
 
-		protected virtual void Initialize() { }
+		protected virtual void _Initialize() { }
 
-		protected void OnDestroy()
+		protected virtual void OnDestroy()
 		{
-			Release();
-
-			if(s_instance)
+			if(s_instance == this)
 			{
-				if(Application.isPlaying)
-				{
-					Destroy(gameObject);
-				}
-				else
-				{
-					DestroyImmediate(gameObject);
-				}
-
+				_Release();
 				s_instance = null;
 			}
 		}
 
-		protected virtual void Release() { }
-
-		public static bool HasInstance => s_instance;
-	}
-
-	/// <summary>
-	/// Not exist in scene -> auto create
-	/// </summary>
-	public class AutoSingletonMB<TBehaviour> : MonoBehaviour where TBehaviour : MonoBehaviour
-	{
-		protected static TBehaviour? s_instance;
-
-		public static TBehaviour In
-		{
-			get
-			{
-				if(!s_instance)
-				{
-					s_instance = FindObjectOfType<TBehaviour>();
-
-					if(!s_instance)
-					{
-						s_instance = new GameObject(typeof(TBehaviour).Name).AddComponent<TBehaviour>();
-					}
-				}
-
-				return s_instance ?? throw new NullReferenceException($"{typeof(TBehaviour)} is not exist.");
-			}
-		}
-
-		protected void Awake()
-		{
-			DontDestroyOnLoad(this);
-
-			Initialize();
-		}
-
-		protected virtual void Initialize() { }
-
-		protected void OnDestroy()
-		{
-			Release();
-
-			s_instance = null;
-		}
-
-		protected virtual void Release() { }
-
-		public static bool HasInstance => s_instance;
-	}
-
-	/// <summary>
-	/// Load in resources folder.
-	/// </summary>
-	public class LoadSingletonMB<TBehaviour> : AutoSingletonMB<TBehaviour> where TBehaviour : MonoBehaviour
-	{
-		public static new TBehaviour In
-		{
-			get
-			{
-				if(!s_instance)
-				{
-					s_instance = FindObjectOfType<TBehaviour>();
-
-					if(!s_instance)
-					{
-						var instance = Resources.Load<TBehaviour>($"Prefab/{typeof(TBehaviour).Name}");
-
-						s_instance = Instantiate(instance);
-						s_instance.name = instance.name;
-					}
-				}
-
-				return s_instance ?? throw new NullReferenceException($"{typeof(TBehaviour)} is not exist.");
-			}
-		}
+		protected virtual void _Release() { }
 	}
 }

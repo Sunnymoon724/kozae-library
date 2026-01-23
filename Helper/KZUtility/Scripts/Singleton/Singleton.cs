@@ -2,17 +2,23 @@
 
 namespace KZLib.KZUtility
 {
-	public abstract class Singleton<TClass> : IDisposable where TClass : class,new()
+	public abstract class Singleton<TClass> : IDisposable where TClass : class
 	{
+		private static readonly object m_syncRoot = new();
 		private static TClass? s_instance = null;
-
 		private bool m_disposed = false;
 
 		public static TClass In
 		{
 			get
 			{
-				s_instance ??= new TClass();
+				if(s_instance == null)
+				{
+					lock(m_syncRoot)
+					{
+						s_instance ??= _CreateInstance();
+					}
+				}
 
 				return s_instance;
 			}
@@ -20,12 +26,17 @@ namespace KZLib.KZUtility
 
 		public static bool HasInstance => s_instance != null;
 
-		protected Singleton() => Initialize();
-		~Singleton() => Release(false);
+		private static TClass _CreateInstance()
+		{
+			return Activator.CreateInstance(typeof(TClass),true) as TClass ?? throw new InvalidOperationException($"Failed to create instance of {typeof(TClass).Name}");
+		}
 
-		protected virtual void Initialize() { }
+		protected Singleton() => _Initialize();
+		~Singleton() => _Release(false);
 
-		protected virtual void Release(bool disposing)
+		protected virtual void _Initialize() { }
+
+		protected virtual void _Release(bool disposing)
 		{
 			if(m_disposed)
 			{
@@ -40,8 +51,17 @@ namespace KZLib.KZUtility
 
 		public void Dispose()
 		{
-			Release(true);
+			_Release(true);
+
 			GC.SuppressFinalize(this);
+		}
+
+		protected void _ThrowIfDisposed()
+		{
+			if(m_disposed)
+			{
+				throw new ObjectDisposedException(GetType().Name);
+			}
 		}
 	}
 }
