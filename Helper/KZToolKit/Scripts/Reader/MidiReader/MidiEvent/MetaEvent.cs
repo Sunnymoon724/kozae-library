@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace KZLib.KZTool
+namespace KZLib.ToolKits
 {
 	public class MetaEvent : MidiEvent 
 	{

@@ -2,8 +2,9 @@ using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
+using KZHelper.ToolKits;
 
-namespace KZLib.KZTool
+namespace KZLib.ToolKits
 {
 	public class MidiFile
 	{

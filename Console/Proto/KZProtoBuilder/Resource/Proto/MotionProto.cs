@@ -2,7 +2,7 @@
 using MemoryPack;
 using UnityEngine;
 
-namespace KZLib.KZData
+namespace KZLib.Data
 {
 	[MemoryPackable]
 	public partial class MotionProto : IProto

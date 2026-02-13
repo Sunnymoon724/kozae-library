@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using KZConsole.KZUtility;
-using KZLib.KZTool;
-using KZLib.KZUtility;
+using KZConsole.Utilities;
+using KZLib.ToolKits;
+using KZLib.Utilities;
 using MemoryPack;
 using Newtonsoft.Json;
 
-namespace KZConsole.KZProto
+namespace KZConsole
 {
 	public class ProtoExtractor(string branchName, string branchFilePath)
 	{
@@ -348,7 +348,7 @@ namespace KZConsole.KZProto
 
 		private Type _GetProtoType(string className)
 		{
-			return m_assembly.GetType($"KZLib.KZData.{className}") ?? throw new InvalidDataException($"Invalid data in {className}");
+			return m_assembly.GetType($"KZLib.Data.{className}") ?? throw new InvalidDataException($"Invalid data in {className}");
 		}
 	}
 }

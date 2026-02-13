@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../Helper/KZTool/KZTool.csproj" />
+    <ProjectReference Include="../../../Helper/KZToolKit/KZToolKit.csproj" />
     <ProjectReference Include="../../../Helper/KZUtility/KZUtility.csproj" />
     <ProjectReference Include="../../../Helper/KZData/KZData.csproj" />
 

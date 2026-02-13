@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../Helper/KZTool/KZTool.csproj" />
+    <ProjectReference Include="../../../Helper/KZToolKit/KZToolKit.csproj" />
     <ProjectReference Include="../../../Helper/KZUtility/KZUtility.csproj" />
 
     <ProjectReference Include="../../Etc/KZCommon/KZCommon.csproj" />

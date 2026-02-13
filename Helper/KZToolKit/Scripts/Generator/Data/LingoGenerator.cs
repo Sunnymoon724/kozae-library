@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using ClosedXML.Excel;
-using KZLib.KZUtility;
+using KZHelper.ToolKits;
+using KZLib.Utilities;
 
-namespace KZLib.KZTool
+namespace KZLib.ToolKits
 {
 	public class LingoGenerator
 	{

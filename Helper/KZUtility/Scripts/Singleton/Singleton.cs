@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace KZLib.KZUtility
+namespace KZLib.Utilities
 {
 	public abstract class Singleton<TClass> : IDisposable where TClass : class
 	{

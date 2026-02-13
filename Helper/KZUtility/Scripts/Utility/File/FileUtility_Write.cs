@@ -2,7 +2,7 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace KZLib.KZUtility
+namespace KZLib.Utilities
 {
 	public static partial class FileUtility
 	{

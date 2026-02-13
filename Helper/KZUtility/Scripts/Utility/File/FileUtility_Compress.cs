@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 
-namespace KZLib.KZUtility
+namespace KZLib.Utilities
 {
 	public static partial class FileUtility
 	{

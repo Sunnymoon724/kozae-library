@@ -4,11 +4,11 @@ using Microsoft.Win32;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Globalization;
-using KZLib.KZUtility;
+using KZLib.Utilities;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 
-namespace KZLib.KZTool
+namespace KZLib.ToolKits
 {
 	public class PlayerPrefsReader
 	{

@@ -1,8 +1,8 @@
 using ClosedXML.Excel;
 using System.IO;
-using KZLib.KZUtility;
+using KZLib.Utilities;
 
-namespace KZLib.KZTool
+namespace KZHelper.ToolKits
 {
 	internal static class CommonUtility
 	{

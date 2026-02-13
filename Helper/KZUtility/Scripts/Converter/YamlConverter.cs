@@ -4,9 +4,9 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using System.Collections.Generic;
-using KZLib.KZData;
+using KZLib.Data;
 
-namespace KZLib.KZUtility
+namespace KZLib.Utilities
 {
 	/// <summary>
 	/// Supported Color, Color32, Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Quaternion, Rect, RectInt, SoundVolume, ScreenResolution, Route

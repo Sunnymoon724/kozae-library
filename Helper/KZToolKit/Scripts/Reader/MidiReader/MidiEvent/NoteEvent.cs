@@ -1,6 +1,6 @@
 using System;
 
-namespace KZLib.KZTool
+namespace KZLib.ToolKits
 {
 	public class NoteEvent : MidiEvent
 	{

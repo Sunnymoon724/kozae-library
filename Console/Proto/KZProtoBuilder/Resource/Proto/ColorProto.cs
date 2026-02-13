@@ -1,7 +1,7 @@
 ﻿#pragma warning disable CS8618
 using MemoryPack;
 
-namespace KZLib.KZData
+namespace KZLib.Data
 {
 	[MemoryPackable]
 	public partial class ColorProto : IProto

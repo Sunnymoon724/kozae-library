@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using MoonSharp.Interpreter;
 
-namespace KZLib.KZUtility
+namespace KZLib.Utilities
 {
 	public class LuaManager : Singleton<LuaManager>
 	{

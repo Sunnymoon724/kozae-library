@@ -1,5 +1,5 @@
 
-namespace KZLib.KZData
+namespace KZLib.Data
 {
 $Enum
 }

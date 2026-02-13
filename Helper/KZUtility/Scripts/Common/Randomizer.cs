@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace KZLib.KZUtility
+namespace KZLib.Utilities
 {
 	public class Randomizer
 	{

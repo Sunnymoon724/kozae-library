@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using KZConsole.KZUtility;
-using KZLib.KZTool;
-using KZLib.KZUtility;
+using KZConsole.Utilities;
+using KZLib.ToolKits;
+using KZLib.Utilities;
 
 namespace KZConsole
 {

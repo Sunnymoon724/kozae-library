@@ -1,11 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using ClosedXML.Excel;
-using KZLib.KZUtility;
-using YamlDotNet.Serialization;
+﻿using ClosedXML.Excel;
+using KZHelper.ToolKits;
 
-namespace KZLib.KZTool
+namespace KZLib.ToolKits
 {
 	public class ProtoGenerator
 	{

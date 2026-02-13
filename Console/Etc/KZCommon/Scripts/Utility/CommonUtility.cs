@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
-namespace KZConsole.KZUtility
+namespace KZConsole.Utilities
 {
 	public enum LogType { Info, Warning, Error, }
 

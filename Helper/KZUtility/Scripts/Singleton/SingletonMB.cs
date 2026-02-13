@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace KZLib.KZUtility
+namespace KZLib.Utilities
 {
 	[AttributeUsage(AttributeTargets.Class)]
 	public class SingletonConfigAttribute : Attribute

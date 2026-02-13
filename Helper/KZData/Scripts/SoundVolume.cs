@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using MemoryPack;
 
-namespace KZLib.KZData
+namespace KZLib.Data
 {
 	/// <summary>
 	/// level -> 0.0 - 1.0

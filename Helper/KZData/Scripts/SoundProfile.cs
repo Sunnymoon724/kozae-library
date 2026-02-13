@@ -1,6 +1,6 @@
 ﻿using MemoryPack;
 
-namespace KZLib.KZData
+namespace KZLib.Data
 {
 	[MemoryPackable]
 	public partial record SoundProfile

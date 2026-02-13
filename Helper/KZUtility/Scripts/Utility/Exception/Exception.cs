@@ -1,7 +1,7 @@
 ﻿
 using System;
 
-namespace KZLib.KZUtility
+namespace KZLib.Utilities
 {
 	public class KZSheetException : InvalidCastException
 	{

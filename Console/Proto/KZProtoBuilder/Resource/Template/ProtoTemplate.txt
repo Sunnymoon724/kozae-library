@@ -1,7 +1,7 @@
 using MemoryPack;
 using UnityEngine;
 
-namespace KZLib.KZData
+namespace KZLib.Data
 {
 $MainClass
 $SubClass

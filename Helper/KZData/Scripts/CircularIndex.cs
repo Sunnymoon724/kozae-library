@@ -1,6 +1,6 @@
 using System;
 
-namespace KZLib.KZData
+namespace KZLib.Data
 {
 	public struct CircularIndex
 	{

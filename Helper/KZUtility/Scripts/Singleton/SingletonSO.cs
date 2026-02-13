@@ -8,7 +8,7 @@ using UnityEditor;
 
 #endif
 
-namespace KZLib.KZUtility
+namespace KZLib.Utilities
 {
 	public abstract class SingletonSO<TScriptable> : ScriptableObject where TScriptable : ScriptableObject
 	{

@@ -1,4 +1,4 @@
-﻿namespace KZLib.KZData
+﻿namespace KZLib.Data
 {
 	public interface IConfig { }
 

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace KZLib.KZTool
+namespace KZLib.ToolKits
 {
 	public record MidiTrack
 	{

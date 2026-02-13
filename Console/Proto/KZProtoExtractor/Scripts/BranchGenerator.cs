@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using KZLib.KZTool;
-using KZLib.KZUtility;
+using KZLib.ToolKits;
+using KZLib.Utilities;
 
-namespace KZConsole.KZProto
+namespace KZConsole
 {
 	public class BranchGenerator(string branchName,string branchFilePath)
 	{

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using MemoryPack;
 
-namespace KZLib.KZData
+namespace KZLib.Data
 {
 	[MemoryPackable]
 	public partial struct ScreenResolution : IEquatable<ScreenResolution>,IFormattable

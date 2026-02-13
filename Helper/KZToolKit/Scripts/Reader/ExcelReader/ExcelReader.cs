@@ -4,11 +4,11 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using ClosedXML.Excel;
-using KZLib.KZUtility;
+using KZLib.Utilities;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace KZLib.KZTool
+namespace KZLib.ToolKits
 {
 	public record ExcelSchemeInfo
 	{

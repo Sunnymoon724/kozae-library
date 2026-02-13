@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
-using KZConsole.KZUtility;
-using KZLib.KZUtility;
+using KZConsole.Utilities;
+using KZLib.Utilities;
 
 namespace KZConsole
 {

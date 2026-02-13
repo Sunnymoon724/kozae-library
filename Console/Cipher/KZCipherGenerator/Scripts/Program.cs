@@ -1,6 +1,6 @@
 ﻿using System.IO;
-using KZConsole.KZUtility;
-using KZLib.KZUtility;
+using KZConsole.Utilities;
+using KZLib.Utilities;
 
 namespace KZConsole
 {

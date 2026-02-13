@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using KZLib.KZUtility;
+using KZLib.Utilities;
 
 namespace KZConsole
 {

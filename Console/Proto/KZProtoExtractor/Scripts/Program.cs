@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using KZConsole.KZUtility;
-using KZLib.KZUtility;
+﻿using System.Collections.Generic;
+using KZConsole.Utilities;
+using KZLib.Utilities;
 
-namespace KZConsole.KZProto
+namespace KZConsole
 {
 	public class Program
 	{

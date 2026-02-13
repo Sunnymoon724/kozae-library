@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace KZLib.KZUtility
+namespace KZLib.Utilities
 {
 	public static partial class FileUtility
 	{
