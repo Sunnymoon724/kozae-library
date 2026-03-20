@@ -14,7 +14,7 @@ namespace KZLib.ToolKits
 			languageHashSet = new HashSet<TEnum>();
 			lingoDict = new Dictionary<string,Dictionary<string,string[]>>();
 
-			var fileName = FileUtility.GetOnlyName(lingoFilePath);
+			var fileName = KZFileKit.GetOnlyName(lingoFilePath);
 			var excelReader = new ExcelReader(lingoFilePath);
 
 			foreach(var sheetName in excelReader.SheetNameGroup)
@@ -77,7 +77,7 @@ namespace KZLib.ToolKits
 			workSheet.Cell(1,1).InsertData(new string[] { "Key", "Deprecated", "English", "Korean" });
 			workSheet.Cell(2,1).InsertData(new string[] { "%이름", "사용 중단됨", "영어", "한국어" });
 
-			CommonUtility.GenerateExcelFile(localeFolderPath,templateName,workbook);
+			KZCommonKit.GenerateExcelFile(localeFolderPath,templateName,workbook);
 		}
 	}
 }

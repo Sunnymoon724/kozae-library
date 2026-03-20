@@ -4,7 +4,7 @@ using MemoryPack;
 namespace KZLib.Data
 {
 	[MemoryPackable]
-	public partial class NetworkErrorProto : IProto
+	public partial class NetworkErrorProto : INetworkErrorProto
 	{
 		[MemoryPackOrder(0)] public int Num { get; init; }
 

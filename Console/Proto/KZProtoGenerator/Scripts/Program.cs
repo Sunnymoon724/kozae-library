@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using KZLib.Utilities;
 
 namespace KZConsole
 {
@@ -26,12 +25,12 @@ namespace KZConsole
 			var projectPluginRelativePath = argumentArray[2];
 
 			// builder -> extractor -> move & clean
-			var currentPath = FileUtility.GetProjectPath();
+			var currentPath = KZFileKit.GetProjectPath();
 
 			var protoFolderAbsolutePath = Path.GetFullPath(Path.Combine(currentPath,protoFolderRelativePath));
 			var projectPluginAbsolutePath = Path.GetFullPath(Path.Combine(currentPath,projectPluginRelativePath));
 
-			var parentPath = FileUtility.GetProjectParentPath();
+			var parentPath = KZFileKit.GetProjectParentPath();
 
 			var builderFolderPath = Path.GetFullPath(Path.Combine(parentPath,$"{c_protoBuilder}",$"{c_protoBuilder}.exe"));
 			var builderArgument = string.Join(" ",protoFolderAbsolutePath,projectPluginAbsolutePath);

@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Text;
 using KZConsole.Utilities;
 using KZLib.ToolKits;
-using KZLib.Utilities;
 
 namespace KZConsole
 {
@@ -24,16 +23,16 @@ namespace KZConsole
 
 		public void GenerateAllProtoCode()
 		{
-			CommonUtility.WriteLog("Generate all proto code.",LogType.Info);
-			CommonUtility.WriteLog("-Copy default proto code.",LogType.Info);
+			KZCommonKit.WriteLog("Generate all proto code.",LogType.Info);
+			KZCommonKit.WriteLog("-Copy default proto code.",LogType.Info);
 
 			Assembly assembly = Assembly.GetExecutingAssembly();
 
 			_CopyDefaultProtoCode(assembly);
 
-			var templateFileDict = CommonUtility.ReadEmbeddedResourcesFromExtension(assembly,".txt");
+			var templateFileDict = KZCommonKit.ReadEmbeddedResourcesFromExtension(assembly,".txt");
 
-			CommonUtility.WriteLog("-Generate enum code.",LogType.Info);
+			KZCommonKit.WriteLog("-Generate enum code.",LogType.Info);
 			
 			if(templateFileDict.TryGetValue("EnumTemplate.txt",out var enumTemplate))
 			{
@@ -44,7 +43,7 @@ namespace KZConsole
 				throw new FileNotFoundException("Enum template file not found.");
 			}
 
-			CommonUtility.WriteLog("-Generate proto code.",LogType.Info);
+			KZCommonKit.WriteLog("-Generate proto code.",LogType.Info);
 
 			if(templateFileDict.TryGetValue("ProtoTemplate.txt",out var protoTemplate))
 			{
@@ -58,7 +57,7 @@ namespace KZConsole
 
 		private void _CopyDefaultProtoCode(Assembly assembly)
 		{
-			var protoFileDict = CommonUtility.ReadEmbeddedResourcesFromExtension(assembly,".cs");
+			var protoFileDict = KZCommonKit.ReadEmbeddedResourcesFromExtension(assembly,".cs");
 
 			foreach(var pair in protoFileDict)
 			{
@@ -68,11 +67,11 @@ namespace KZConsole
 
 		private void _GenerateEnumCode(string templateFile)
 		{
-			var enumExcelFilePath = FileUtility.FindFilePath(m_protoFilePathList,"Enum");
+			var enumExcelFilePath = KZFileKit.FindFilePath(m_protoFilePathList,"Enum");
 			
 			if(string.IsNullOrEmpty(enumExcelFilePath))
 			{
-				CommonUtility.WriteLog("Warning : Enum excel file not found.",LogType.Warning);
+				KZCommonKit.WriteLog("Warning : Enum excel file not found.",LogType.Warning);
 
 				return;
 			}
@@ -136,7 +135,7 @@ namespace KZConsole
 			for(int i=0;i<m_protoFilePathList.Count;i++)
 			{
 				var protoFilePath = m_protoFilePathList[i];
-				var fileName = FileUtility.GetOnlyName(protoFilePath);
+				var fileName = KZFileKit.GetOnlyName(protoFilePath);
 
 				if(excludeFileNameList.Contains(fileName))
 				{
@@ -155,7 +154,7 @@ namespace KZConsole
 
 				if(nameCount < 1)
 				{
-					CommonUtility.WriteLog($"Warning : {fileName} is not include +Sheet", LogType.Warning);
+					KZCommonKit.WriteLog($"Warning : {fileName} is not include +Sheet", LogType.Warning);
 
 					continue;
 				}
@@ -221,7 +220,7 @@ namespace KZConsole
 
 			for(int i=0;i<schemeLength;i++)
 			{
-				var property = schemeArray[i];
+				var property = schemeArray[i].Replace(":pk","");
 
 				// remove overlap
 				if(string.IsNullOrEmpty(property) || property.StartsWith('%') || propertyList.Contains(property))
@@ -251,7 +250,7 @@ namespace KZConsole
 		{
 			var filePath = Path.Combine(m_projectFolderPath,fileName);
 
-			FileUtility.WriteTextToFile(filePath,text);
+			KZFileKit.WriteTextToFile(filePath,text);
 		}
 	}
 }

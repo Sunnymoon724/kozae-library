@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using ClosedXML.Excel;
-using KZLib.Utilities;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -32,7 +31,7 @@ namespace KZLib.ToolKits
 		{
 			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-			if(!FileUtility.IsFileExist(filePath))
+			if(!KZFileKit.IsFileExist(filePath))
 			{
 				throw new FileNotFoundException($"{filePath} is not exist");
 			}
@@ -127,7 +126,7 @@ namespace KZLib.ToolKits
 
 		public int FindPrimaryKeyIndex(string sheetName)
 		{
-			var typeArray = FindCellArrayInRow(sheetName,1);
+			var typeArray = FindCellArrayInRow(sheetName,0);
 
 			for(var i=0;i<typeArray.Length;i++)
 			{
@@ -253,7 +252,7 @@ namespace KZLib.ToolKits
 
 				for(var i=0;i<schemeArray.Length;i++)
 				{
-					var scheme = schemeArray[i];
+					var scheme = schemeArray[i].Replace(":pk","");
 
 					if(string.Equals(scheme,propertyName))
 					{

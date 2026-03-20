@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using KZConsole.Utilities;
-using KZLib.Utilities;
 
 namespace KZConsole
 {
@@ -22,14 +21,14 @@ namespace KZConsole
 		{
 			var protoFolderPath = argumentArray[0];
 
-			CommonUtility.WriteLog($"Proto folder path : {protoFolderPath}",LogType.Info);
+			KZCommonKit.WriteLog($"Proto folder path : {protoFolderPath}",LogType.Info);
 
-			var protoFilePathList  = new List<string>(FileUtility.FindAllExcelFileGroupByFolderPath(protoFolderPath));
+			var protoFilePathList  = new List<string>(KZFileKit.FindAllExcelFileGroupByFolderPath(protoFolderPath));
 
 			var environment = argumentArray[1];
-			var branchFilePath = FileUtility.FindFilePath(protoFilePathList,"Branch");
+			var branchFilePath = KZFileKit.FindFilePath(protoFilePathList,"Branch");
 
-			CommonUtility.WriteLog($"Environment : {environment}",LogType.Info);
+			KZCommonKit.WriteLog($"Environment : {environment}",LogType.Info);
 
 			var protoExtractor = new ProtoExtractor(environment,branchFilePath);
 

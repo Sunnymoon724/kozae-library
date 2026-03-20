@@ -20,7 +20,7 @@ namespace KZConsole
 
 		public void ExtractAllProto(List<string> protoFilePathList)
 		{
-			CommonUtility.WriteLog("Extract all proto.",LogType.Info);
+			KZCommonKit.WriteLog("Extract all proto.",LogType.Info);
 
 			_GenerateBranch();
 			_ExtractProtoAllFiles(protoFilePathList);
@@ -28,16 +28,16 @@ namespace KZConsole
 
 		private void _GenerateBranch()
 		{
-			CommonUtility.WriteLog("-Make branch.",LogType.Info);
+			KZCommonKit.WriteLog("-Make branch.",LogType.Info);
 
 			m_branchGenerator.GenerateBranch();
 		}
 
 		private void _ExtractProtoAllFiles(List<string> protoFilePathList)
 		{
-			CommonUtility.WriteLog("Extract proto.",LogType.Info);
+			KZCommonKit.WriteLog("Extract proto.",LogType.Info);
 
-			var outputFolderPath = Path.Combine(FileUtility.GetProjectParentPath(),"ProtoOutput");
+			var outputFolderPath = Path.Combine(KZFileKit.GetProjectParentPath(),"ProtoOutput");
 
 			var csvFolderPath = Path.Combine(outputFolderPath,"Csv");
 			var byteFolderPath = Path.Combine(outputFolderPath,"Proto");
@@ -50,7 +50,7 @@ namespace KZConsole
 
 			foreach(var protoFilePath in protoFilePathList)
 			{
-				var fileName = FileUtility.GetOnlyName(protoFilePath);
+				var fileName = KZFileKit.GetOnlyName(protoFilePath);
 
 				if(excludeFileNameList.Contains(fileName))
 				{
@@ -63,7 +63,7 @@ namespace KZConsole
 
 		private void _ExtractProtoFile(string protoFilePath,string csvFolderPath,string byteFolderPath)
 		{
-			var fileName = FileUtility.GetOnlyName(protoFilePath);
+			var fileName = KZFileKit.GetOnlyName(protoFilePath);
 			var excelReader = new ExcelReader(protoFilePath);
 
 			var protoType = _GetProtoType($"{fileName}Proto");
@@ -73,7 +73,7 @@ namespace KZConsole
 				_SaveCsvFile(csvFolderPath,fileName,backupText);
 				_SaveProto(fileName,protoArray,byteFolderPath);
 
-				CommonUtility.WriteLog($"-Save {fileName} proto",LogType.Info);
+				KZCommonKit.WriteLog($"-Save {fileName} proto",LogType.Info);
 			}
 		}
 
@@ -85,19 +85,19 @@ namespace KZConsole
 
 			var filePath = Path.Combine(byteFolderPath,$"{fileName}.bytes");
 
-			FileUtility.WriteByteToFile(filePath,serialized);
+			KZFileKit.WriteByteToFile(filePath,serialized);
 		}
 
 		private static void _SaveCsvFile(string csvFolderPath,string csvFileName,string backupText)
 		{
 			var csvFilePath = Path.Combine(csvFolderPath,$"{csvFileName}.csv");
 
-			FileUtility.WriteTextToFile(csvFilePath,backupText);
+			KZFileKit.WriteTextToFile(csvFilePath,backupText);
 		}
 
 		private bool _TryExtractProtoArray(string fileName,Type protoType,ExcelReader excelReader,out Array protoArray,out string backupText)
 		{
-			CommonUtility.WriteLog($"-Extract {fileName}",LogType.Info);
+			KZCommonKit.WriteLog($"-Extract {fileName}",LogType.Info);
 
 			static bool _FindPlus(string sheetName)
 			{
@@ -109,7 +109,7 @@ namespace KZConsole
 
 			if(sheetNameArray.Length < 1)
 			{
-				CommonUtility.WriteLog($"Warning : {fileName} is not include +Sheet",LogType.Info);
+				KZCommonKit.WriteLog($"Warning : {fileName} is not include +Sheet",LogType.Info);
 
 				backupText = string.Empty;
 				protoArray = Array.Empty<object>();

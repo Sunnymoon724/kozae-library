@@ -24,7 +24,7 @@ namespace KZLib.ToolKits
 			var stringBuilder = new StringBuilder();
 
 			var excelReader = new ExcelReader(configFilePath);
-			var fileName = FileUtility.GetOnlyName(configFilePath);
+			var fileName = KZFileKit.GetOnlyName(configFilePath);
 
 			if(!excelReader.IsExistSheetName(fileName))
 			{
@@ -67,7 +67,7 @@ namespace KZLib.ToolKits
 
 			var configCodeFilePath = Path.Combine(outputFolderPath,$"{fileName}Config.generated.cs");
 
-			CommonUtility.GenerateTextFile(configCodeFilePath,templateText);
+			KZCommonKit.GenerateTextFile(configCodeFilePath,templateText);
 		}
 
 		public static void GenerateConfigTemplateExcelFile(string configFolderPath,string templateName)
@@ -78,7 +78,7 @@ namespace KZLib.ToolKits
 			workSheet.Cell(1,1).InsertData(new string[] { "Name", "Type", "Deprecated", "Default", "Comment" });
 			workSheet.Cell(2,1).InsertData(new string[] { "%이름", "타입", "사용 중단됨", "기본 값", "주석" });
 
-			CommonUtility.GenerateExcelFile(configFolderPath,templateName,workbook);
+			KZCommonKit.GenerateExcelFile(configFolderPath,templateName,workbook);
 		}
 
 		public static void GenerateConfigYamlFile<TConfig>(TConfig config,string configFilePath)
@@ -87,7 +87,7 @@ namespace KZLib.ToolKits
 
 			var yaml = serializer.Serialize(config);
 
-			CommonUtility.GenerateTextFile(configFilePath,yaml);
+			KZCommonKit.GenerateTextFile(configFilePath,yaml);
 		}
 	}
 }

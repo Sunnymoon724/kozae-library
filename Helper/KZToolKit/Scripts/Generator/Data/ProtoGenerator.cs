@@ -93,7 +93,7 @@ namespace KZLib.ToolKits
 			eventSheet.Cell(2,1).InsertData(new string[] { "int", "string", "Vector3", "string" });
 			eventSheet.Cell(3,1).InsertData(new string[] { "%순서", "이펙트 경로", "위치 오프셋", "시작 위치" });
 
-			CommonUtility.GenerateExcelFile(protoFolderPath,"Motion",workbook);
+			KZCommonKit.GenerateExcelFile(protoFolderPath,"Motion",workbook);
 		}
 	}
 }

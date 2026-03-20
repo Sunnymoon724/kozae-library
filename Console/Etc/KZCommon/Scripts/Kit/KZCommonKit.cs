@@ -7,7 +7,7 @@ namespace KZConsole.Utilities
 {
 	public enum LogType { Info, Warning, Error, }
 
-    public static class CommonUtility
+    public static class KZCommonKit
 	{
 		public static Dictionary<string, string> ReadEmbeddedResourcesFromExtension(Assembly assembly, string extension)
 		{

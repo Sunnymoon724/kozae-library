@@ -1,14 +1,13 @@
 using ClosedXML.Excel;
 using System.IO;
-using KZLib.Utilities;
 
 namespace KZHelper.ToolKits
 {
-	internal static class CommonUtility
+	internal static class KZCommonKit
 	{
 		internal static void GenerateExcelFile(string folderPath,string fileName,XLWorkbook workbook)
 		{
-			FileUtility.CreateFolder(folderPath);
+			KZFileKit.CreateFolder(folderPath);
 
 			var filePath = Path.Combine(folderPath,$"{fileName}.xlsx");
 
@@ -17,7 +16,7 @@ namespace KZHelper.ToolKits
 
 		internal static void GenerateTextFile(string filePath,string text)
 		{
-			FileUtility.WriteTextToFile(filePath,text);
+			KZFileKit.WriteTextToFile(filePath,text);
 		}
 
 		internal static int ReadInt32(BinaryReader binaryReader)

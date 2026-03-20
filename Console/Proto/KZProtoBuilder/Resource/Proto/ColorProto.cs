@@ -4,12 +4,10 @@ using MemoryPack;
 namespace KZLib.Data
 {
 	[MemoryPackable]
-	public partial class ColorProto : IProto
+	public partial class ColorProto : IColorProto
 	{
 		[MemoryPackOrder(0)] public int Num { get; init; }
-
-		[MemoryPackOrder(1)] public string NameKey { get; init; }
-		[MemoryPackOrder(2)] public string[] ColorArray { get; init; }
+		[MemoryPackOrder(1)] public string[] ColorArray { get; init; }
 	}
 }
 #pragma warning restore CS8618

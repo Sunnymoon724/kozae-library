@@ -8,7 +8,7 @@ namespace KZLib.Utilities
 	{
 		private Script m_luaScript = null!;
 
-		private readonly Dictionary<string,DynValue> m_functionDict = new();
+		private readonly LazyRegistry<string,DynValue> m_functionRegistry = new();
 
 		private bool m_disposed = false;
 
@@ -23,7 +23,7 @@ namespace KZLib.Utilities
 
 			if(disposing)
 			{
-				m_functionDict.Clear();
+				m_functionRegistry.Clear();
 			}
 
 			m_disposed = true;
@@ -36,7 +36,8 @@ namespace KZLib.Utilities
 			var textHashSet = new HashSet<string>();
 
 			m_luaScript = new Script();
-			m_functionDict.Clear();
+
+			m_functionRegistry.Clear();
 
 			foreach(var luaText in luaTextArray)
 			{
@@ -64,7 +65,7 @@ namespace KZLib.Utilities
 				throw new InvalidOperationException("Lua script is empty.");
 			}
 
-			var function = _GetFunctionOrThrow(functionName);
+			var function = m_functionRegistry.Fetch(functionName,_Throw);
 
 			var result = m_luaScript.Call(function,_ConvertToValueArray(argumentArray));
 
@@ -80,7 +81,7 @@ namespace KZLib.Utilities
 				throw new InvalidOperationException("Lua script is empty.");
 			}
 
-			var function = _GetFunctionOrThrow(functionName);
+			var function = m_functionRegistry.Fetch(functionName,_Throw);
 
 			m_luaScript.Call(function,_ConvertToValueArray(argumentArray));
 		}
@@ -95,18 +96,13 @@ namespace KZLib.Utilities
 			return argumentArray?.Length > 0 ? Array.ConvertAll(argumentArray,_ConvertToValue) : Array.Empty<DynValue>();
 		}
 
-		private DynValue _GetFunctionOrThrow(string functionName)
+		private DynValue _Throw(string functionName)
 		{
-			if(!m_functionDict.TryGetValue(functionName,out var function))
+			var function = m_luaScript!.Globals.Get(functionName);
+
+			if(function.Type != DataType.Function)
 			{
-				function = m_luaScript!.Globals.Get(functionName);
-
-				if(function.Type != DataType.Function)
-				{
-					throw new MissingMethodException($"{functionName} was not found in the Lua script.");
-				}
-
-				m_functionDict.Add(functionName,function);
+				throw new MissingMethodException($"{functionName} was not found in the Lua script.");
 			}
 
 			return function;

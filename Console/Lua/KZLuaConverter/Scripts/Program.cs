@@ -1,7 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using KZConsole.Utilities;
-using KZLib.Utilities;
 
 namespace KZConsole
 {
@@ -20,20 +18,20 @@ namespace KZConsole
 			var currentPath = Directory.GetCurrentDirectory();
 			var luaFolderPath = Path.GetFullPath(Path.Combine(currentPath,argumentArray[0]));
 
-			CommonUtility.WriteLog($"Lua folder path : {luaFolderPath}",LogType.Info);
+			KZCommonKit.WriteLog($"Lua folder path : {luaFolderPath}",LogType.Info);
 
 			var resultFolderPath = argumentArray[1];
 
-			FileUtility.CreateFolder(resultFolderPath);
+			KZFileKit.CreateFolder(resultFolderPath);
 
-			foreach(var filePath in FileUtility.GetFilePathArray(luaFolderPath))
+			foreach(var filePath in KZFileKit.GetFilePathArray(luaFolderPath))
 			{
 				var newFilePath = filePath.Replace(luaFolderPath,resultFolderPath);
 
-				newFilePath = FileUtility.ChangeExtension(newFilePath,".lua.bytes");
+				newFilePath = KZFileKit.ChangeExtension(newFilePath,".lua.bytes");
 
-				FileUtility.CreateFolder(newFilePath);
-				FileUtility.CopyFile(filePath,newFilePath,true);
+				KZFileKit.CreateFolder(newFilePath);
+				KZFileKit.CopyFile(filePath,newFilePath,true);
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using KZConsole.Utilities;
-using KZLib.Utilities;
 
 namespace KZConsole
 {
@@ -9,9 +8,9 @@ namespace KZConsole
 	{
 		public static void RunProject(string name, string projectPath, string argument)
 		{
-			if (!FileUtility.IsFileExist(projectPath))
+			if (!KZFileKit.IsFileExist(projectPath))
 			{
-				CommonUtility.WriteLog($"Warning : Project not found: {projectPath}",LogType.Warning);
+				KZCommonKit.WriteLog($"Warning : Project not found: {projectPath}",LogType.Warning);
 
 				return;
 			}
@@ -33,7 +32,7 @@ namespace KZConsole
 
 			try
 			{
-				CommonUtility.WriteLog($"-{name} Run Start",LogType.Info);
+				KZCommonKit.WriteLog($"-{name} Run Start",LogType.Info);
 
 				process.Start();
 
@@ -45,11 +44,11 @@ namespace KZConsole
 				process.CancelOutputRead();
 				process.CancelErrorRead();
 
-				CommonUtility.WriteLog($"-{name} Run End.",LogType.Info);
+				KZCommonKit.WriteLog($"-{name} Run End.",LogType.Info);
 			}
 			catch(Exception exception)
 			{
-				CommonUtility.WriteLog($"Error executing build : {exception.Message}",LogType.Error);
+				KZCommonKit.WriteLog($"Error executing build : {exception.Message}",LogType.Error);
 			}
 		}
 
@@ -57,7 +56,7 @@ namespace KZConsole
 		{
 			if(argument.Data != null)
 			{
-				CommonUtility.WriteLog($"{argument.Data}",LogType.Info);
+				KZCommonKit.WriteLog($"{argument.Data}",LogType.Info);
 			}
 		}
 
@@ -65,7 +64,7 @@ namespace KZConsole
 		{
 			if(argument.Data != null)
 			{
-				CommonUtility.WriteLog($"-Error : {argument.Data}",LogType.Error);
+				KZCommonKit.WriteLog($"-Error : {argument.Data}",LogType.Error);
 			}
 		}
 	}

@@ -1,6 +1,5 @@
 ﻿using System;
 using KZConsole.Utilities;
-using KZLib.Utilities;
 
 namespace KZConsole
 {
@@ -22,14 +21,14 @@ namespace KZConsole
 	{
 		public static KeyInfo GenerateKey()
 		{
-			var randomKey = CryptoUtility.AES.GenerateRandomKey();
+			var randomKey = KZCryptoKit.AES.GenerateRandomKey();
 
-			CryptoUtility.RSA.GenerateKey(out var publicKey,out var privateKey);
+			KZCryptoKit.RSA.GenerateKey(out var publicKey,out var privateKey);
 
-			var encryptKey = CryptoUtility.AES.EncryptToString(privateKey,randomKey);
+			var encryptKey = KZCryptoKit.AES.EncryptToString(privateKey,randomKey);
 			var convertKey = Convert.ToBase64String(randomKey);
 
-			CommonUtility.WriteLog($"Public Key : {publicKey}\n\nPrivate Key : {privateKey}\n\nEncrypt Key : {encryptKey}\n\nRandom Key : {convertKey}",LogType.Info);
+			KZCommonKit.WriteLog($"Public Key : {publicKey}\n\nPrivate Key : {privateKey}\n\nEncrypt Key : {encryptKey}\n\nRandom Key : {convertKey}",LogType.Info);
 
 			return new KeyInfo(publicKey,encryptKey,convertKey);
 		}

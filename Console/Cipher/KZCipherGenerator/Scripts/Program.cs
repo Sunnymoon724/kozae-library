@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using KZConsole.Utilities;
-using KZLib.Utilities;
 
 namespace KZConsole
 {
@@ -18,19 +17,19 @@ namespace KZConsole
 		{
 			var keyInfo = Encryptor.GenerateKey();
 
-			CommonUtility.WriteLog("Save keys",LogType.Info);
+			KZCommonKit.WriteLog("Save keys",LogType.Info);
 
 			var resultFolderPath = argumentArray[0];
 
-			FileUtility.CreateFolder(resultFolderPath);
+			KZFileKit.CreateFolder(resultFolderPath);
 
 			var convertFilePath = Path.Combine(resultFolderPath,"Encryption.key");
 			var publicFilePath = Path.Combine(resultFolderPath,"PublicKey.pem");
 			var privateFilePath = Path.Combine(resultFolderPath,"PrivateKey.pem");
 
-			FileUtility.WriteTextToFile(convertFilePath,keyInfo.ConvertKey);
-			FileUtility.WriteTextToFile(publicFilePath,FileUtility.WrapPemFormat(keyInfo.PublicKey,"PUBLIC KEY"));
-			FileUtility.WriteTextToFile(privateFilePath,FileUtility.WrapPemFormat(keyInfo.PrivateKey,"PRIVATE KEY"));
+			KZFileKit.WriteTextToFile(convertFilePath,keyInfo.ConvertKey);
+			KZFileKit.WriteTextToFile(publicFilePath,KZFileKit.WrapPemFormat(keyInfo.PublicKey,"PUBLIC KEY"));
+			KZFileKit.WriteTextToFile(privateFilePath,KZFileKit.WrapPemFormat(keyInfo.PrivateKey,"PRIVATE KEY"));
 		}
 	}
 }

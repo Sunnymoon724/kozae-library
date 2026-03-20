@@ -7,8 +7,8 @@ namespace KZLib.Utilities
 	{
 		private const int c_inValid_index = -1;
 
-		private readonly Random m_random;
-		
+		private readonly Random m_random = null!;
+
 		public Randomizer()
 		{
 			m_random = new Random();

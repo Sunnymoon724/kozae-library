@@ -4,7 +4,6 @@ using Microsoft.Win32;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Globalization;
-using KZLib.Utilities;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 
@@ -38,7 +37,7 @@ namespace KZLib.ToolKits
 
 				var prefsPath = @$"Library/Preferences/unity.{_MakeValidFileName(companyName,inValidArray)}.{_MakeValidFileName(productName,inValidArray)}.plist";
 
-				if(FileUtility.IsFileExist(prefsPath))
+				if(KZFileKit.IsFileExist(prefsPath))
 				{
 					var cmdStr = string.Format(@"-p '{0}'", prefsPath.Replace("\"","\\\"").Replace("'","\\'").Replace("`","\\`"));
 

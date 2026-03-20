@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using KZConsole.Utilities;
-using KZLib.Utilities;
 
 namespace KZConsole
 {
@@ -23,11 +22,11 @@ namespace KZConsole
 			var protoFolderAbsolutePath = argumentArray[0];
 			var projectPluginAbsolutePath = argumentArray[1];
 
-			CommonUtility.WriteLog($"Proto folder path : {protoFolderAbsolutePath}",LogType.Info);
+			KZCommonKit.WriteLog($"Proto folder path : {protoFolderAbsolutePath}",LogType.Info);
 
-			var protoFilePathList = new List<string>(FileUtility.FindAllExcelFileGroupByFolderPath(protoFolderAbsolutePath));
+			var protoFilePathList = new List<string>(KZFileKit.FindAllExcelFileGroupByFolderPath(protoFolderAbsolutePath));
 
-			var parentPath = FileUtility.GetProjectParentPath();
+			var parentPath = KZFileKit.GetProjectParentPath();
 			var projectFolderPath = Path.Combine(parentPath,"ProtoProject");
 			
 			var projectManager = new ProjectManager(projectFolderPath);
@@ -38,29 +37,29 @@ namespace KZConsole
 
 			builder.GenerateAllProtoCode();
 
-			CommonUtility.WriteLog("Build project",LogType.Info);
+			KZCommonKit.WriteLog("Build project",LogType.Info);
 
 			//? Build Project
 			projectManager.BuildProject();
 
-			CommonUtility.WriteLog("Move dll & pdb file",LogType.Info);
-			
-			CommonUtility.WriteLog($"project plugin path : {projectPluginAbsolutePath}",LogType.Info);
+			KZCommonKit.WriteLog("Move dll & pdb file",LogType.Info);
 
-			FileUtility.CreateFolder(projectPluginAbsolutePath);
+			KZCommonKit.WriteLog($"project plugin path : {projectPluginAbsolutePath}",LogType.Info);
+
+			KZFileKit.CreateFolder(projectPluginAbsolutePath);
 
 			var outputFolderPath = Path.Combine(parentPath,"ProtoOutput","Plugin");
 
 			var sourceDllFilePath = Path.Combine(outputFolderPath,"KZProto.dll");
 			var sourcePdbFilePath = Path.Combine(outputFolderPath,"KZProto.pdb");
 
-			FileUtility.MoveFile(sourceDllFilePath,projectPluginAbsolutePath,true);
-			FileUtility.MoveFile(sourcePdbFilePath,projectPluginAbsolutePath,true);
+			KZFileKit.MoveFile(sourceDllFilePath,projectPluginAbsolutePath,true);
+			KZFileKit.MoveFile(sourcePdbFilePath,projectPluginAbsolutePath,true);
 
-			CommonUtility.WriteLog("Delete project",LogType.Info);
+			KZCommonKit.WriteLog("Delete project",LogType.Info);
 
 			//? Delete Project
-			FileUtility.DeleteFolder(projectFolderPath,true);
+			KZFileKit.DeleteFolder(projectFolderPath,true);
 		}
 	}
 }

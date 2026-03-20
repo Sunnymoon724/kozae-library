@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using KZConsole.Utilities;
-using KZLib.Utilities;
 
 namespace KZConsole
 {
@@ -14,12 +14,12 @@ namespace KZConsole
 		{
 			m_projectFolderPath = projectFolderPath;
 
-			FileUtility.CreateFolder(m_projectFolderPath);
+			KZFileKit.CreateFolder(m_projectFolderPath);
 		}
 
 		public void CreateProject()
 		{
-			Assembly assembly = Assembly.GetExecutingAssembly();
+			var assembly = Assembly.GetExecutingAssembly();
 
 			_CreateProjectFile(assembly);
 			_CreateGlobalFile(assembly);
@@ -29,7 +29,7 @@ namespace KZConsole
 
 		private void _CreateProjectFile(Assembly assembly)
 		{
-			var projectFileDict = CommonUtility.ReadEmbeddedResourcesFromExtension(assembly,".txt");
+			var projectFileDict = KZCommonKit.ReadEmbeddedResourcesFromExtension(assembly,".txt");
 
 			if(!projectFileDict.TryGetValue("ProtoProject.txt", out var projectFile))
 			{
@@ -41,7 +41,7 @@ namespace KZConsole
 
 		private void _CreateGlobalFile(Assembly assembly)
 		{
-			var codeFileDict = CommonUtility.ReadEmbeddedResourcesFromExtension(assembly,".cs");
+			var codeFileDict = KZCommonKit.ReadEmbeddedResourcesFromExtension(assembly,".cs");
 
 			if(!codeFileDict.TryGetValue("Global.cs", out var globalFile))
 			{
@@ -53,30 +53,31 @@ namespace KZConsole
 
 		private void _CopyPluginFile()
 		{
-			var dllFilePath = Path.Combine(FileUtility.GetProjectPath(),"KZData.dll");
+			var dllFilePath = Path.Combine(KZFileKit.GetProjectPath(),"KZData.dll");
 
-			FileUtility.CopyFile(dllFilePath,m_projectFolderPath,true);
+			KZFileKit.CopyFile(dllFilePath,m_projectFolderPath,true);
 		}
 
 		private void _WriteTextToFile(string fileName,string text)
 		{
 			var filePath = Path.Combine(m_projectFolderPath,fileName);
 
-			FileUtility.WriteTextToFile(filePath,text);
+			KZFileKit.WriteTextToFile(filePath,text);
 		}
 
 		public void BuildProject()
 		{
 			var projectFilePath = Path.Combine(m_projectFolderPath,"ProtoProject.csproj");
 
-			var process = new System.Diagnostics.Process();
+			var process = new Process();
+
 			process.StartInfo.FileName = "dotnet";
 			process.StartInfo.Arguments = $"build \"{projectFilePath}\" --configuration Release";
 			process.StartInfo.RedirectStandardOutput = true;
 			process.StartInfo.RedirectStandardError = true;
 			process.StartInfo.UseShellExecute = false;
 
-			CommonUtility.WriteLog("-Build start",LogType.Info);
+			KZCommonKit.WriteLog("-Build start",LogType.Info);
 
 			try
 			{
@@ -87,16 +88,16 @@ namespace KZConsole
 
 				process.WaitForExit();
 
-				CommonUtility.WriteLog($"-Build Output: \n{output}",LogType.Info);
+				KZCommonKit.WriteLog($"-Build Output: \n{output}",LogType.Info);
 
 				if(!string.IsNullOrEmpty(error))
 				{
-					CommonUtility.WriteLog($"-Build Error: \n{error}",LogType.Error);
+					KZCommonKit.WriteLog($"-Build Error: \n{error}",LogType.Error);
 				}
 			}
 			catch(Exception exception)
 			{
-				CommonUtility.WriteLog($"Error executing build: {exception.Message}",LogType.Error);
+				KZCommonKit.WriteLog($"Error executing build: {exception.Message}",LogType.Error);
 			}
 		}
 	}

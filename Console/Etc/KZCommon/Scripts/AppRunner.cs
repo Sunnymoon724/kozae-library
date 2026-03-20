@@ -17,13 +17,13 @@ namespace KZConsole
 
 				onPlayProgram(argumentArray); 
 
-				CommonUtility.WriteLog("Program is done",LogType.Info);
+				KZCommonKit.WriteLog("Program is done",LogType.Info);
 
 				Console.ReadLine();
 			}
 			catch(Exception exception)
 			{
-				CommonUtility.WriteLog($"Exception : {exception}",LogType.Error);
+				KZCommonKit.WriteLog($"Exception : {exception}",LogType.Error);
 
 				Environment.Exit(-1);
 			}

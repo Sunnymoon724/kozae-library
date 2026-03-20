@@ -35,17 +35,17 @@ namespace KZLib.ToolKits
 				throw new NullReferenceException("HeaderChunk is not found.");
 			}
 
-			var chunkSize = CommonUtility.ReadInt32(binaryReader);
+			var chunkSize = KZCommonKit.ReadInt32(binaryReader);
 
 			if(chunkSize != 6)
 			{
 				throw new ArgumentException("HeaderChunk is not 6 bytes.");
 			}
 
-			int fileFormat = CommonUtility.ReadInt16(binaryReader); // 0 = single track, 1 = multi track synchronous, 2 = multi track asynchronous
-			int trackCount = CommonUtility.ReadInt16(binaryReader);
+			int fileFormat = KZCommonKit.ReadInt16(binaryReader); // 0 = single track, 1 = multi track synchronous, 2 = multi track asynchronous
+			int trackCount = KZCommonKit.ReadInt16(binaryReader);
 
-			m_deltaTicksPerQuarterNote = CommonUtility.ReadInt16(binaryReader);
+			m_deltaTicksPerQuarterNote = KZCommonKit.ReadInt16(binaryReader);
 			m_midiTrackList = new List<MidiTrack>(trackCount);
 
 			for(var i=0;i<trackCount;i++)
@@ -66,7 +66,7 @@ namespace KZLib.ToolKits
 				throw new NullReferenceException("TrackChunk is not found.");
 			}
 
-			var chunkSize = CommonUtility.ReadInt32(binaryReader);
+			var chunkSize = KZCommonKit.ReadInt32(binaryReader);
 			var startPosition = binaryReader.BaseStream.Position;
 			var endPosition = startPosition+chunkSize;
 

@@ -16,6 +16,8 @@
 		int Num { get; }
 	}
 
+	public interface ICluster { }
+
 	public enum EffectType
 	{
 		VisualEffect,
