@@ -19,7 +19,7 @@ public static partial class KZFileKit
 			{
 				var currentFolderPath = folderQueue.Dequeue();
 
-				foreach(var filePath in GetFilePathArray(folderPath))
+				foreach(var filePath in GetFilePathArray(currentFolderPath))
 				{
 					if(!string.IsNullOrEmpty(filePath) && !filePath.EndsWith(".meta"))
 					{

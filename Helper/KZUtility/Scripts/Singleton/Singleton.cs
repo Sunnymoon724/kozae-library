@@ -32,7 +32,6 @@ namespace KZLib.Utilities
 		}
 
 		protected Singleton() => _Initialize();
-		~Singleton() => _Release(false);
 
 		protected virtual void _Initialize() { }
 
@@ -52,7 +51,6 @@ namespace KZLib.Utilities
 		public void Dispose()
 		{
 			_Release(true);
-
 			GC.SuppressFinalize(this);
 		}
 

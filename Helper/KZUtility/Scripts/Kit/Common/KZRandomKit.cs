@@ -142,7 +142,7 @@ public static class KZRandomKit
 		{
 			Randomize(list);
 
-			var maxCount = Math.Max(count,list.Count);
+			var maxCount = Math.Min(count,list.Count);
 
 			for(var i=0;i<maxCount;i++)
 			{
@@ -236,7 +236,7 @@ public static class KZRandomKit
 
 	public static int GetRandomSign(bool includeZero = true)
 	{
-		return includeZero ? s_randomizer.PickInteger(0,2)-1 : s_randomizer.PickDouble() < 0.5d ? -1 : 1;
+		return includeZero ? s_randomizer.PickInteger(0,2)-1 : s_randomizer.PickDouble() < 0.5d ? -1 : +1;
 	}
 
 	private static bool _IsValidList<TValue>(IList<TValue> list)

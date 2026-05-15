@@ -10,7 +10,7 @@ public static partial class KZFileKit
 	/// <param name="path">The absolute path of the file or folder.</param>
 	public static void CreateFolder(string path)
 	{
-		if(!IsPathExist(path))
+		if(IsPathExist(path))
 		{
 			return;
 		}
@@ -27,7 +27,7 @@ public static partial class KZFileKit
 	/// <param name="filePath">The absolute path of the file.</param>
 	public static void CreateFile(string filePath)
 	{
-		if(!IsPathExist(filePath))
+		if(IsPathExist(filePath))
 		{
 			return;
 		}

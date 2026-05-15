@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace KZLib.Data
 {
 	public interface IColorProto : IProto
@@ -9,7 +11,15 @@ namespace KZLib.Data
 	public interface IMotionProto : IProto
 	{
 		string StateName { get; }
-		MotionEvent[] EventArray { get; }
+		MotionEntry[] MotionEntryArray { get; }
+	}
+
+	public interface IBuffProto : IProto
+	{
+		public string BuffName { get; }
+		public float Duration { get; }
+		public int MaxStackCount { get; }
+		public BuffEntry[] BuffEntryArray { get; }
 	}
 
 	public interface INetworkErrorProto : IProto

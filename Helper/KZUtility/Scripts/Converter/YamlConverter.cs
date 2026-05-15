@@ -62,8 +62,8 @@ namespace KZLib.Utilities
 
 				nameof(Quaternion)			=> new Quaternion(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"z"),_GetFloat(dictionary,"w")),
 
-				nameof(Rect)				=> new Rect(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"width"),_GetFloat(dictionary,"heigh")),
-				nameof(RectInt)				=> new RectInt(_GetInt(dictionary,"x"),_GetInt(dictionary,"y"),_GetInt(dictionary,"width"),_GetInt(dictionary,"heigh")),
+				nameof(Rect)				=> new Rect(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"width"),_GetFloat(dictionary,"height")),
+				nameof(RectInt)				=> new RectInt(_GetInt(dictionary,"x"),_GetInt(dictionary,"y"),_GetInt(dictionary,"width"),_GetInt(dictionary,"height")),
 
 				nameof(SoundVolume)			=> new SoundVolume(_GetFloat(dictionary,"level"),_GetBool(dictionary,"mute")),
 				nameof(ScreenResolution)	=> new ScreenResolution(_GetInt(dictionary,"width"),_GetInt(dictionary,"height"),_GetBool(dictionary,"fullscreen")),

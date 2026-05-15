@@ -82,7 +82,7 @@ namespace KZLib.Utilities
 			{
 				if(weight < 0.0f)
 				{
-					throw new ArgumentException("Weight is below zero -> {weight} < 0.0f");
+					throw new ArgumentException($"Weight is below zero -> {weight} < 0.0f");
 				}
 
 				total += weight;

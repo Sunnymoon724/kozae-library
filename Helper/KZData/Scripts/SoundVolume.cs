@@ -80,27 +80,27 @@ namespace KZLib.Data
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SoundVolume operator +(SoundVolume a,float b)
+		public static SoundVolume operator +(SoundVolume lhs,float rhs)
 		{
-			return new SoundVolume(a.level+b,a.mute);
+			return new SoundVolume(lhs.level+rhs,lhs.mute);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SoundVolume operator -(SoundVolume a,float b)
+		public static SoundVolume operator -(SoundVolume lhs,float rhs)
 		{
-			return new SoundVolume(a.level-b,a.mute);
+			return new SoundVolume(lhs.level-rhs,lhs.mute);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SoundVolume operator *(SoundVolume a,float b)
+		public static SoundVolume operator *(SoundVolume lhs,float rhs)
 		{
-			return new SoundVolume(a.level*b,a.mute);
+			return new SoundVolume(lhs.level*rhs,lhs.mute);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SoundVolume operator /(SoundVolume a,float b)
+		public static SoundVolume operator /(SoundVolume lhs,float rhs)
 		{
-			return new SoundVolume(a.level/b,a.mute);
+			return new SoundVolume(lhs.level/rhs,lhs.mute);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

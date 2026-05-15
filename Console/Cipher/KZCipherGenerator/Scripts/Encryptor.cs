@@ -21,11 +21,11 @@ namespace KZConsole
 	{
 		public static KeyInfo GenerateKey()
 		{
-			var randomKey = KZCryptoKit.AES.GenerateRandomKey();
+			var randomKey = KZCryptoKit.AESGenerateRandomKey();
 
-			KZCryptoKit.RSA.GenerateKey(out var publicKey,out var privateKey);
+			KZCryptoKit.RSAGenerateKey(out var publicKey,out var privateKey);
 
-			var encryptKey = KZCryptoKit.AES.EncryptToString(privateKey,randomKey);
+			var encryptKey = KZCryptoKit.AESEncryptToString(privateKey,randomKey);
 			var convertKey = Convert.ToBase64String(randomKey);
 
 			KZCommonKit.WriteLog($"Public Key : {publicKey}\n\nPrivate Key : {privateKey}\n\nEncrypt Key : {encryptKey}\n\nRandom Key : {convertKey}",LogType.Info);

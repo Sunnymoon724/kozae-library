@@ -8,7 +8,7 @@ namespace KZLib.Utilities
 	{
 		private Script m_luaScript = null!;
 
-		private readonly LazyRegistry<string,DynValue> m_functionRegistry = new();
+		private readonly LazyRegistry<string,DynValue> m_registry = new();
 
 		private bool m_disposed = false;
 
@@ -23,7 +23,7 @@ namespace KZLib.Utilities
 
 			if(disposing)
 			{
-				m_functionRegistry.Clear();
+				m_registry.Release();
 			}
 
 			m_disposed = true;
@@ -37,7 +37,7 @@ namespace KZLib.Utilities
 
 			m_luaScript = new Script();
 
-			m_functionRegistry.Clear();
+			m_registry.Release();
 
 			foreach(var luaText in luaTextArray)
 			{
@@ -65,7 +65,7 @@ namespace KZLib.Utilities
 				throw new InvalidOperationException("Lua script is empty.");
 			}
 
-			var function = m_functionRegistry.Fetch(functionName,_Throw);
+			var function = m_registry.Fetch(functionName,_FindFunction);
 
 			var result = m_luaScript.Call(function,_ConvertToValueArray(argumentArray));
 
@@ -81,7 +81,7 @@ namespace KZLib.Utilities
 				throw new InvalidOperationException("Lua script is empty.");
 			}
 
-			var function = m_functionRegistry.Fetch(functionName,_Throw);
+			var function = m_registry.Fetch(functionName,_FindFunction);
 
 			m_luaScript.Call(function,_ConvertToValueArray(argumentArray));
 		}
@@ -96,16 +96,21 @@ namespace KZLib.Utilities
 			return argumentArray?.Length > 0 ? Array.ConvertAll(argumentArray,_ConvertToValue) : Array.Empty<DynValue>();
 		}
 
-		private DynValue _Throw(string functionName)
+		private bool _FindFunction(string functionName,out DynValue function)
 		{
-			var function = m_luaScript!.Globals.Get(functionName);
+			function = m_luaScript!.Globals.Get(functionName);
+
+			if(function == null)
+			{
+				return false;
+			}
 
 			if(function.Type != DataType.Function)
 			{
-				throw new MissingMethodException($"{functionName} was not found in the Lua script.");
+				return false;
 			}
 
-			return function;
+			return true;
 		}
 
 		private void _CheckVoid(DynValue result,string functionName)

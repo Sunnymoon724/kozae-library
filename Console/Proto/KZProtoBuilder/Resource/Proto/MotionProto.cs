@@ -9,7 +9,7 @@ namespace KZLib.Data
 		[MemoryPackOrder(0)] public int Num { get; init; }
 
 		[MemoryPackOrder(1)] public string StateName { get; init; }
-		[MemoryPackOrder(2)] public MotionEvent[] EventArray { get; init; }
+		[MemoryPackOrder(2)] public MotionEntry[] MotionEntryArray { get; init; }
 	}
 }
 #pragma warning restore CS8618
