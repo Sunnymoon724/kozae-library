@@ -9,7 +9,9 @@ namespace KZLib.ToolKits
 	public class MidiFile
 	{
 		private const string c_fileHeaderChunk = "MThd";
-		private const string c_fileTrackChunk = "MTrk";		
+		private const string c_fileTrackChunk = "MTrk";
+		private const int c_chunkHeaderLength = 4;
+		private const int c_headerChunkSize = 6;
 
 		private List<MidiTrack> m_midiTrackList = new();
 
@@ -28,7 +30,7 @@ namespace KZLib.ToolKits
 
 		private void _LoadMidiFile(BinaryReader binaryReader)
 		{
-			var chunkHeader = Encoding.UTF8.GetString(binaryReader.ReadBytes(4));
+			var chunkHeader = Encoding.UTF8.GetString(binaryReader.ReadBytes(c_chunkHeaderLength));
 
 			if(chunkHeader != c_fileHeaderChunk)
 			{
@@ -37,7 +39,7 @@ namespace KZLib.ToolKits
 
 			var chunkSize = KZCommonKit.ReadInt32(binaryReader);
 
-			if(chunkSize != 6)
+			if(chunkSize != c_headerChunkSize)
 			{
 				throw new ArgumentException("HeaderChunk is not 6 bytes.");
 			}
@@ -59,7 +61,7 @@ namespace KZLib.ToolKits
 			var eventList = new List<MidiEvent>();
 			var totalTime = 0L;
 
-			var chunkHeader = Encoding.UTF8.GetString(binaryReader.ReadBytes(4));
+			var chunkHeader = Encoding.UTF8.GetString(binaryReader.ReadBytes(c_chunkHeaderLength));
 
 			if(chunkHeader != c_fileTrackChunk)
 			{

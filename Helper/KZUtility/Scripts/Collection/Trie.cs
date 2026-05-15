@@ -5,6 +5,7 @@ namespace KZLib.Collections.Generic
 {
 	public sealed class Trie
 	{
+		private const int c_initialBufferSize = 16;
 		private class TrieNode
 		{
 			private readonly Dictionary<char,TrieNode> m_childDict = new();
@@ -233,7 +234,7 @@ namespace KZLib.Collections.Generic
 
 		private void _DepthFirstSearch(TrieNode startNode,string prefix,List<string> result)
 		{
-			var bufferArray = new char[Math.Max(16,prefix.Length*2)];
+			var bufferArray = new char[Math.Max(c_initialBufferSize,prefix.Length*2)];
 			prefix.CopyTo(0,bufferArray,0,prefix.Length);
 
 			var stack = new Stack<(TrieNode node,int length,char letter)>();

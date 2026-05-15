@@ -23,6 +23,8 @@ namespace KZLib.ToolKits
 
 	public class ExcelReader
 	{
+		private const int c_vector2ComponentCount = 2;
+		private const int c_vector3ComponentCount = 3;
 		public string FilePath { get; }
 
 		private readonly Dictionary<string,string[][]> m_sheetDict = new();
@@ -317,12 +319,12 @@ namespace KZLib.ToolKits
 				{
 					var valueArray = Array.ConvertAll(vectorArray,float.Parse);
 
-					if(targetType == typeof(Vector2) && valueArray.Length == 2)
+					if(targetType == typeof(Vector2) && valueArray.Length == c_vector2ComponentCount)
 					{
 						return new Vector2(valueArray[0],valueArray[1]);
 					}
 
-					if(targetType == typeof(Vector3) && valueArray.Length == 3)
+					if(targetType == typeof(Vector3) && valueArray.Length == c_vector3ComponentCount)
 					{
 						return new Vector3(valueArray[0],valueArray[1],valueArray[2]);
 					}

@@ -50,17 +50,20 @@ namespace KZLib.ToolKits
 
 	public class TrackSequenceNumberEvent : MetaEvent
 	{
+		private const int c_sequenceNumberLength = 2;
+		private const int c_byte1Shift = 8;
+
 		private readonly ushort m_sequenceNumber = 0;
 
 		public TrackSequenceNumberEvent(BinaryReader binaryReader,int length,int delta) : base(0x00,0x00,delta)
 		{
-			if(length == 2)
+			if(length == c_sequenceNumberLength)
 			{
-				m_sequenceNumber = (ushort)((binaryReader.ReadByte() << 8)+binaryReader.ReadByte());
+				m_sequenceNumber = (ushort)((binaryReader.ReadByte() << c_byte1Shift)+binaryReader.ReadByte());
 			}
 			else
 			{
-				binaryReader.ReadBytes(2);
+				binaryReader.ReadBytes(c_sequenceNumberLength);
 
 				m_sequenceNumber = 0;
 			}
@@ -86,21 +89,26 @@ namespace KZLib.ToolKits
 
 	public class TempoEvent : MetaEvent 
 	{
+		private const int c_tempoEventLength = 3;
+		private const int c_byte2Shift = 16;
+		private const int c_byte1Shift = 8;
+		private const int c_microsecondsPerMinute = 60000000;
+
 		public int MicrosecondsPerQuarterNote { get; }		
 
 		public TempoEvent(BinaryReader binaryReader,int length,int delta) : base(0x51,0x00,delta)
 		{
-			if(length != 3) 
+			if(length != c_tempoEventLength) 
 			{
 				throw new InvalidDataException("Tempo length is not 3");
 			}
 
-			MicrosecondsPerQuarterNote = (binaryReader.ReadByte() << 16) + (binaryReader.ReadByte() << 8) + binaryReader.ReadByte();
+			MicrosecondsPerQuarterNote = (binaryReader.ReadByte() << c_byte2Shift) + (binaryReader.ReadByte() << c_byte1Shift) + binaryReader.ReadByte();
 		}
 		
 		public override string ToString() 
 		{
-			return $"{base.ToString()} {60000000 / MicrosecondsPerQuarterNote}bpm ({MicrosecondsPerQuarterNote})";
+			return $"{base.ToString()} {c_microsecondsPerMinute / MicrosecondsPerQuarterNote}bpm ({MicrosecondsPerQuarterNote})";
 		}
 		
 		// public double Tempo

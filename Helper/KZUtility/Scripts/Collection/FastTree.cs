@@ -16,7 +16,11 @@ namespace KZLib.Collections.Generic
 
 		private Rect m_tempRect = Rect.zero;
 
-		public FastTree(int depth,Rect treeArea,int unitNodeCount = 3)
+		private const int c_unitNodeCount = 3;
+		private const int c_nodeIndexBase = 10;
+		private const int c_hexNibbleMask = 0x0F;
+
+		public FastTree(int depth,Rect treeArea,int unitNodeCount = c_unitNodeCount)
 		{
 			m_depth = depth;
 
@@ -54,7 +58,7 @@ namespace KZLib.Collections.Generic
 			{
 				var depth = i;
 
-				var index = nodeID[depth] & 15;
+				var index = nodeID[depth] & c_hexNibbleMask;
 
 				var width = rect.width/m_unitNodeCount;
 				var height = rect.height/m_unitNodeCount;
@@ -111,7 +115,7 @@ namespace KZLib.Collections.Generic
 
 					if(m_tempRect.Contains(point))
 					{
-						var index = parentIndex*10+j*m_unitNodeCount+i+1;
+						var index = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
 
 						return _FindNodeIndexRecursive(depth+1,index,point,m_tempRect);
 					}
@@ -122,9 +126,9 @@ namespace KZLib.Collections.Generic
 		}
 
 
-		private Rect _FindNodeRectRecursive(int _depth,Vector2 point,Rect rect)
+		private Rect _FindNodeRectRecursive(int depth,Vector2 point,Rect rect)
 		{
-			if(_depth > m_depth)
+			if(depth > m_depth)
 			{
 				return rect;
 			}
@@ -144,7 +148,7 @@ namespace KZLib.Collections.Generic
 
 					if(m_tempRect.Contains(point))
 					{
-						return _FindNodeRectRecursive(_depth+1,point,m_tempRect);
+						return _FindNodeRectRecursive(depth+1,point,m_tempRect);
 					}
 				}
 			}
@@ -152,11 +156,11 @@ namespace KZLib.Collections.Generic
 			return rect;
 		}
 
-		private void _FindNodesIndexInBoundRecursive(int _depth,long _parentIndex,Rect srcRect,Rect dstRect,List<long> resultList)
+		private void _FindNodesIndexInBoundRecursive(int depth,long parentIndex,Rect srcRect,Rect dstRect,List<long> resultList)
 		{
-			if( _depth > m_depth)
+			if( depth > m_depth)
 			{
-				resultList.Add(_parentIndex);
+				resultList.Add(parentIndex);
 
 				return;
 			}
@@ -176,9 +180,9 @@ namespace KZLib.Collections.Generic
 
 					if(m_tempRect.Overlaps(dstRect))
 					{
-						var index = _parentIndex*10+j*m_unitNodeCount+i+1;
+						var index = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
 
-						_FindNodesIndexInBoundRecursive(_depth+1,index,m_tempRect,dstRect,resultList);
+						_FindNodesIndexInBoundRecursive(depth+1,index,m_tempRect,dstRect,resultList);
 					}
 				}
 			}

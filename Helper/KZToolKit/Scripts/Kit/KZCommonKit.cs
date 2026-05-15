@@ -5,6 +5,10 @@ namespace KZHelper.ToolKits
 {
 	internal static class KZCommonKit
 	{
+		private const int c_byte3Shift = 24;
+		private const int c_byte2Shift = 16;
+		private const int c_byte1Shift = 8;
+
 		internal static void GenerateExcelFile(string folderPath,string fileName,XLWorkbook workbook)
 		{
 			KZFileKit.CreateFolder(folderPath);
@@ -21,12 +25,12 @@ namespace KZHelper.ToolKits
 
 		internal static int ReadInt32(BinaryReader binaryReader)
 		{
-			return (binaryReader.ReadByte() << 24) | (binaryReader.ReadByte() << 16) | (binaryReader.ReadByte() << 8) | binaryReader.ReadByte();
+			return (binaryReader.ReadByte() << c_byte3Shift) | (binaryReader.ReadByte() << c_byte2Shift) | (binaryReader.ReadByte() << c_byte1Shift) | binaryReader.ReadByte();
 		}
 
 		internal static short ReadInt16(BinaryReader binaryReader)
 		{
-			return (short)((binaryReader.ReadByte() << 8) | binaryReader.ReadByte());
+			return (short)((binaryReader.ReadByte() << c_byte1Shift) | binaryReader.ReadByte());
 		}
 	}
 }

@@ -4,11 +4,14 @@ namespace KZLib.ToolKits
 {
 	public class NoteEvent : MidiEvent
 	{
+		private const byte c_maxMidiValue = 127;
+		private const int c_percussionChannel = 10;
+
 		public NoteEvent(byte command,byte data1,byte data2,int delta,int channel) : base(command,data1,data2,delta,channel)
 		{
-			if(m_data2 > 127)
+			if(m_data2 > c_maxMidiValue)
 			{
-				m_data2 &= 127;
+				m_data2 &= c_maxMidiValue;
 			}
 
 			if(m_data2 == 0x00)
@@ -25,7 +28,7 @@ namespace KZLib.ToolKits
 
 			set
 			{
-				if(value < 0 || value > 127)
+if(value < 0 || value > c_maxMidiValue)
 				{
 					throw new ArgumentOutOfRangeException("value","Note number must be in the range 0-127");
 				}
@@ -40,7 +43,7 @@ namespace KZLib.ToolKits
 
 			set
 			{
-				if(value < 0 || value > 127)
+if(value < 0 || value > c_maxMidiValue)
 				{
 					throw new ArgumentOutOfRangeException("value","Velocity must be in the range 0-127");
 				}
@@ -53,7 +56,7 @@ namespace KZLib.ToolKits
 		{
 			get
 			{
-				if(Channel == 10)
+				if(Channel == c_percussionChannel)
 				{
 					switch(NoteNumber)
 					{

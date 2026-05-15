@@ -12,3 +12,5 @@
 
 # Ignore Visual Studio Solution
 *.sln
+
+*.lscache
