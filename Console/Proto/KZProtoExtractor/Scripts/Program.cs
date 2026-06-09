@@ -6,11 +6,11 @@ namespace KZConsole
 	public class Program
 	{
 		/// <summary>
-		/// 0 -> protoFolderAbsolutePath / 1 -> environment / 2 -> outputFolderPath
+		/// 0 -> protoFolderAbsolutePath / 1 -> environment (output: ../ProtoOutput from exe parent folder)
 		/// </summary>
 		internal static void Main(string[] argumentArray)
 		{
-			AppRunner.Execute(argumentArray,onPlayProgram);
+			AppRunner.Execute(argumentArray,2,"KZProtoExtractor <protoFolderAbsolutePath> <environment>",onPlayProgram);
 		}
 
 		/// <summary>

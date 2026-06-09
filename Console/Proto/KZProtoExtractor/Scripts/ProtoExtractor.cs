@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using KZConsole.Utilities;
 using KZLib.ToolKits;
 using KZLib.Utilities;
@@ -13,8 +12,6 @@ namespace KZConsole
 {
 	public class ProtoExtractor(string branchName, string branchFilePath)
 	{
-		private const int c_valueIndex = 3;
-
 		private readonly BranchGenerator m_branchGenerator = new(branchName,branchFilePath);
 		private readonly Assembly m_assembly = Assembly.LoadFrom(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"KZProto.dll"));
 
@@ -42,17 +39,11 @@ namespace KZConsole
 			var csvFolderPath = Path.Combine(outputFolderPath,"Csv");
 			var byteFolderPath = Path.Combine(outputFolderPath,"Proto");
 
-			var excludeFileNameList = new List<string>
-			{
-				"Enum",
-				"Branch",
-			};
-
 			foreach(var protoFilePath in protoFilePathList)
 			{
 				var fileName = KZFileKit.GetOnlyName(protoFilePath);
 
-				if(excludeFileNameList.Contains(fileName))
+				if(ProtoGlobal.ExcludeFileNameHashSet.Contains(fileName))
 				{
 					continue;
 				}
@@ -99,17 +90,11 @@ namespace KZConsole
 		{
 			KZCommonKit.WriteLog($"-Extract {fileName}",LogType.Info);
 
-			static bool _FindPlus(string sheetName)
-			{
-				return sheetName.StartsWith('+');
-			}
-
-			// extract is only +sheet
-			var sheetNameArray = excelReader.FindSheetNameArray(_FindPlus);
+			var sheetNameArray = excelReader.FindSheetNameArrayByPrefix(ProtoGlobal.SheetPrefix);
 
 			if(sheetNameArray.Length < 1)
 			{
-				KZCommonKit.WriteLog($"Warning : {fileName} is not include +Sheet",LogType.Info);
+				KZCommonKit.WriteLog($"Warning : {fileName} is not include +Sheet",LogType.Warning);
 
 				backupText = string.Empty;
 				protoArray = Array.Empty<object>();
@@ -118,7 +103,7 @@ namespace KZConsole
 			}
 
 			// first sheet is main class (others are field class)
-			var mainSheetName = sheetNameArray[0];
+			var mainSheetName = sheetNameArray[ProtoGlobal.MainSheetIndex];
 
 			// extract field class (support main class)
 			var schemeIndexListDict = _ExtractSubSheet(excelReader,sheetNameArray);
@@ -137,11 +122,11 @@ namespace KZConsole
 			}
 
 			var indexListDict = new Dictionary<Type,List<int>>();
-			var typeNameArray = excelReader.FindCellArrayInRow(sheetNameArray[0],1);
+			var typeNameArray = excelReader.FindCellArrayInRow(sheetNameArray[ProtoGlobal.MainSheetIndex],ProtoGlobal.TypeRowIndex);
 
-			for(var i=1;i<sheetNameArray.Length;i++)
+			for(var i=ProtoGlobal.SubSheetStartIndex;i<sheetNameArray.Length;i++)
 			{
-				var className = sheetNameArray[i].TrimStart('+');
+				var className = KZProtoKit.TrimProtoName(sheetNameArray[i]);
 
 				_ExtractSubSheetTypes(typeNameArray,className,ref indexListDict);
 			}
@@ -174,28 +159,26 @@ namespace KZConsole
 		{
 			var protoArray = Array.CreateInstance(protoType,rowArray.Length);
 			var schemeArray = excelReader.FindSchemeArray(sheetName);
-
-			var builder = new StringBuilder();
-			builder.AppendLine(string.Join(",",schemeArray));
+			var csvLineList = new List<string> { string.Join(",",schemeArray) };
 
 			for(var i=0;i<rowArray.Length;i++)
 			{
-				string[] currentRow = rowArray[i];
-				string[] escapedRow = new string[currentRow.Length];
+				var currentRow = rowArray[i];
+				var escapedRow = new string[currentRow.Length];
 
 				for(var j=0;j<currentRow.Length;j++)
 				{
 					escapedRow[j] = _EscapeText(currentRow[j]);
 				}
 
-				builder.AppendLine(string.Join(",",escapedRow));
+				csvLineList.Add(string.Join(",",escapedRow));
 
 				var proto = excelReader.Deserialize(schemeArray,protoType,rowArray[i],i);
 
 				protoArray.SetValue(proto,i);
 			}
 
-			content = builder.ToString();
+			content = csvLineList.Count == 0 ? string.Empty : string.Join(Environment.NewLine,csvLineList)+Environment.NewLine;
 
 			return protoArray;
 		}
@@ -244,13 +227,13 @@ namespace KZConsole
 			{
 				var scheme = schemeArray[i];
 
-				if(string.Equals(scheme,"%Branch"))
+				if(string.Equals(scheme,ProtoGlobal.BranchColumnScheme))
 				{
 					return i;
 				}
 			}
 
-			throw new KZSheetException("%Branch is not included.",filePath,sheetName,0);
+			throw new KZSheetException($"{ProtoGlobal.BranchColumnScheme} is not included.",filePath,sheetName,0);
 		}
 
 		private string[][] _ExtractRowArray(ExcelReader excelReader,string sheetName,Dictionary<Type,List<int>> schemeIndexListDict)
@@ -265,7 +248,7 @@ namespace KZConsole
 			var rowList = new List<string[]>();
 			var subSheetDict = schemeIndexListDict.Count == 0 ? [] : _ExtractSubSheetForCustomRow(excelReader,schemeIndexListDict);
 
-			for(var i=c_valueIndex;i<rowSize;i++)
+			for(var i=ProtoGlobal.DataRowStartIndex;i<rowSize;i++)
 			{
 				var cellArray = excelReader.FindCellArrayInRow(sheetName,i);
 
@@ -298,13 +281,13 @@ namespace KZConsole
 			
 			foreach(var pair in schemeIndexListDict)
 			{
-				var subSheetName = $"+{pair.Key.Name}";
+				var subSheetName = KZProtoKit.ToProtoSheetName(pair.Key.Name);
 				var schemeArray = excelReader.FindSchemeArray(subSheetName);
 
 				var rowSize = excelReader.GetRowSize(subSheetName);
 				var keyIndex = excelReader.FindPrimaryKeyIndex(subSheetName);
 
-				for(var i=c_valueIndex;i<rowSize;i++)
+				for(var i=ProtoGlobal.DataRowStartIndex;i<rowSize;i++)
 				{
 					var cellArray = excelReader.FindCellArrayInRow(subSheetName,i);
 

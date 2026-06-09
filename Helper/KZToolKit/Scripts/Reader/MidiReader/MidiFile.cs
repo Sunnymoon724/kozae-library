@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using KZHelper.ToolKits;
 
 namespace KZLib.ToolKits
 {

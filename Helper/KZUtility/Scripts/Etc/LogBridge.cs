@@ -1,23 +1,26 @@
 using System;
 
-public static class LogBridge
+namespace KZLib.Diagnostics
 {
-	public static Action<string> OnInfo = _ => { };
-	public static Action<string> OnWarning = _ => { };
-	public static Action<string> OnError = _ => { };
-
-	public static void I(string message)
+	public static class LogBridge
 	{
-		OnInfo.Invoke(message);
-	}
+		public static Action<string> OnInfo = _ => { };
+		public static Action<string> OnWarning = _ => { };
+		public static Action<string> OnError = _ => { };
 
-	public static void W(string message)
-	{
-		OnWarning.Invoke(message);
-	}
+		public static void I(string message)
+		{
+			OnInfo.Invoke(message);
+		}
 
-	public static void E(string message)
-	{
-		OnError.Invoke(message);
+		public static void W(string message)
+		{
+			OnWarning.Invoke(message);
+		}
+
+		public static void E(string message)
+		{
+			OnError.Invoke(message);
+		}
 	}
 }

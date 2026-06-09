@@ -186,13 +186,25 @@ namespace KZLib.Collections.Generic
 				throw new ArgumentNullException(nameof(array));
 			}
 
-			if(index < 0 || index >= array.Length)
+			if(index < 0 || index > array.Length)
 			{
-				throw new ArgumentOutOfRangeException($"Index {index} is out of bounds for the array.");
+				throw new ArgumentOutOfRangeException(nameof(index));
 			}
 
 			lock(m_syncRoot)
 			{
+				var count = m_valueList.Count;
+
+				if(index+count > array.Length)
+				{
+					throw new ArgumentException("Destination array is too small.");
+				}
+
+				if(count == 0)
+				{
+					return;
+				}
+
 				if(array is TValue[] convert)
 				{
 					m_valueList.CopyTo(convert,index);

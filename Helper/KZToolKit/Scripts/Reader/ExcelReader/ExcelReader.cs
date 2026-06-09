@@ -95,9 +95,24 @@ namespace KZLib.ToolKits
 		{
 			var nameList = new List<string>();
 
-			foreach (var key in m_sheetDict.Keys)
+			foreach(var key in m_sheetDict.Keys)
 			{
-				if (condition.Invoke(key))
+				if(condition.Invoke(key))
+				{
+					nameList.Add(key);
+				}
+			}
+
+			return nameList.ToArray();
+		}
+
+		public string[] FindSheetNameArrayByPrefix(char prefix)
+		{
+			var nameList = new List<string>();
+
+			foreach(var key in m_sheetDict.Keys)
+			{
+				if(key.StartsWith(prefix))
 				{
 					nameList.Add(key);
 				}

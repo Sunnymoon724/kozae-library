@@ -3,34 +3,25 @@ using KZConsole.Utilities;
 
 namespace KZConsole
 {
-	public record KeyInfo
-	{
-		public string PublicKey { get; }
-		public string PrivateKey { get; }
-		public string ConvertKey { get; }
-
-		public KeyInfo(string publicKey,string privateKey,string convertKey)
-		{
-			PublicKey = publicKey;
-			PrivateKey = privateKey;
-			ConvertKey = convertKey;
-		}
-	}
+	/// <summary>
+	/// PublicKeyBase64: RSA public key (Base64) / EncryptedPrivateKeyBase64: AES-encrypted RSA private key (Base64) / AesKeyBase64: AES key for decryption (Base64)
+	/// </summary>
+	public record KeyInfo(string PublicKeyBase64,string EncryptedPrivateKeyBase64,string AesKeyBase64);
 
 	public class Encryptor
 	{
 		public static KeyInfo GenerateKey()
 		{
-			var randomKey = KZCryptoKit.AESGenerateRandomKey();
+			var aesKey = KZCryptoKit.AESGenerateRandomKey();
 
-			KZCryptoKit.RSAGenerateKey(out var publicKey,out var privateKey);
+			KZCryptoKit.RSAGenerateKey(out var publicKeyBase64,out var privateKeyBase64);
 
-			var encryptKey = KZCryptoKit.AESEncryptToString(privateKey,randomKey);
-			var convertKey = Convert.ToBase64String(randomKey);
+			var encryptedPrivateKeyBase64 = KZCryptoKit.AESEncryptToString(privateKeyBase64,aesKey);
+			var aesKeyBase64 = Convert.ToBase64String(aesKey);
 
-			KZCommonKit.WriteLog($"Public Key : {publicKey}\n\nPrivate Key : {privateKey}\n\nEncrypt Key : {encryptKey}\n\nRandom Key : {convertKey}",LogType.Info);
+			KZCommonKit.WriteLog("-Keys generated",LogType.Info);
 
-			return new KeyInfo(publicKey,encryptKey,convertKey);
+			return new KeyInfo(publicKeyBase64,encryptedPrivateKeyBase64,aesKeyBase64);
 		}
 	}
 }

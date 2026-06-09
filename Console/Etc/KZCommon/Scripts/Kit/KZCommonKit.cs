@@ -11,6 +11,11 @@ namespace KZConsole.Utilities
 	{
 		public static Dictionary<string, string> ReadEmbeddedResourcesFromExtension(Assembly assembly, string extension)
 		{
+			return ReadEmbeddedResourcesFromExtensions(assembly,extension);
+		}
+
+		public static Dictionary<string, string> ReadEmbeddedResourcesFromExtensions(Assembly assembly, params string[] extensions)
+		{
 			var resourceNameArray = assembly.GetManifestResourceNames();
 			var resourceDict = new Dictionary<string,string>();
 
@@ -18,25 +23,40 @@ namespace KZConsole.Utilities
 			{
 				var resourceName = resourceNameArray[i];
 
-				if(resourceName.EndsWith(extension))
+				if(!_EndsWithAnyExtension(resourceName,extensions))
 				{
-					using var stream = assembly.GetManifestResourceStream(resourceName);
-
-					if(stream == null)
-					{
-						continue;
-					}
-
-					using var streamReader = new StreamReader(stream);
-					string content = streamReader.ReadToEnd();
-
-					var key = _GetFileName(resourceName);
-
-					resourceDict.Add(key,content);
+					continue;
 				}
+
+				using var stream = assembly.GetManifestResourceStream(resourceName);
+
+				if(stream == null)
+				{
+					continue;
+				}
+
+				using var streamReader = new StreamReader(stream);
+				string content = streamReader.ReadToEnd();
+
+				var key = _GetFileName(resourceName);
+
+				resourceDict.Add(key,content);
 			}
 
 			return resourceDict;
+		}
+
+		private static bool _EndsWithAnyExtension(string resourceName,string[] extensions)
+		{
+			for(var i=0;i<extensions.Length;i++)
+			{
+				if(resourceName.EndsWith(extensions[i]))
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		private static string _GetFileName(string resourceName)

@@ -13,12 +13,12 @@ namespace KZConsole
 		{
 			var excelReader = new ExcelReader(branchFilePath);
 
-			if(!excelReader.IsExistSheetName("Branch"))
+			if(!excelReader.IsExistSheetName(ProtoGlobal.BranchSheetName))
 			{
 				throw new InvalidOperationException($"Branch is not exist in {branchFilePath}.");
 			}
 
-			var schemeArray = excelReader.FindSchemeArray("Branch");
+			var schemeArray = excelReader.FindSchemeArray(ProtoGlobal.BranchSheetName);
 
 			if(schemeArray.Length == 0 || Array.IndexOf(schemeArray, branchName) < 0)
 			{
@@ -29,10 +29,14 @@ namespace KZConsole
 
 			m_branchStateDict.Clear();
 
-			var branchJaggedArray = excelReader.MergeCellArrayInColumns("Branch",0,Array.IndexOf(schemeArray,branchName));
-			var branchArray = branchJaggedArray[0];
+			var branchJaggedArray = excelReader.MergeCellArrayInColumns(
+				ProtoGlobal.BranchSheetName,
+				ProtoGlobal.BranchMergeStartColumnIndex,
+				Array.IndexOf(schemeArray,branchName));
 
-			for(int i=1;i<branchArray.Length;i++)
+			var branchArray = branchJaggedArray[ProtoGlobal.BranchNameRowIndex];
+
+			for(int i=ProtoGlobal.BranchDataStartIndex;i<branchArray.Length;i++)
 			{
 				var branch = branchArray[i];
 
@@ -46,7 +50,7 @@ namespace KZConsole
 					throw new ArgumentException($"{branch} is already exist. [overlap index = {i}]");
 				}
 
-				var branchState = branchJaggedArray[1][i];
+				var branchState = branchJaggedArray[ProtoGlobal.BranchStateRowIndex][i];
 
 				if(string.IsNullOrEmpty(branchState))
 				{

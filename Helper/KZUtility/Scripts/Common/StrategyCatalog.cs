@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KZLib.Diagnostics;
 
 namespace KZLib.Utilities
 {

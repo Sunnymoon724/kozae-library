@@ -11,7 +11,7 @@ namespace KZConsole
 		/// </summary>
 		internal static void Main(string[] argumentArray)
 		{
-			AppRunner.Execute(argumentArray,onPlayProgram);
+			AppRunner.Execute(argumentArray,2,"KZProtoBuilder <protoFolderAbsolutePath> <projectPluginAbsolutePath>",onPlayProgram);
 		}
 
 		/// <summary>

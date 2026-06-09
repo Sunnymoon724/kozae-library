@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,11 +11,10 @@ namespace KZLib.Collections.Generic
 		private readonly Rect m_rectTree = Rect.zero;
 
 		private readonly Dictionary<long,List<TValue>> m_valueListDict = new();
+		private readonly object m_syncRoot = new();
 
 		private readonly float m_halfWidth = 0.0f;
 		private readonly float m_halfHeight = 0.0f;
-
-		private Rect m_tempRect = Rect.zero;
 
 		private const int c_unitNodeCount = 3;
 		private const int c_nodeIndexBase = 10;
@@ -22,6 +22,21 @@ namespace KZLib.Collections.Generic
 
 		public FastTree(int depth,Rect treeArea,int unitNodeCount = c_unitNodeCount)
 		{
+			if(depth < 0)
+			{
+				throw new ArgumentOutOfRangeException(nameof(depth));
+			}
+
+			if(unitNodeCount <= 0)
+			{
+				throw new ArgumentOutOfRangeException(nameof(unitNodeCount));
+			}
+
+			if(unitNodeCount*unitNodeCount >= c_nodeIndexBase)
+			{
+				throw new ArgumentOutOfRangeException(nameof(unitNodeCount),$"Unit node count must produce fewer than {c_nodeIndexBase} child indices per level.");
+			}
+
 			m_depth = depth;
 
 			m_unitNodeCount = unitNodeCount;
@@ -52,13 +67,22 @@ namespace KZLib.Collections.Generic
 
 		public Rect FindNodeRect(string nodeID)
 		{
+			if(string.IsNullOrEmpty(nodeID))
+			{
+				throw new ArgumentException("Node ID must not be null or empty.",nameof(nodeID));
+			}
+
 			var rect = m_rectTree;
+			var maxIndex = m_unitNodeCount*m_unitNodeCount;
 
 			for(var i=0;i<nodeID.Length;i++)
 			{
-				var depth = i;
+				var index = nodeID[i] & c_hexNibbleMask;
 
-				var index = nodeID[depth] & c_hexNibbleMask;
+				if(index < 1 || index > maxIndex)
+				{
+					throw new ArgumentException($"Invalid node ID character '{nodeID[i]}' at position {i}.",nameof(nodeID));
+				}
 
 				var width = rect.width/m_unitNodeCount;
 				var height = rect.height/m_unitNodeCount;
@@ -103,21 +127,17 @@ namespace KZLib.Collections.Generic
 			var width = rect.width/m_unitNodeCount;
 			var height = rect.height/m_unitNodeCount;
 
-			m_tempRect.width = width;
-			m_tempRect.height = height;
-
 			for(var i=0;i<m_unitNodeCount;i++)
 			{
 				for(var j=0;j<m_unitNodeCount;j++)
 				{
-					m_tempRect.x = rect.x+width*i;
-					m_tempRect.y = rect.y+height*j;
+					var childRect = new Rect(rect.x+width*i,rect.y+height*j,width,height);
 
-					if(m_tempRect.Contains(point))
+					if(childRect.Contains(point))
 					{
 						var index = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
 
-						return _FindNodeIndexRecursive(depth+1,index,point,m_tempRect);
+						return _FindNodeIndexRecursive(depth+1,index,point,childRect);
 					}
 				}
 			}
@@ -136,19 +156,15 @@ namespace KZLib.Collections.Generic
 			var width = rect.width/m_unitNodeCount;
 			var height = rect.height/m_unitNodeCount;
 
-			m_tempRect.width = width;
-			m_tempRect.height = height;
-
 			for(var i=0;i<m_unitNodeCount;i++)
 			{
 				for(var j=0;j<m_unitNodeCount;j++)
 				{
-					m_tempRect.x = rect.x+width*i;
-					m_tempRect.y = rect.y+height*j;
+					var childRect = new Rect(rect.x+width*i,rect.y+height*j,width,height);
 
-					if(m_tempRect.Contains(point))
+					if(childRect.Contains(point))
 					{
-						return _FindNodeRectRecursive(depth+1,point,m_tempRect);
+						return _FindNodeRectRecursive(depth+1,point,childRect);
 					}
 				}
 			}
@@ -168,21 +184,17 @@ namespace KZLib.Collections.Generic
 			var width = srcRect.width/m_unitNodeCount;
 			var height = srcRect.height/m_unitNodeCount;
 
-			m_tempRect.width = width;
-			m_tempRect.height = height;
-
 			for(var i=0;i<m_unitNodeCount;i++)
 			{
 				for(var j=0;j<m_unitNodeCount;j++)
 				{
-					m_tempRect.x = srcRect.x+width*i;
-					m_tempRect.y = srcRect.y+height*j;
+					var childRect = new Rect(srcRect.x+width*i,srcRect.y+height*j,width,height);
 
-					if(m_tempRect.Overlaps(dstRect))
+					if(childRect.Overlaps(dstRect))
 					{
 						var index = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
 
-						_FindNodesIndexInBoundRecursive(depth+1,index,m_tempRect,dstRect,resultList);
+						_FindNodesIndexInBoundRecursive(depth+1,index,childRect,dstRect,resultList);
 					}
 				}
 			}
@@ -214,21 +226,17 @@ namespace KZLib.Collections.Generic
 			var width = srcRect.width/m_unitNodeCount;
 			var height = srcRect.height/m_unitNodeCount;
 
-			m_tempRect.width = width;
-			m_tempRect.height = height;
-
 			for(var i=0;i<m_unitNodeCount;i++)
 			{
 				for(var j=0;j<m_unitNodeCount;j++)
 				{
-					m_tempRect.x = srcRect.x+width*i;
-					m_tempRect.y = srcRect.y+height*j;
+					var childRect = new Rect(srcRect.x+width*i,srcRect.y+height*j,width,height);
 
-					if(m_tempRect.Overlaps(dstRect))
+					if(childRect.Overlaps(dstRect))
 					{
-						var index = parentIndex*10+j*m_unitNodeCount+i+1;
+						var index = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
 
-						_FindNodesRectRecursive(depth+1,index,m_tempRect,dstRect,resultList);
+						_FindNodesRectRecursive(depth+1,index,childRect,dstRect,resultList);
 					}
 				}
 			}
@@ -236,29 +244,35 @@ namespace KZLib.Collections.Generic
 
 		public long UpdateValue(long oldIndex,TValue value,Vector2 point)
 		{
-			var newIndex = FindNodeIndex(point);
-
-			if(newIndex == oldIndex)
+			lock(m_syncRoot)
 			{
+				var newIndex = FindNodeIndex(point);
+
+				if(newIndex == oldIndex)
+				{
+					return newIndex;
+				}
+
+				_RemoveValueUnsafe(oldIndex,value);
+				_AddValueUnsafe(newIndex,value);
+
 				return newIndex;
 			}
-
-			_RemoveValue(oldIndex,value);
-			_AddValue(newIndex,value);
-
-			return newIndex;
 		}
 
 		public long AddValue(TValue value,Vector2 point)
 		{
-			var index = FindNodeIndex(point);
+			lock(m_syncRoot)
+			{
+				var index = FindNodeIndex(point);
 
-			_AddValue(index,value);
+				_AddValueUnsafe(index,value);
 
-			return index;
+				return index;
+			}
 		}
 
-		private long _AddValue(long key,TValue value)
+		private void _AddValueUnsafe(long key,TValue value)
 		{
 			if(!m_valueListDict.TryGetValue(key,out var valueList))
 			{
@@ -268,18 +282,19 @@ namespace KZLib.Collections.Generic
 			}
 
 			valueList.Add(value);
-
-			return key;
 		}
 
 		public void RemoveValue(TValue value,Vector2 point)
 		{
-			var index = FindNodeIndex(point);
+			lock(m_syncRoot)
+			{
+				var index = FindNodeIndex(point);
 
-			_RemoveValue(index,value);
+				_RemoveValueUnsafe(index,value);
+			}
 		}
 
-		private void _RemoveValue(long key,TValue value)
+		private void _RemoveValueUnsafe(long key,TValue value)
 		{
 			if(m_valueListDict.TryGetValue(key,out List<TValue> valueList))
 			{
@@ -308,13 +323,16 @@ namespace KZLib.Collections.Generic
 			var resultList = new List<TValue>();
 			var indexList = FindNodeInBound(rect);
 
-			for(var i=0;i<indexList.Count;i++)
+			lock(m_syncRoot)
 			{
-				var index = indexList[i];
-
-				if(m_valueListDict.TryGetValue(index, out var valueList))
+				for(var i=0;i<indexList.Count;i++)
 				{
-					resultList.AddRange(valueList);
+					var index = indexList[i];
+
+					if(m_valueListDict.TryGetValue(index,out var valueList))
+					{
+						resultList.AddRange(valueList);
+					}
 				}
 			}
 
@@ -343,6 +361,24 @@ namespace KZLib.Collections.Generic
 			rect.y += m_halfHeight;
 
 			return rect;
+		}
+
+		public TValue[] ToArray()
+		{
+			lock(m_syncRoot)
+			{
+				var valueList = new List<TValue>();
+
+				foreach(var pair in m_valueListDict)
+				{
+					if(pair.Value != null)
+					{
+						valueList.AddRange(pair.Value);
+					}
+				}
+
+				return valueList.ToArray();
+			}
 		}
 	}
 }

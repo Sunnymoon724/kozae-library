@@ -1,7 +1,7 @@
 using ClosedXML.Excel;
 using System.IO;
 
-namespace KZHelper.ToolKits
+namespace KZLib.ToolKits
 {
 	internal static class KZCommonKit
 	{

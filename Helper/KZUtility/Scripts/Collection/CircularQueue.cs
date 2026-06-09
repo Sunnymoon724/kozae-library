@@ -116,8 +116,27 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
-		public bool IsEmpty => m_front == -1;
-		public bool IsFull => (m_rear+1)%m_capacity == m_front;
+		public bool IsEmpty
+		{
+			get
+			{
+				lock(m_syncRoot)
+				{
+					return m_front == -1;
+				}
+			}
+		}
+
+		public bool IsFull
+		{
+			get
+			{
+				lock(m_syncRoot)
+				{
+					return m_front != -1 && (m_rear+1)%m_capacity == m_front;
+				}
+			}
+		}
 
 		public void Clear()
 		{
@@ -188,34 +207,60 @@ namespace KZLib.Collections.Generic
 				throw new ArgumentNullException(nameof(array));
 			}
 
-			if(index < 0 || index >= array.Length)
+			if(index < 0 || index > array.Length)
 			{
-				throw new ArgumentOutOfRangeException($"Index {index} is out of bounds for the array.");
+				throw new ArgumentOutOfRangeException(nameof(index));
 			}
 
-			var count = Count;
-
-			if(index+count > array.Length)
+			lock(m_syncRoot)
 			{
-				throw new ArgumentException("Destination array is too small.");
-			}
+				var count = Count;
 
-			if(count > 0)
-			{
-				lock(m_syncRoot)
+				if(index+count > array.Length)
 				{
-					var front = m_front;
+					throw new ArgumentException("Destination array is too small.");
+				}
 
-					for(var i=0;i<count;i++)
-					{
-						array.SetValue(m_valueArray[front],index+i);
-						front = (front+1)%m_capacity;
-					}
+				if(count == 0)
+				{
+					return;
+				}
+
+				var front = m_front;
+
+				for(var i=0;i<count;i++)
+				{
+					array.SetValue(m_valueArray[front],index+i);
+					front = (front+1)%m_capacity;
 				}
 			}
 		}
 
 		public bool IsSynchronized => false;
 		public object SyncRoot => m_syncRoot;
+
+		public TValue[] ToArray()
+		{
+			lock(m_syncRoot)
+			{
+				var count = Count;
+
+				if(count == 0)
+				{
+					return Array.Empty<TValue>();
+				}
+
+				var resultArray = new TValue[count];
+				var index = m_front;
+
+				for(var i=0;i<count;i++)
+				{
+					resultArray[i] = m_valueArray[index];
+					index = (index+1)%m_capacity;
+				}
+
+				return resultArray;
+			}
+		}
 	}
 }

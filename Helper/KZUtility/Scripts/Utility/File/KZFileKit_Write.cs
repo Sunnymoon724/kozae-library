@@ -5,32 +5,36 @@ using Newtonsoft.Json;
 public static partial class KZFileKit
 {
 	/// <summary>
-	/// Create folder. (path is file ? create parent folder. : create folder)
+	/// Creates the folder at path, or the parent folder when path is a file path.
+	/// No-op when path is empty, the target folder path cannot be resolved, or the folder already exists.
 	/// </summary>
 	/// <param name="path">The absolute path of the file or folder.</param>
 	public static void CreateFolder(string path)
 	{
-		if(IsPathExist(path))
+		if(!IsPathExist(path))
 		{
 			return;
 		}
 
-		// Path is file ? Get parent path. : Get path
 		var fullPath = IsFilePath(path) ? GetParentPath(path) : path;
 
-		if(!IsFolderExist(fullPath))
+		if(!IsPathExist(fullPath) || IsFolderExist(fullPath))
 		{
-			Directory.CreateDirectory(fullPath);
+			return;
 		}
+
+		Directory.CreateDirectory(fullPath);
 	}
 
 	/// <param name="filePath">The absolute path of the file.</param>
 	public static void CreateFile(string filePath)
 	{
-		if(IsPathExist(filePath))
+		if(!IsPathExist(filePath))
 		{
 			return;
 		}
+
+		CreateFolder(filePath);
 
 		if(!IsFileExist(filePath))
 		{
@@ -49,6 +53,13 @@ public static partial class KZFileKit
 		CreateFolder(filePath);
 
 		File.WriteAllBytes(filePath,bytes);
+	}
+
+	/// <param name="folderPath">The absolute path of the folder.</param>
+	/// <param name="fileName">The name of the file.</param>
+	public static void WriteTextToFile(string folderPath,string fileName,string text)
+	{
+		WriteTextToFile(Path.Combine(folderPath,fileName),text);
 	}
 
 	/// <param name="filePath">The absolute path of the file.</param>

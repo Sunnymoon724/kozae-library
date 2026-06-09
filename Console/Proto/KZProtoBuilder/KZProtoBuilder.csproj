@@ -7,12 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resource\Proto\ColorProto.cs" />
-    <EmbeddedResource Include="Resource\Proto\MotionProto.cs" />
-    <EmbeddedResource Include="Resource\Proto\NetworkErrorProto.cs" />
+    <EmbeddedResource Include="Resource\Proto\*.cs" />
 
     <EmbeddedResource Include="Resource\Project\ProtoProject.txt" />
-    <EmbeddedResource Include="Resource\Project\Global.cs" />
 
     <EmbeddedResource Include="Resource\Template\ProtoTemplate.txt" />
     <EmbeddedResource Include="Resource\Template\EnumTemplate.txt" />
@@ -24,6 +21,7 @@
     <ProjectReference Include="../../../Helper/KZData/KZData.csproj" />
 
     <ProjectReference Include="../../Etc/KZCommon/KZCommon.csproj" />
+    <ProjectReference Include="../KZProtoCommon/KZProtoCommon.csproj" />
   </ItemGroup>
 
 </Project>

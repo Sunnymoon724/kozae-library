@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using KZConsole.Utilities;
 
 namespace KZConsole
@@ -8,11 +9,11 @@ namespace KZConsole
 	{
 		public static void RunProject(string name, string projectPath, string argument)
 		{
-			if (!KZFileKit.IsFileExist(projectPath))
+			if(!KZFileKit.IsFileExist(projectPath))
 			{
-				KZCommonKit.WriteLog($"Warning : Project not found: {projectPath}",LogType.Warning);
+				KZCommonKit.WriteLog($"Project not found: {projectPath}",LogType.Error);
 
-				return;
+				throw new FileNotFoundException("Project not found.",projectPath);
 			}
 
 			var startInfo = new ProcessStartInfo
@@ -30,26 +31,24 @@ namespace KZConsole
 			process.OutputDataReceived += _CreateOutputHandler;
 			process.ErrorDataReceived += _CreateErrorHandler;
 
-			try
+			KZCommonKit.WriteLog($"-{name} Run Start",LogType.Info);
+
+			process.Start();
+
+			process.BeginOutputReadLine();
+			process.BeginErrorReadLine();
+
+			process.WaitForExit();
+
+			process.CancelOutputRead();
+			process.CancelErrorRead();
+
+			if(process.ExitCode != 0)
 			{
-				KZCommonKit.WriteLog($"-{name} Run Start",LogType.Info);
-
-				process.Start();
-
-				process.BeginOutputReadLine();
-				process.BeginErrorReadLine();
-
-				process.WaitForExit();
-
-				process.CancelOutputRead();
-				process.CancelErrorRead();
-
-				KZCommonKit.WriteLog($"-{name} Run End.",LogType.Info);
+				throw new InvalidOperationException($"{name} failed with exit code {process.ExitCode}.");
 			}
-			catch(Exception exception)
-			{
-				KZCommonKit.WriteLog($"Error executing build : {exception.Message}",LogType.Error);
-			}
+
+			KZCommonKit.WriteLog($"-{name} Run End.",LogType.Info);
 		}
 
 		private static void _CreateOutputHandler(object sender,DataReceivedEventArgs argument)

@@ -169,6 +169,9 @@ public static partial class KZFileKit
 		return string.IsNullOrEmpty(pattern) ? Directory.GetDirectories(folderPath) : Directory.GetDirectories(folderPath,pattern);
 	}
 
+	/// <summary>
+	/// Returns whether the path string is non-null and non-empty. Does not check disk existence.
+	/// </summary>
 	public static bool IsPathExist(string path)
 	{
 		return !string.IsNullOrEmpty(path);

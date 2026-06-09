@@ -8,11 +8,11 @@ namespace KZConsole
 		private const string c_protoExtractor = "KZProtoExtractor";
 
 		/// <summary>
-		/// 0 -> builderProjectPath / 1 -> extractorProjectPath / 2 -> resultFolderPath
+		/// 0 -> protoFolderRelativePath / 1 -> environment / 2 -> projectPluginRelativePath
 		/// </summary>
 		internal static void Main(string[] argumentArray)
 		{
-			AppRunner.Execute(argumentArray,onPlayProgram);
+			AppRunner.Execute(argumentArray,3,"KZProtoGenerator <protoFolderRelativePath> <environment> <projectPluginRelativePath>",onPlayProgram);
 		}
 
 		/// <summary>

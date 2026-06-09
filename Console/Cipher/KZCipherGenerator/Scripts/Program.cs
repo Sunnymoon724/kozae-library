@@ -5,31 +5,42 @@ namespace KZConsole
 {
 	public class Program
 	{
+		private const string c_aesKeyFileName = "Encryption.key";
+		private const string c_publicKeyFileName = "PublicKey.pem";
+		private const string c_encryptedPrivateKeyFileName = "EncryptedPrivateKey.pem";
+		private const string c_rsaPublicKeyPemHeader = "RSA PUBLIC KEY";
+		private const string c_encryptedPrivateKeyPemHeader = "ENCRYPTED PRIVATE KEY";
+
 		/// <summary>
-		/// 0 -> resultFolderPath
+		/// 0 -> resultFolderRelativePath (relative to exe working directory)
 		/// </summary>
 		internal static void Main(string[] argumentArray)
 		{
-			AppRunner.Execute(argumentArray,onPlayProgram);
+			AppRunner.Execute(argumentArray,1,"KZCipherGenerator <resultFolderRelativePath>",onPlayProgram);
 		}
 
 		private static void onPlayProgram(string[] argumentArray)
 		{
+			var currentPath = KZFileKit.GetProjectPath();
+			var resultFolderPath = Path.GetFullPath(Path.Combine(currentPath,argumentArray[0]));
+
+			KZCommonKit.WriteLog($"Result folder path : {resultFolderPath}",LogType.Info);
+
 			var keyInfo = Encryptor.GenerateKey();
 
 			KZCommonKit.WriteLog("Save keys",LogType.Info);
 
-			var resultFolderPath = argumentArray[0];
-
 			KZFileKit.CreateFolder(resultFolderPath);
 
-			var convertFilePath = Path.Combine(resultFolderPath,"Encryption.key");
-			var publicFilePath = Path.Combine(resultFolderPath,"PublicKey.pem");
-			var privateFilePath = Path.Combine(resultFolderPath,"PrivateKey.pem");
+			var aesKeyFilePath = Path.Combine(resultFolderPath,c_aesKeyFileName);
+			var publicKeyFilePath = Path.Combine(resultFolderPath,c_publicKeyFileName);
+			var encryptedPrivateKeyFilePath = Path.Combine(resultFolderPath,c_encryptedPrivateKeyFileName);
 
-			KZFileKit.WriteTextToFile(convertFilePath,keyInfo.ConvertKey);
-			KZFileKit.WriteTextToFile(publicFilePath,KZFileKit.WrapPemFormat(keyInfo.PublicKey,"PUBLIC KEY"));
-			KZFileKit.WriteTextToFile(privateFilePath,KZFileKit.WrapPemFormat(keyInfo.PrivateKey,"PRIVATE KEY"));
+			KZFileKit.WriteTextToFile(aesKeyFilePath,keyInfo.AesKeyBase64);
+			KZFileKit.WriteTextToFile(publicKeyFilePath,KZFileKit.WrapPemFormat(keyInfo.PublicKeyBase64,c_rsaPublicKeyPemHeader));
+			KZFileKit.WriteTextToFile(encryptedPrivateKeyFilePath,KZFileKit.WrapPemFormat(keyInfo.EncryptedPrivateKeyBase64,c_encryptedPrivateKeyPemHeader));
+
+			KZCommonKit.WriteLog($"-Save {c_aesKeyFileName}, {c_publicKeyFileName}, {c_encryptedPrivateKeyFileName}",LogType.Info);
 		}
 	}
 }
