@@ -23,7 +23,7 @@ namespace KZLib.ToolKits
 			var stringBuilder = new StringBuilder();
 
 			var excelReader = new ExcelReader(configFilePath);
-			var fileName = KZFileKit.GetOnlyName(configFilePath);
+			var fileName = KZFileKit.GetOnlyFileName(configFilePath);
 
 			if(!excelReader.IsExistSheetName(fileName))
 			{

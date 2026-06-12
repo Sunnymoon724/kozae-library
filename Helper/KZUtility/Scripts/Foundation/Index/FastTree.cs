@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace KZLib.Collections.Generic
+namespace KZLib.Utilities
 {
 	/// <summary>
 	/// Uniform grid spatial index for 2D points with hierarchical node IDs.
@@ -84,34 +84,34 @@ namespace KZLib.Collections.Generic
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="point"/> is outside the tree bounds.</exception>
 		public long FindNodeIndex(Vector2 point)
 		{
-			if(!TryFindNodeIndex(point,out var index))
+			if(!TryFindNodeIndex(point,out var idx))
 			{
 				throw new ArgumentOutOfRangeException(nameof(point),point,"Point is outside the tree bounds.");
 			}
 
-			return index;
+			return idx;
 		}
 
 		/// <summary>Attempts to resolve the leaf node index for <paramref name="point"/>.</summary>
-		public bool TryFindNodeIndex(Vector2 point,out long index)
+		public bool TryFindNodeIndex(Vector2 point,out long idx)
 		{
 			var treePoint = Convert2TreeCoordinate(point);
 
 			if(!_ContainsTreePoint(treePoint))
 			{
-				index = 0;
+				idx = 0;
 
 				return false;
 			}
 
 			if(m_depth == 0)
 			{
-				index = c_rootLeafIndex;
+				idx = c_rootLeafIndex;
 
 				return true;
 			}
 
-			index = _FindNodeIndexRecursive(1,0,treePoint,m_rectTree);
+			idx = _FindNodeIndexRecursive(1,0,treePoint,m_rectTree);
 
 			return true;
 		}
@@ -160,9 +160,9 @@ namespace KZLib.Collections.Generic
 					throw new ArgumentException($"Invalid node ID character '{digit}' at position {i}. Use ASCII digits 1-{maxIndex}.",nameof(nodeID));
 				}
 
-				var index = digit-'0';
+				var idx = digit-'0';
 
-				if(index > maxIndex)
+				if(idx > maxIndex)
 				{
 					throw new ArgumentException($"Invalid node ID character '{digit}' at position {i}.",nameof(nodeID));
 				}
@@ -170,8 +170,8 @@ namespace KZLib.Collections.Generic
 				var width = rect.width/m_unitNodeCount;
 				var height = rect.height/m_unitNodeCount;
 
-				var column = (index-1)%m_unitNodeCount;
-				var row = (index-1)/m_unitNodeCount;
+				var column = (idx-1)%m_unitNodeCount;
+				var row = (idx-1)/m_unitNodeCount;
 
 				rect.x += width*column;
 				rect.y += height*row;
@@ -216,9 +216,9 @@ namespace KZLib.Collections.Generic
 
 					if(childRect.Contains(point))
 					{
-						var index = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
+						var idx = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
 
-						return _FindNodeIndexRecursive(depth+1,index,point,childRect);
+						return _FindNodeIndexRecursive(depth+1,idx,point,childRect);
 					}
 				}
 			}
@@ -272,9 +272,9 @@ namespace KZLib.Collections.Generic
 
 					if(childRect.Overlaps(dstRect))
 					{
-						var index = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
+						var idx = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
 
-						_FindNodesIndexInBoundRecursive(depth+1,index,childRect,dstRect,resultList);
+						_FindNodesIndexInBoundRecursive(depth+1,idx,childRect,dstRect,resultList);
 					}
 				}
 			}
@@ -321,9 +321,9 @@ namespace KZLib.Collections.Generic
 
 					if(childRect.Overlaps(dstRect))
 					{
-						var index = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
+						var idx = parentIndex*c_nodeIndexBase+j*m_unitNodeCount+i+1;
 
-						_FindNodesRectRecursive(depth+1,index,childRect,dstRect,resultList);
+						_FindNodesRectRecursive(depth+1,idx,childRect,dstRect,resultList);
 					}
 				}
 			}
@@ -332,108 +332,108 @@ namespace KZLib.Collections.Generic
 		/// <summary>
 		/// Moves a value from its old cell to the cell containing <paramref name="point"/> when the index changes.
 		/// </summary>
-		/// <returns>The new node index (unchanged when the point still maps to <paramref name="oldIndex"/>).</returns>
+		/// <returns>The new node index (unchanged when the point still maps to <paramref name="oldIdx"/>).</returns>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="point"/> is outside the tree bounds.</exception>
-		public long UpdateValue(long oldIndex,TValue value,Vector2 point)
+		public long UpdateValue(long oldIdx,TValue val,Vector2 point)
 		{
 			lock(m_syncRoot)
 			{
 				var newIndex = FindNodeIndex(point);
 
-				if(newIndex == oldIndex)
+				if(newIndex == oldIdx)
 				{
 					return newIndex;
 				}
 
-				_RemoveValueUnsafe(oldIndex,value);
-				_AddValueUnsafe(newIndex,value);
+				_RemoveValueUnsafe(oldIdx,val);
+				_AddValueUnsafe(newIndex,val);
 
 				return newIndex;
 			}
 		}
 
-		/// <summary>Stores <paramref name="value"/> in the leaf cell containing <paramref name="point"/>.</summary>
+		/// <summary>Stores <paramref name="val"/> in the leaf cell containing <paramref name="point"/>.</summary>
 		/// <returns>The assigned node index.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="point"/> is outside the tree bounds.</exception>
-		public long AddValue(TValue value,Vector2 point)
+		public long AddValue(TValue val,Vector2 point)
 		{
 			lock(m_syncRoot)
 			{
-				var index = FindNodeIndex(point);
+				var idx = FindNodeIndex(point);
 
-				_AddValueUnsafe(index,value);
+				_AddValueUnsafe(idx,val);
 
-				return index;
+				return idx;
 			}
 		}
 
-		/// <summary>Attempts to store <paramref name="value"/> when <paramref name="point"/> is inside the tree bounds.</summary>
-		public bool TryAddValue(TValue value,Vector2 point,out long index)
+		/// <summary>Attempts to store <paramref name="val"/> when <paramref name="point"/> is inside the tree bounds.</summary>
+		public bool TryAddValue(TValue val,Vector2 point,out long idx)
 		{
 			lock(m_syncRoot)
 			{
-				if(!TryFindNodeIndex(point,out index))
+				if(!TryFindNodeIndex(point,out idx))
 				{
 					return false;
 				}
 
-				_AddValueUnsafe(index,value);
+				_AddValueUnsafe(idx,val);
 
 				return true;
 			}
 		}
 
-		private void _AddValueUnsafe(long key,TValue value)
+		private void _AddValueUnsafe(long key,TValue val)
 		{
-			if(!m_valueListDict.TryGetValue(key,out var valueList))
+			if(!m_valueListDict.TryGetValue(key,out var valList))
 			{
-				valueList = new List<TValue>();
+				valList = new List<TValue>();
 
-				m_valueListDict.Add(key,valueList);
+				m_valueListDict.Add(key,valList);
 			}
 
-			valueList.Add(value);
+			valList.Add(val);
 		}
 
-		/// <summary>Removes the first equal occurrence of <paramref name="value"/> from the cell at <paramref name="point"/>.</summary>
+		/// <summary>Removes the first equal occurrence of <paramref name="val"/> from the cell at <paramref name="point"/>.</summary>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="point"/> is outside the tree bounds.</exception>
-		public void RemoveValue(TValue value,Vector2 point)
+		public void RemoveValue(TValue val,Vector2 point)
 		{
 			lock(m_syncRoot)
 			{
-				var index = FindNodeIndex(point);
+				var idx = FindNodeIndex(point);
 
-				_RemoveValueUnsafe(index,value);
+				_RemoveValueUnsafe(idx,val);
 			}
 		}
 
-		/// <summary>Attempts to remove <paramref name="value"/> when <paramref name="point"/> is inside the tree bounds.</summary>
-		public bool TryRemoveValue(TValue value,Vector2 point)
+		/// <summary>Attempts to remove <paramref name="val"/> when <paramref name="point"/> is inside the tree bounds.</summary>
+		public bool TryRemoveValue(TValue val,Vector2 point)
 		{
 			lock(m_syncRoot)
 			{
-				if(!TryFindNodeIndex(point,out var index))
+				if(!TryFindNodeIndex(point,out var idx))
 				{
 					return false;
 				}
 
-				return _RemoveValueUnsafe(index,value);
+				return _RemoveValueUnsafe(idx,val);
 			}
 		}
 
-		private bool _RemoveValueUnsafe(long key,TValue value)
+		private bool _RemoveValueUnsafe(long key,TValue val)
 		{
-			if(!m_valueListDict.TryGetValue(key,out List<TValue> valueList))
+			if(!m_valueListDict.TryGetValue(key,out List<TValue> valList))
 			{
 				return false;
 			}
 
-			if(!valueList.Remove(value))
+			if(!valList.Remove(val))
 			{
 				return false;
 			}
 
-			if(valueList.Count == 0)
+			if(valList.Count == 0)
 			{
 				m_valueListDict.Remove(key);
 			}
@@ -444,22 +444,22 @@ namespace KZLib.Collections.Generic
 		/// <summary>Returns node indices of leaf cells overlapping <paramref name="rect"/>.</summary>
 		public List<long> FindNodeInBound(Rect rect)
 		{
-			var indexList = new List<long>();
+			var idxList = new List<long>();
 			var treeRect = ConvertRect2TreeCoordinate(rect);
 
 			if(m_depth == 0)
 			{
 				if(m_rectTree.Overlaps(treeRect))
 				{
-					indexList.Add(c_rootLeafIndex);
+					idxList.Add(c_rootLeafIndex);
 				}
 
-				return indexList;
+				return idxList;
 			}
 
-			_FindNodesIndexInBoundRecursive(1,0,m_rectTree,treeRect,indexList);
+			_FindNodesIndexInBoundRecursive(1,0,m_rectTree,treeRect,idxList);
 
-			return indexList;
+			return idxList;
 		}
 
 		/// <summary>Gathers all stored values whose cells overlap <paramref name="rect"/>.</summary>
@@ -468,7 +468,7 @@ namespace KZLib.Collections.Generic
 			lock(m_syncRoot)
 			{
 				var resultList = new List<TValue>();
-				var indexList = new List<long>();
+				var idxList = new List<long>();
 				var treeRect = ConvertRect2TreeCoordinate(rect);
 
 				if(m_depth == 0)
@@ -481,15 +481,15 @@ namespace KZLib.Collections.Generic
 					return resultList;
 				}
 
-				_FindNodesIndexInBoundRecursive(1,0,m_rectTree,treeRect,indexList);
+				_FindNodesIndexInBoundRecursive(1,0,m_rectTree,treeRect,idxList);
 
-				for(var i=0;i<indexList.Count;i++)
+				for(var i=0;i<idxList.Count;i++)
 				{
-					var index = indexList[i];
+					var idx = idxList[i];
 
-					if(m_valueListDict.TryGetValue(index,out var valueList))
+					if(m_valueListDict.TryGetValue(idx,out var valList))
 					{
-						resultList.AddRange(valueList);
+						resultList.AddRange(valList);
 					}
 				}
 
@@ -529,17 +529,17 @@ namespace KZLib.Collections.Generic
 		{
 			lock(m_syncRoot)
 			{
-				var valueList = new List<TValue>();
+				var valList = new List<TValue>();
 
 				foreach(var pair in m_valueListDict)
 				{
 					if(pair.Value != null)
 					{
-						valueList.AddRange(pair.Value);
+						valList.AddRange(pair.Value);
 					}
 				}
 
-				return valueList.ToArray();
+				return valList.ToArray();
 			}
 		}
 

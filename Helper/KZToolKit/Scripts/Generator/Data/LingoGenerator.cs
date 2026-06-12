@@ -13,7 +13,7 @@ namespace KZLib.ToolKits
 			languageHashSet = new HashSet<TEnum>();
 			lingoDict = new Dictionary<string,Dictionary<string,string[]>>();
 
-			var fileName = KZFileKit.GetOnlyName(lingoFilePath);
+			var fileName = KZFileKit.GetOnlyFileName(lingoFilePath);
 			var excelReader = new ExcelReader(lingoFilePath);
 
 			foreach(var sheetName in excelReader.SheetNameGroup)

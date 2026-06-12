@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace KZLib.Utilities
 {
+	/// <summary>
+	/// Optional configuration for <see cref="SingletonMB{TBehaviour}"/>.
+	/// </summary>
 	[AttributeUsage(AttributeTargets.Class)]
 	public class SingletonConfigAttribute : Attribute
 	{
@@ -11,9 +14,14 @@ namespace KZLib.Utilities
 		public string PrefabPath { get; set; } = "";
 	}
 
+	/// <summary>
+	/// Singleton base for <see cref="MonoBehaviour"/> types. Access via <see cref="In"/>.
+	/// Unity main thread only.
+	/// </summary>
 	public abstract class SingletonMB<TBehaviour> : MonoBehaviour where TBehaviour : MonoBehaviour
 	{
-		protected static TBehaviour? s_instance = null;
+		private static readonly object s_syncRoot = new();
+		private static TBehaviour? s_instance = null;
 		private static SingletonConfigAttribute? s_config = null;
 
 		private static SingletonConfigAttribute SingletonConfig
@@ -36,52 +44,74 @@ namespace KZLib.Utilities
 			}
 		}
 
+		/// <summary>
+		/// Returns the singleton instance, finding it in the scene or creating it when configured.
+		/// </summary>
 		public static TBehaviour In
 		{
 			get
 			{
 				if(s_instance == null)
 				{
-					s_instance = FindObjectOfType<TBehaviour>();
-
-					if(s_instance == null)
+					lock(s_syncRoot)
 					{
-						var config = SingletonConfig;
-
-						if(config.AutoCreate)
+						if(s_instance == null)
 						{
-							var prefabPath = config.PrefabPath;
-
-							if(string.IsNullOrEmpty(prefabPath))
-							{
-								var instance = new GameObject(typeof(TBehaviour).Name);
-
-								s_instance = instance.AddComponent<TBehaviour>();
-							}
-							else
-							{
-								var instance = Resources.Load<TBehaviour>(prefabPath);
-
-								if(instance != null)
-								{
-									s_instance = Instantiate(instance);
-									s_instance.name = instance.name;
-								}
-							}
+							s_instance = _FindOrCreateInstance();
 						}
-					}
-
-					if(s_instance == null)
-					{
-						throw new NullReferenceException($"{typeof(TBehaviour)} is not exist.");
 					}
 				}
 
-				return s_instance;
+				return s_instance ?? throw new InvalidOperationException($"{typeof(TBehaviour).Name} singleton is not available.");
 			}
 		}
 
 		public static bool HasInstance => s_instance != null;
+
+		private static TBehaviour? _FindOrCreateInstance()
+		{
+			var instance = _FindInstanceInScene();
+
+			if(instance != null)
+			{
+				return instance;
+			}
+
+			var config = SingletonConfig;
+
+			if(!config.AutoCreate)
+			{
+				return null;
+			}
+
+			if(string.IsNullOrEmpty(config.PrefabPath))
+			{
+				var gameObject = new GameObject(typeof(TBehaviour).Name);
+
+				return gameObject.AddComponent<TBehaviour>();
+			}
+
+			var prefab = Resources.Load<TBehaviour>(config.PrefabPath);
+
+			if(prefab == null)
+			{
+				return null;
+			}
+
+			var created = Instantiate(prefab);
+			created.name = prefab.name;
+
+			return created;
+		}
+
+		private static TBehaviour? _FindInstanceInScene()
+		{
+#if UNITY_2023_1_OR_NEWER
+			return FindFirstObjectByType<TBehaviour>();
+#else
+			return FindObjectOfType<TBehaviour>();
+#endif
+		}
 
 		protected virtual void Awake()
 		{

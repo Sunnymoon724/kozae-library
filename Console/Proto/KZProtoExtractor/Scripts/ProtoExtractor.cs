@@ -41,7 +41,7 @@ namespace KZConsole
 
 			foreach(var protoFilePath in protoFilePathList)
 			{
-				var fileName = KZFileKit.GetOnlyName(protoFilePath);
+				var fileName = KZFileKit.GetOnlyFileName(protoFilePath);
 
 				if(ProtoGlobal.ExcludeFileNameHashSet.Contains(fileName))
 				{
@@ -54,7 +54,7 @@ namespace KZConsole
 
 		private void _ExtractProtoFile(string protoFilePath,string csvFolderPath,string byteFolderPath)
 		{
-			var fileName = KZFileKit.GetOnlyName(protoFilePath);
+			var fileName = KZFileKit.GetOnlyFileName(protoFilePath);
 			var excelReader = new ExcelReader(protoFilePath);
 
 			var protoType = _GetProtoType($"{fileName}Proto");
@@ -76,7 +76,7 @@ namespace KZConsole
 
 			var filePath = Path.Combine(byteFolderPath,$"{fileName}.bytes");
 
-			KZFileKit.WriteByteToFile(filePath,serialized);
+			KZFileKit.WriteBytesToFile(filePath,serialized);
 		}
 
 		private static void _SaveCsvFile(string csvFolderPath,string csvFileName,string backupText)

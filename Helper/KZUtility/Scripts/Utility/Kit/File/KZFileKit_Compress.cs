@@ -4,6 +4,9 @@ using System.IO.Compression;
 
 public static partial class KZFileKit
 {
+	/// <summary>
+	/// Compresses <paramref name="bytes"/> into a single-entry zip archive (entry name: data.bin).
+	/// </summary>
 	public static byte[] CompressBytes(byte[] bytes)
 	{
 		if(bytes == null || bytes.Length == 0)
@@ -23,17 +26,21 @@ public static partial class KZFileKit
 		return memoryStream.ToArray();
 	}
 
+	/// <summary>
+	/// Compresses a file or folder into zip bytes.
+	/// A single file is wrapped via <see cref="CompressBytes"/>; a folder includes all files recursively.
+	/// </summary>
 	/// <param name="sourcePath">The absolute path of the file or folder.</param>
 	public static byte[] CompressZip(string sourcePath)
 	{
-		if(!IsPathExist(sourcePath))
+		if(!IsValidPathString(sourcePath))
 		{
 			return Array.Empty<byte>();
 		}
 
-		if(IsFilePath(sourcePath))
+		if(HasFileExtension(sourcePath))
 		{
-			return CompressBytes(ReadFileToBytes(sourcePath));
+			return CompressBytes(ReadBytesFromFile(sourcePath));
 		}
 		else
 		{
@@ -55,28 +62,28 @@ public static partial class KZFileKit
 		}
 	}
 
+	/// <summary>
+	/// Compresses <paramref name="sourcePath"/> and writes a .zip file to a unique path derived from <paramref name="destinationPath"/>.
+	/// </summary>
 	/// <param name="sourcePath">The absolute path of the file or folder.</param>
-	/// <param name="destinationPath">The absolute path of the file or folder.</param>
+	/// <param name="destinationPath">The absolute path of the output file. A .zip extension is appended when missing.</param>
 	public static void CompressZip(string sourcePath,string destinationPath)
 	{
-		if(!IsPathExist(destinationPath))
+		if(!IsValidPathString(destinationPath))
 		{
 			return;
 		}
 
-		var extension = GetExtension(destinationPath);
-
-		if(!string.Equals(extension,".zip"))
+		if(string.IsNullOrEmpty(GetExtension(destinationPath)))
+		{
+			destinationPath = $"{destinationPath}.zip";
+		}
+		else if(!string.Equals(GetExtension(destinationPath),".zip",StringComparison.OrdinalIgnoreCase))
 		{
 			throw new NotSupportedException($"Not supported extension. [{destinationPath}]");
 		}
 
-		if(string.IsNullOrEmpty(extension))
-		{
-			destinationPath = $"{destinationPath}.zip";
-		}
-
-		if(!IsPathExist(sourcePath))
+		if(!IsValidPathString(sourcePath))
 		{
 			return;
 		}
@@ -91,9 +98,12 @@ public static partial class KZFileKit
 		//? destinationPath == unique file path
 		var uniquePath = _GetUniquePath(destinationPath);
 
-		WriteByteToFile(uniquePath,compress);
+		WriteBytesToFile(uniquePath,compress);
 	}
 
+	/// <summary>
+	/// Decompresses the first entry from a single-entry zip produced by <see cref="CompressBytes"/>.
+	/// </summary>
 	public static byte[] DecompressBytes(byte[] bytes)
 	{
 		if(bytes == null || bytes.Length == 0)
@@ -114,11 +124,14 @@ public static partial class KZFileKit
 		return memoryStream.ToArray();
 	}
 
-	/// <param name="sourcePath">The absolute path of the file.</param>
-	/// <param name="destinationPath">The absolute path of the folder.</param>
+	/// <summary>
+	/// Extracts a .zip file into a unique folder path derived from <paramref name="destinationPath"/>.
+	/// </summary>
+	/// <param name="sourcePath">The absolute path of the .zip file.</param>
+	/// <param name="destinationPath">The absolute path of the destination folder (must not include an extension).</param>
 	public static void DecompressZip(string sourcePath,string destinationPath)
 	{
-		if(!IsPathExist(destinationPath))
+		if(!IsValidPathString(destinationPath))
 		{
 			return;
 		}

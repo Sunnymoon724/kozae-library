@@ -79,9 +79,9 @@ namespace KZLib.Utilities
 			}
 		}
 
-		private static void _DisposeIfNeeded(TValue value)
+		private static void _DisposeIfNeeded(TValue val)
 		{
-			if(value is IDisposable disposable)
+			if(val is IDisposable disposable)
 			{
 				disposable.Dispose();
 			}

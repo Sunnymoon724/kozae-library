@@ -60,11 +60,11 @@ namespace KZLib.Collections.Generic
 		/// <summary>
 		/// Inserts a value and restores the heap property by sifting up.
 		/// </summary>
-		public void Insert(TValue value)
+		public void Insert(TValue val)
 		{
 			lock(m_syncRoot)
 			{
-				m_valueList.Add(value);
+				m_valueList.Add(val);
 				_HeapifyUp(m_valueList.Count-1);
 			}
 		}
@@ -115,62 +115,62 @@ namespace KZLib.Collections.Generic
 		}
 
 		/// <summary>
-		/// Removes the first equal occurrence of <paramref name="value"/> if present.
+		/// Removes the first equal occurrence of <paramref name="val"/> if present.
 		/// </summary>
 		/// <returns><see langword="true"/> when a matching element was removed.</returns>
 		/// <remarks>Locates the element with a linear scan; both sift directions may run after replacement.</remarks>
-		public bool Remove(TValue value)
+		public bool Remove(TValue val)
 		{
 			lock(m_syncRoot)
 			{
-				var index = m_valueList.IndexOf(value);
+				var idx = m_valueList.IndexOf(val);
 
-				if(index == -1)
+				if(idx == -1)
 				{
 					return false;
 				}
 
-				m_valueList[index] = m_valueList[^1];
+				m_valueList[idx] = m_valueList[^1];
 				m_valueList.RemoveAt(m_valueList.Count-1);
 
-				if(index < m_valueList.Count)
+				if(idx < m_valueList.Count)
 				{
-					_HeapifyDown(index);
-					_HeapifyUp(index);
+					_HeapifyDown(idx);
+					_HeapifyUp(idx);
 				}
 
 				return true;
 			}
 		}
 
-		/// <summary>Sifts the element at <paramref name="index"/> toward the root while it outranks its parent.</summary>
-		private void _HeapifyUp(int index)
+		/// <summary>Sifts the element at <paramref name="idx"/> toward the root while it outranks its parent.</summary>
+		private void _HeapifyUp(int idx)
 		{
-			while(index > 0)
+			while(idx > 0)
 			{
-				var parent = (index-1)/2;
+				var parent = (idx-1)/2;
 
-				if(Compare(m_valueList[index],m_valueList[parent]) >= 0)
+				if(Compare(m_valueList[idx],m_valueList[parent]) >= 0)
 				{
 					break;
 				}
 
-				_Swap(index,parent);
+				_Swap(idx,parent);
 
-				index = parent;
+				idx = parent;
 			}
 		}
 
-		/// <summary>Sifts the element at <paramref name="index"/> toward the leaves while a child outranks it.</summary>
-		private void _HeapifyDown(int index)
+		/// <summary>Sifts the element at <paramref name="idx"/> toward the leaves while a child outranks it.</summary>
+		private void _HeapifyDown(int idx)
 		{
 			var last = m_valueList.Count-1;
 
-			while(index <= last)
+			while(idx <= last)
 			{
-				var left = index*2+1;
-				var right = index*2+2;
-				var swap = index;
+				var left = idx*2+1;
+				var right = idx*2+2;
+				var swap = idx;
 
 				if(left <= last && Compare(m_valueList[left],m_valueList[swap]) < 0)
 				{
@@ -182,14 +182,14 @@ namespace KZLib.Collections.Generic
 					swap = right;
 				}
 
-				if(swap == index)
+				if(swap == idx)
 				{
 					break;
 				}
 
-				_Swap(index,swap);
+				_Swap(idx,swap);
 
-				index = swap;
+				idx = swap;
 			}
 		}
 
@@ -220,23 +220,23 @@ namespace KZLib.Collections.Generic
 		}
 
 		/// <summary>Copies heap elements into a strongly typed array segment.</summary>
-		public void CopyTo(Array array,int index)
+		public void CopyTo(Array array,int idx)
 		{
 			if(array == null)
 			{
 				throw new ArgumentNullException(nameof(array));
 			}
 
-			if(index < 0 || index > array.Length)
+			if(idx < 0 || idx > array.Length)
 			{
-				throw new ArgumentOutOfRangeException(nameof(index));
+				throw new ArgumentOutOfRangeException(nameof(idx));
 			}
 
 			lock(m_syncRoot)
 			{
 				var count = m_valueList.Count;
 
-				if(index+count > array.Length)
+				if(idx+count > array.Length)
 				{
 					throw new ArgumentException("Destination array is too small.");
 				}
@@ -248,7 +248,7 @@ namespace KZLib.Collections.Generic
 
 				if(array is TValue[] convert)
 				{
-					m_valueList.CopyTo(convert,index);
+					m_valueList.CopyTo(convert,idx);
 				}
 				else
 				{
@@ -257,12 +257,12 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
-		/// <summary>Performs a linear scan for <paramref name="value"/>.</summary>
-		public bool Contains(TValue value)
+		/// <summary>Performs a linear scan for <paramref name="val"/>.</summary>
+		public bool Contains(TValue val)
 		{
 			lock(m_syncRoot)
 			{
-				return m_valueList.Contains(value);
+				return m_valueList.Contains(val);
 			}
 		}
 

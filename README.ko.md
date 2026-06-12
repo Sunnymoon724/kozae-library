@@ -17,7 +17,7 @@
 KoZaeLibrary/
 ├── Helper/
 │   ├── KZData/          # 공용 데이터 타입, 인터페이스, MemoryPack 모델
-│   ├── KZUtility/       # 파일 I/O, 암호화, 컬렉션, 싱글톤, Lua 매니저
+│   ├── KZUtility/       # 파일 I/O, 암호화, Collection, Foundation, 싱글톤, Lua 매니저
 │   └── KZToolKit/       # Excel/MIDI 리더, 데이터 생성기, 바코드
 │
 └── Console/
@@ -241,27 +241,163 @@ KZLuaConverter <luaFolderRelativePath> <resultFolderRelativePath>
 
 ### KZData
 
-Unity 런타임과 콘솔 도구 모두에서 사용하는 공용 데이터 계층입니다.
+Unity 런타임과 콘솔 도구 모두에서 사용하는 공용 데이터 계층입니다. Proto 계약, 설정용 값 타입, MemoryPack 모델을 포함합니다.
 
-- Proto 인터페이스: `IProto`, `IBuffProto`, `IMotionProto`, `IColorProto`, `INetworkErrorProto`
-- 엔트리 타입: `BuffEntry`, `MotionEntry`
-- 게임 상수: `DataConstant`, `ScreenResolution`, `SoundProfile`, `SoundVolume`
-- MemoryPack 직렬화 지원
+#### Scripts 폴더 구조
+
+```
+KZData/Scripts/
+├── DataConstant.cs      # 핵심 인터페이스, enum
+├── CommonData.cs        # Proto 인터페이스
+├── BuffEntry.cs         # 버프 스탯 엔트리
+├── MotionEntry.cs       # 모션 이펙트 엔트리
+├── ScreenResolution.cs  # 해상도 + 전체화면 값 타입
+├── SoundVolume.cs       # 채널 볼륨 (0.0–1.0) + 음소거
+├── SoundProfile.cs      # 마스터/음악/효과음 프로필
+└── Global.cs            # netstandard2.1용 IsExternalInit 폴리필
+```
+
+#### 핵심 인터페이스 · enum (`DataConstant.cs`)
+
+| 심볼 | 설명 |
+|------|------|
+| `IProto` | 모든 Proto의 기본 키 (`Num`) |
+| `IConfig` | 설정 데이터 마커 인터페이스 |
+| `IAffix` | Affix 초기화/갱신 계약 |
+| `ICluster` | 클러스터 데이터 마커 인터페이스 |
+| `EffectType` | `VisualEffect`, `SoundEffect` |
+| `NetworkErrorResultType` | `None`, `Popup`, `Toast`, `Title` |
+
+#### Proto 인터페이스 (`CommonData.cs`)
+
+| 인터페이스 | 주요 멤버 |
+|------------|-----------|
+| `IBuffProto` | `BuffName`, `Duration`, `MaxStackCount`, `BuffEntryArray` |
+| `IMotionProto` | `StateName`, `MotionEntryArray` |
+| `IColorProto` | `ColorArray` |
+| `INetworkErrorProto` | `Description`, `ResultMainType`, `ResultSubType` |
+
+#### MemoryPack 엔트리
+
+| 타입 | 필드 |
+|------|------|
+| `BuffEntry` | `Id`, `StatName`, `Value`, `IsPercent` |
+| `MotionEntry` | `Order`, `EffectPath`, `PositionOffset`, `StartBone` |
+
+#### 설정 값 타입
+
+| 타입 | 설명 |
+|------|------|
+| `ScreenResolution` | `width`, `height`, `fullscreen`. 프리셋: `sd`, `hd`, `fhd`, `qhd`, `uhd` (기본 `fullscreen: true`). `ToString` / `Parse` / `TryParse` 지원 |
+| `SoundVolume` | `level` (0.0–1.0, 클램프), `mute`. 프리셋: `zero`, `min`, `max`. 음소거 시 `level` 유지. `+`/`-`/`*`/`/` 연산자, `Toggle()` |
+| `SoundProfile` | `master`, `music`, `effect` 채널. `DefaultProfile` 프리셋. `OutputMusic` / `OutputEffect` = 마스터 × 채널. `WithMaster` / `WithMusic` / `WithEffect` 불변 업데이트 |
+
+**문자열 형식 예시**
+
+```
+resolution : 1920x1080, fullscreen : True
+level : 0.80, mute : False
+master : level : 1.00, mute : False, music : level : 0.80, mute : False, effect : level : 1.00, mute : False
+```
+
+`Parse` / `TryParse`는 `ReadOnlySpan<char>` 오버로드를 제공하며, 할당 없이 Span 기반으로 파싱합니다.
 
 ### KZUtility
 
 Unity 및 콘솔 환경을 위한 범용 유틸리티입니다.
 
+#### Scripts 폴더 구조
+
+```
+KZUtility/Scripts/
+├── Collection/          # 순수 컨테이너 (큐, 힙, 트리, 집합)
+├── Foundation/
+│   ├── Index/           # handle, 공간, 연결 그룹 추적
+│   ├── Storage/         # 캐시, 객체 풀
+│   └── Pattern/         # 설계 패턴, smart enum, 난수
+├── Utility/Kit/         # KZFileKit, KZCryptoKit, KZRandomKit
+├── Singleton/
+├── Manager/
+├── Converter/
+└── Log/
+```
+
+#### Kit (`Utility/Kit/`)
+
 | 모듈 | 설명 |
 |------|------|
 | `KZFileKit` | 파일/폴더 생성, 읽기, 쓰기, 복사, 이동, 삭제, 압축, 검색 |
 | `KZCryptoKit` | AES/RSA 암호화, 키 생성, PEM 포맷팅 |
-| `KZRandomKit` | 난수 유틸리티 |
-| Collections | `BinaryHeap`, `CircularQueue`, `FastTree`, `Trie` |
-| Patterns | `Singleton`, `SingletonMB`, `SingletonSO`, `ObjectPool`, `LazyRegistry`, `StrategyCatalog`, `TransientStore` |
-| Managers | `LuaManager` (MoonSharp), `TimeManager` |
-| Converters | `YamlConverter` (YamlDotNet) |
-| Diagnostics | `LogBridge` |
+| `KZRandomKit` | 가중치 선택, 구간 샘플링 등 난수 헬퍼 (`Randomizer` 기반) |
+
+#### Collections (`Collection/`)
+
+| 타입 | 설명 |
+|------|------|
+| `BinaryHeap` / `MinHeap` / `MaxHeap` | 스레드 세이프 배열 기반 이진 힙. 우선순위 큐·Top-N 추출에 사용 |
+| `CircularQueue` | **고정 크기** ring buffer FIFO. 가득 차면 **가장 오래된 항목을 덮어씀** (최근 N개 유지) |
+| `Deque` | **확장 가능** 양방향 큐. 앞·뒤 O(1) 삽입/제거. `Enqueue`/`Dequeue`/`Peek` Queue API 포함 |
+| `Trie` | 문자열 prefix 트리. `Contains`, prefix 검색, 자동완성 |
+| `SparseSet` | live integer index만 O(1) 추가/제거·순회. `SlotMap` slot index + parallel array와 함께 사용 |
+
+#### Foundation — Index (`Foundation/Index/`)
+
+| 타입 | 설명 |
+|------|------|
+| `SlotMap` | generational handle 발급 + 값 저장. slot index(하위 16비트)와 generation(상위 16비트) 패킹 |
+| `FastTree` | 2D 균일 격자 공간 인덱스. 영역 내 포인트 등록·범위 조회 |
+| `UnionFind` | disjoint-set. `TryFind` / `Union` / `Connected`로 index 그룹 연결 여부 추적 |
+
+#### Foundation — Storage (`Foundation/Storage/`)
+
+| 타입 | 설명 |
+|------|------|
+| `ObjectPool` | `Queue` 기반 객체 풀. `GetOrCreate` / `Put`으로 인스턴스 재사용 |
+| `LazyRegistry` | key별 lazy resolve. 첫 `Fetch`에서 provider 호출, 이후 캐시된 값 반환 |
+| `CacheResolver` | **TTL(시간)** 기반 string key 캐시. key당 FIFO entry, 백그라운드 만료 purge |
+| `TransientStore` | 프로세스 전역 **1칸** handoff. `Set` → `Consume` 1회 소비 |
+
+#### Foundation — Pattern (`Foundation/Pattern/`)
+
+| 타입 | 설명 |
+|------|------|
+| `StrategyCatalog` | enum key → strategy 구현체 맵. Strategy 패턴 베이스 |
+| `CustomTag` | C# enum 대신 static 필드 기반 **smart enum**. 파생 타입으로 태그 확장 |
+| `Randomizer` | 스레드 세이프 `Random` 래퍼. 정수/실수 구간, 가중치, unique 그룹 샘플링 |
+
+#### Singleton · Manager · Converter · Log
+
+| 모듈 | 설명 |
+|------|------|
+| `Singleton` / `SingletonMB` / `SingletonSO` | 일반 클래스 / `MonoBehaviour` / `ScriptableObject` 싱글톤 베이스 |
+| `LuaManager` | MoonSharp Lua 스크립트 실행 |
+| `TimeManager` | 시간·스케줄 관리 |
+| `YamlConverter` | YamlDotNet 기반 YAML 직렬화/역직렬화. `SoundVolume`, `ScreenResolution`, `SoundProfile`(중첩 채널) 등 지원 |
+| `LogBridge` | `OnInfo` / `OnWarning` / `OnError` delegate. Unity·콘솔 로그 연동용 브릿지 |
+
+**KZData 타입 YAML 예시 (`YamlConverter`)**
+
+```yaml
+# ScreenResolution
+width: 1920
+height: 1080
+fullscreen: true
+
+# SoundVolume
+level: 0.8
+mute: false
+
+# SoundProfile
+master:
+  level: 1.0
+  mute: false
+music:
+  level: 0.8
+  mute: false
+effect:
+  level: 1.0
+  mute: false
+```
 
 ### KZToolKit
 

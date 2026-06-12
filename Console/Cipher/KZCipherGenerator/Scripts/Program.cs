@@ -37,8 +37,8 @@ namespace KZConsole
 			var encryptedPrivateKeyFilePath = Path.Combine(resultFolderPath,c_encryptedPrivateKeyFileName);
 
 			KZFileKit.WriteTextToFile(aesKeyFilePath,keyInfo.AesKeyBase64);
-			KZFileKit.WriteTextToFile(publicKeyFilePath,KZFileKit.WrapPemFormat(keyInfo.PublicKeyBase64,c_rsaPublicKeyPemHeader));
-			KZFileKit.WriteTextToFile(encryptedPrivateKeyFilePath,KZFileKit.WrapPemFormat(keyInfo.EncryptedPrivateKeyBase64,c_encryptedPrivateKeyPemHeader));
+			KZFileKit.WriteTextToFile(publicKeyFilePath,KZCryptoKit.WrapPemFormat(keyInfo.PublicKeyBase64,c_rsaPublicKeyPemHeader));
+			KZFileKit.WriteTextToFile(encryptedPrivateKeyFilePath,KZCryptoKit.WrapPemFormat(keyInfo.EncryptedPrivateKeyBase64,c_encryptedPrivateKeyPemHeader));
 
 			KZCommonKit.WriteLog($"-Save {c_aesKeyFileName}, {c_publicKeyFileName}, {c_encryptedPrivateKeyFileName}",LogType.Info);
 		}

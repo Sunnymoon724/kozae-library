@@ -23,10 +23,10 @@ namespace KZConsole
 
 			KZCommonKit.WriteLog($"Proto folder path : {protoFolderPath}",LogType.Info);
 
-			var protoFilePathList  = new List<string>(KZFileKit.FindAllExcelFileGroupByFolderPath(protoFolderPath));
+			var protoFilePathList  = new List<string>(KZFileKit.FindExcelFilesInFolder(protoFolderPath));
 
 			var environment = argumentArray[1];
-			var branchFilePath = KZFileKit.FindFilePath(protoFilePathList,"Branch");
+			var branchFilePath = KZFileKit.FindPathByFileName(protoFilePathList,"Branch");
 
 			KZCommonKit.WriteLog($"Environment : {environment}",LogType.Info);
 

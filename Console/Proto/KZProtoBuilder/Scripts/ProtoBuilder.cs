@@ -79,7 +79,7 @@ namespace KZConsole
 
 		private void _GenerateEnumCode(string templateFile)
 		{
-			var enumExcelFilePath = KZFileKit.FindFilePath(m_protoFilePathList,"Enum");
+			var enumExcelFilePath = KZFileKit.FindPathByFileName(m_protoFilePathList,"Enum");
 			
 			if(string.IsNullOrEmpty(enumExcelFilePath))
 			{
@@ -129,7 +129,7 @@ namespace KZConsole
 			for(int i=0;i<m_protoFilePathList.Count;i++)
 			{
 				var protoFilePath = m_protoFilePathList[i];
-				var fileName = KZFileKit.GetOnlyName(protoFilePath);
+				var fileName = KZFileKit.GetOnlyFileName(protoFilePath);
 
 				if(excludeProtoNameHashSet.Contains(fileName))
 				{

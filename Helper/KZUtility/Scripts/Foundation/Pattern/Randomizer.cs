@@ -35,34 +35,34 @@ namespace KZLib.Utilities
 		/// <summary>
 		/// Returns a random integer in the inclusive range [minValue, maxValue].
 		/// </summary>
-		/// <param name="minValue">Minimum value.</param>
-		/// <param name="maxValue">Maximum value.</param>
-		public int PickInteger(int minValue,int maxValue)
+		/// <param name="minVal">Minimum value.</param>
+		/// <param name="maxVal">Maximum value.</param>
+		public int PickInteger(int minVal,int maxVal)
 		{
-			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
+			(minVal,maxVal) = _NormalizeRange(minVal,maxVal);
 
 			lock(m_syncRoot)
 			{
-				return minValue == maxValue ? minValue : m_random.Next(minValue,maxValue+1);
+				return minVal == maxVal ? minVal : m_random.Next(minVal,maxVal+1);
 			}
 		}
 
 		/// <summary>
 		/// Returns random integers in the inclusive range [minValue, maxValue].
 		/// </summary>
-		/// <param name="minValue">Minimum value.</param>
-		/// <param name="maxValue">Maximum value.</param>
+		/// <param name="minVal">Minimum value.</param>
+		/// <param name="maxVal">Maximum value.</param>
 		/// <param name="count">Number of values to return.</param>
 		/// <param name="allowDuplicate">When false, returns unique integers using partial shuffle.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative or exceeds the available unique range.</exception>
-		public IEnumerable<int> PickIntegerGroup(int minValue,int maxValue,int count,bool allowDuplicate = true)
+		public IEnumerable<int> PickIntegerGroup(int minVal,int maxVal,int count,bool allowDuplicate = true)
 		{
 			if(count < 0)
 			{
 				throw new ArgumentOutOfRangeException(nameof(count),count,"Count must be zero or greater.");
 			}
 
-			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
+			(minVal,maxVal) = _NormalizeRange(minVal,maxVal);
 
 			if(count == 0)
 			{
@@ -73,13 +73,13 @@ namespace KZLib.Utilities
 			{
 				for(var i=0;i<count;i++)
 				{
-					yield return PickInteger(minValue,maxValue);
+					yield return PickInteger(minVal,maxVal);
 				}
 
 				yield break;
 			}
 
-			var range = maxValue-minValue+1;
+			var range = maxVal-minVal+1;
 
 			if(count > range)
 			{
@@ -88,20 +88,18 @@ namespace KZLib.Utilities
 
 			var pool = new List<int>(range);
 
-			for(var value=minValue;value<=maxValue;value++)
+			for(var val=minVal;val<=maxVal;val++)
 			{
-				pool.Add(value);
+				pool.Add(val);
 			}
 
 			for(var i=0;i<count;i++)
 			{
-				var index = PickInteger(i,pool.Count-1);
-				var picked = pool[index];
+				var idx = PickInteger(i,pool.Count-1);
 
-				pool[index] = pool[i];
-				pool[i] = picked;
+                (pool[i],pool[idx]) = (pool[idx],pool[i]);
 
-				yield return picked;
+                yield return pool[i];
 			}
 		}
 
@@ -172,54 +170,54 @@ namespace KZLib.Utilities
 		/// <summary>
 		/// Returns a random float in the inclusive range [-value, value].
 		/// </summary>
-		/// <param name="value">Absolute range boundary.</param>
-		public float PickSingle(float value)
+		/// <param name="val">Absolute range boundary.</param>
+		public float PickSingle(float val)
 		{
-			return value == 0.0f ? value : PickSingle(-value,+value);
+			return val == 0.0f ? val : PickSingle(-val,+val);
 		}
 
 		/// <summary>
 		/// Returns a random float in the inclusive range [minValue, maxValue].
 		/// </summary>
-		/// <param name="minValue">Minimum value.</param>
-		/// <param name="maxValue">Maximum value.</param>
-		public float PickSingle(float minValue,float maxValue)
+		/// <param name="minVal">Minimum value.</param>
+		/// <param name="maxVal">Maximum value.</param>
+		public float PickSingle(float minVal,float maxVal)
 		{
-			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
+			(minVal,maxVal) = _NormalizeRange(minVal,maxVal);
 
-			return PickSingle()*(maxValue-minValue)+minValue;
+			return PickSingle()*(maxVal-minVal)+minVal;
 		}
 
 		/// <summary>
 		/// Returns random floats in the inclusive range [minValue, maxValue].
 		/// Unique sampling is not supported for floating-point ranges.
 		/// </summary>
-		/// <param name="minValue">Minimum value.</param>
-		/// <param name="maxValue">Maximum value.</param>
+		/// <param name="minVal">Minimum value.</param>
+		/// <param name="maxVal">Maximum value.</param>
 		/// <param name="count">Number of values to return.</param>
 		/// <param name="allowDuplicate">Must be true. Use <see cref="PickIntegerGroup"/> for unique sampling.</param>
 		/// <exception cref="NotSupportedException">Thrown when <paramref name="allowDuplicate"/> is false.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
-		public IEnumerable<float> PickSingleGroup(float minValue,float maxValue,int count,bool allowDuplicate = true)
+		public IEnumerable<float> PickSingleGroup(float minVal,float maxVal,int count,bool allowDuplicate = true)
 		{
 			_ThrowIfUniqueGroupIsUnsupported(allowDuplicate);
 
-			return PickSingleGroupCore(minValue,maxValue,count);
+			return PickSingleGroupCore(minVal,maxVal,count);
 		}
 
 		/// <summary>Shared implementation for <see cref="PickSingleGroup"/>.</summary>
-		private IEnumerable<float> PickSingleGroupCore(float minValue,float maxValue,int count)
+		private IEnumerable<float> PickSingleGroupCore(float minVal,float maxVal,int count)
 		{
 			if(count < 0)
 			{
 				throw new ArgumentOutOfRangeException(nameof(count),count,"Count must be zero or greater.");
 			}
 
-			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
+			(minVal,maxVal) = _NormalizeRange(minVal,maxVal);
 
 			for(var i=0;i<count;i++)
 			{
-				yield return PickSingle(minValue,maxValue);
+				yield return PickSingle(minVal,maxVal);
 			}
 		}
 		#endregion Single
@@ -239,54 +237,54 @@ namespace KZLib.Utilities
 		/// <summary>
 		/// Returns a random double in the inclusive range [-value, value].
 		/// </summary>
-		/// <param name="value">Absolute range boundary.</param>
-		public double PickDouble(double value)
+		/// <param name="val">Absolute range boundary.</param>
+		public double PickDouble(double val)
 		{
-			return value == 0.0d ? value : PickDouble(-value,+value);
+			return val == 0.0d ? val : PickDouble(-val,+val);
 		}
 
 		/// <summary>
 		/// Returns a random double in the inclusive range [minValue, maxValue].
 		/// </summary>
-		/// <param name="minValue">Minimum value.</param>
-		/// <param name="maxValue">Maximum value.</param>
-		public double PickDouble(double minValue,double maxValue)
+		/// <param name="minVal">Minimum value.</param>
+		/// <param name="maxVal">Maximum value.</param>
+		public double PickDouble(double minVal,double maxVal)
 		{
-			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
+			(minVal,maxVal) = _NormalizeRange(minVal,maxVal);
 
-			return PickDouble()*(maxValue-minValue)+minValue;
+			return PickDouble()*(maxVal-minVal)+minVal;
 		}
 
 		/// <summary>
 		/// Returns random doubles in the inclusive range [minValue, maxValue].
 		/// Unique sampling is not supported for floating-point ranges.
 		/// </summary>
-		/// <param name="minValue">Minimum value.</param>
-		/// <param name="maxValue">Maximum value.</param>
+		/// <param name="minVal">Minimum value.</param>
+		/// <param name="maxVal">Maximum value.</param>
 		/// <param name="count">Number of values to return.</param>
 		/// <param name="allowDuplicate">Must be true. Use <see cref="PickIntegerGroup"/> for unique sampling.</param>
 		/// <exception cref="NotSupportedException">Thrown when <paramref name="allowDuplicate"/> is false.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
-		public IEnumerable<double> PickDoubleGroup(double minValue,double maxValue,int count,bool allowDuplicate = true)
+		public IEnumerable<double> PickDoubleGroup(double minVal,double maxVal,int count,bool allowDuplicate = true)
 		{
 			_ThrowIfUniqueGroupIsUnsupported(allowDuplicate);
 
-			return PickDoubleGroupCore(minValue,maxValue,count);
+			return PickDoubleGroupCore(minVal,maxVal,count);
 		}
 
 		/// <summary>Shared implementation for <see cref="PickDoubleGroup"/>.</summary>
-		private IEnumerable<double> PickDoubleGroupCore(double minValue,double maxValue,int count)
+		private IEnumerable<double> PickDoubleGroupCore(double minVal,double maxVal,int count)
 		{
 			if(count < 0)
 			{
 				throw new ArgumentOutOfRangeException(nameof(count),count,"Count must be zero or greater.");
 			}
 
-			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
+			(minVal,maxVal) = _NormalizeRange(minVal,maxVal);
 
 			for(var i=0;i<count;i++)
 			{
-				yield return PickDouble(minValue,maxValue);
+				yield return PickDouble(minVal,maxVal);
 			}
 		}
 		#endregion Double
@@ -316,18 +314,18 @@ namespace KZLib.Utilities
 		/// <summary>
 		/// Returns true when a random value in [0, 1) falls within [minValue, maxValue].
 		/// </summary>
-		/// <param name="minValue">Lower bound in the range [0, 1].</param>
-		/// <param name="maxValue">Upper bound in the range [0, 1].</param>
+		/// <param name="minVal">Lower bound in the range [0, 1].</param>
+		/// <param name="maxVal">Upper bound in the range [0, 1].</param>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when either bound is outside [0, 1].</exception>
-		public bool HitRateInRange(float minValue,float maxValue)
+		public bool HitRateInRange(float minVal,float maxVal)
 		{
-			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
-			_ValidateUnitRate(minValue,nameof(minValue));
-			_ValidateUnitRate(maxValue,nameof(maxValue));
+			(minVal,maxVal) = _NormalizeRange(minVal,maxVal);
+			_ValidateUnitRate(minVal,nameof(minVal));
+			_ValidateUnitRate(maxVal,nameof(maxVal));
 
-			var value = PickSingle();
+			var val = PickSingle();
 
-			return minValue <= value && value <= maxValue;
+			return minVal <= val && val <= maxVal;
 		}
 
 		/// <summary>
@@ -345,18 +343,18 @@ namespace KZLib.Utilities
 		/// <summary>
 		/// Returns true when a random value in [0, 1) falls within [minValue, maxValue].
 		/// </summary>
-		/// <param name="minValue">Lower bound in the range [0, 1].</param>
-		/// <param name="maxValue">Upper bound in the range [0, 1].</param>
+		/// <param name="minVal">Lower bound in the range [0, 1].</param>
+		/// <param name="maxVal">Upper bound in the range [0, 1].</param>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown when either bound is outside [0, 1].</exception>
-		public bool HitRateInRange(double minValue,double maxValue)
+		public bool HitRateInRange(double minVal,double maxVal)
 		{
-			(minValue,maxValue) = _NormalizeRange(minValue,maxValue);
-			_ValidateUnitRate(minValue,nameof(minValue));
-			_ValidateUnitRate(maxValue,nameof(maxValue));
+			(minVal,maxVal) = _NormalizeRange(minVal,maxVal);
+			_ValidateUnitRate(minVal,nameof(minVal));
+			_ValidateUnitRate(maxVal,nameof(maxVal));
 
-			var value = PickDouble();
+			var val = PickDouble();
 
-			return minValue <= value && value <= maxValue;
+			return minVal <= val && val <= maxVal;
 		}
 
 		/// <summary>Rejects unique sampling for floating-point group methods.</summary>
@@ -369,32 +367,32 @@ namespace KZLib.Utilities
 		}
 
 		/// <summary>Validates that a probability value is in [0, 1].</summary>
-		private static void _ValidateUnitRate(float value,string paramName)
+		private static void _ValidateUnitRate(float val,string paramName)
 		{
-			if(value < 0.0f || value > 1.0f)
+			if(val < 0.0f || val > 1.0f)
 			{
-				throw new ArgumentOutOfRangeException(paramName,value,"Value must be in the range [0, 1].");
+				throw new ArgumentOutOfRangeException(paramName,val,"Value must be in the range [0, 1].");
 			}
 		}
 
 		/// <summary>Validates that a probability value is in [0, 1].</summary>
-		private static void _ValidateUnitRate(double value,string paramName)
+		private static void _ValidateUnitRate(double val,string paramName)
 		{
-			if(value < 0.0d || value > 1.0d)
+			if(val < 0.0d || val > 1.0d)
 			{
-				throw new ArgumentOutOfRangeException(paramName,value,"Value must be in the range [0, 1].");
+				throw new ArgumentOutOfRangeException(paramName,val,"Value must be in the range [0, 1].");
 			}
 		}
 
 		/// <summary>
-		/// Swaps bounds when <paramref name="minValue"/> is greater than <paramref name="maxValue"/>.
+		/// Swaps bounds when <paramref name="minVal"/> is greater than <paramref name="maxVal"/>.
 		/// </summary>
-		private CompareValue<TValue> _NormalizeRange<TValue>(TValue minValue,TValue maxValue) where TValue : IComparable<TValue>
+		private CompareValue<TValue> _NormalizeRange<TValue>(TValue minVal,TValue maxVal) where TValue : IComparable<TValue>
 		{
-			return minValue.CompareTo(maxValue) > 0 ? new CompareValue<TValue>(maxValue,minValue) : new CompareValue<TValue>(minValue,maxValue);
+			return minVal.CompareTo(maxVal) > 0 ? new CompareValue<TValue>(maxVal,minVal) : new CompareValue<TValue>(minVal,maxVal);
 		}
 
 		/// <summary>Normalized min/max pair.</summary>
-		private record CompareValue<TValue>(TValue minValue,TValue maxValue);
+		private record CompareValue<TValue>(TValue minVal,TValue maxVal);
 	}
 }

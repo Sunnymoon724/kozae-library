@@ -4,40 +4,55 @@ using MoonSharp.Interpreter;
 
 namespace KZLib.Utilities
 {
+	/// <summary>
+	/// MoonSharp Lua script host. Load scripts with <see cref="LoadLuaScript"/> and invoke global functions by name.
+	/// Not thread-safe; use from a single thread (Unity main thread).
+	/// </summary>
 	public class LuaManager : Singleton<LuaManager>
 	{
 		private Script m_luaScript = null!;
 
 		private readonly LazyRegistry<string,DynValue> m_registry = new();
 
-		private bool m_disposed = false;
-
 		private bool m_initialized = false;
+
+		private LuaManager() { }
 
 		protected override void _Release(bool disposing)
 		{
-			if(m_disposed)
-			{
-				return;
-			}
-
 			if(disposing)
 			{
 				m_registry.Release();
+				m_luaScript = null!;
+				m_initialized = false;
 			}
-
-			m_disposed = true;
 
 			base._Release(disposing);
 		}
 
+		/// <summary>
+		/// Replaces the current script with <paramref name="luaTextArray"/> entries executed in order.
+		/// Duplicate strings in the array are skipped.
+		/// </summary>
 		public void LoadLuaScript(string[] luaTextArray)
 		{
+			_ThrowIfDisposed();
+
+			if(luaTextArray == null)
+			{
+				throw new ArgumentNullException(nameof(luaTextArray));
+			}
+
+			if(luaTextArray.Length == 0)
+			{
+				throw new ArgumentException("Lua text array must contain at least one script.",nameof(luaTextArray));
+			}
+
 			var textHashSet = new HashSet<string>();
 
-			m_luaScript = new Script();
-
+			m_initialized = false;
 			m_registry.Release();
+			m_luaScript = new Script();
 
 			foreach(var luaText in luaTextArray)
 			{
@@ -58,11 +73,16 @@ namespace KZLib.Utilities
 			m_initialized = true;
 		}
 
+		/// <summary>
+		/// Invokes a global Lua function and converts the return value to <typeparamref name="T"/>.
+		/// </summary>
 		public T InvokeFunction<T>(string functionName,params object[] argumentArray)
 		{
-			if(!m_initialized)
+			_EnsureReady();
+
+			if(string.IsNullOrEmpty(functionName))
 			{
-				throw new InvalidOperationException("Lua script is empty.");
+				throw new ArgumentException("Function name cannot be null or empty.",nameof(functionName));
 			}
 
 			var function = m_registry.Fetch(functionName,_FindFunction);
@@ -74,11 +94,16 @@ namespace KZLib.Utilities
 			return result.ToObject<T>();
 		}
 
+		/// <summary>
+		/// Invokes a global Lua function with no return value.
+		/// </summary>
 		public void InvokeFunction(string functionName,params object[] argumentArray)
 		{
-			if(!m_initialized)
+			_EnsureReady();
+
+			if(string.IsNullOrEmpty(functionName))
 			{
-				throw new InvalidOperationException("Lua script is empty.");
+				throw new ArgumentException("Function name cannot be null or empty.",nameof(functionName));
 			}
 
 			var function = m_registry.Fetch(functionName,_FindFunction);
@@ -98,14 +123,9 @@ namespace KZLib.Utilities
 
 		private bool _FindFunction(string functionName,out DynValue function)
 		{
-			function = m_luaScript!.Globals.Get(functionName);
+			function = m_luaScript.Globals.Get(functionName);
 
-			if(function == null)
-			{
-				return false;
-			}
-
-			if(function.Type != DataType.Function)
+			if(function.IsNil() || function.Type != DataType.Function)
 			{
 				return false;
 			}
@@ -118,6 +138,20 @@ namespace KZLib.Utilities
 			if(result.Type == DataType.Void)
 			{
 				throw new InvalidOperationException($"{functionName} is void function.");
+			}
+		}
+
+		/// <summary>
+		/// After <see cref="Dispose"/>, further use of the same instance throws <see cref="ObjectDisposedException"/>.
+		/// Use <see cref="Singleton{TClass}.In"/> again to obtain a new instance.
+		/// </summary>
+		private void _EnsureReady()
+		{
+			_ThrowIfDisposed();
+
+			if(!m_initialized || m_luaScript == null)
+			{
+				throw new InvalidOperationException("Lua script is not loaded. Call LoadLuaScript first.");
 			}
 		}
 	}

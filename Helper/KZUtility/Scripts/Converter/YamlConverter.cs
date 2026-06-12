@@ -9,7 +9,7 @@ using KZLib.Data;
 namespace KZLib.Utilities
 {
 	/// <summary>
-	/// Supported Color, Color32, Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Quaternion, Rect, RectInt, SoundVolume, ScreenResolution, Route
+	/// Supported Color, Color32, Vector2, Vector2Int, Vector3, Vector3Int, Vector4, Quaternion, Rect, RectInt, SoundVolume, ScreenResolution, SoundProfile, Route
 	/// <br/>
 	/// <b> Example </b>
 	/// <br/>
@@ -31,7 +31,7 @@ namespace KZLib.Utilities
 			typeof(Vector2Int),		typeof(Vector3Int),
 			typeof(Quaternion),
 			typeof(Rect),			typeof(RectInt),
-			typeof(SoundVolume),	typeof(ScreenResolution),
+			typeof(SoundVolume),	typeof(ScreenResolution),	typeof(SoundProfile),
 		};
 
 		public bool Accepts(Type objectType)
@@ -39,60 +39,65 @@ namespace KZLib.Utilities
 			return s_converterHashSet.Contains(objectType);
 		}
 
-		public object? ReadYaml(IParser parser,Type objectType,ObjectDeserializer deserializer)
+		public object? ReadYaml(IParser parser,Type objType,ObjectDeserializer deserializer)
 		{
-			var dictionary = _ConvertToDictionary(parser);
+			if(objType == typeof(SoundProfile))
+			{
+				return _ReadSoundProfile(parser);
+			}
 
-			if(dictionary.Count == 0)
+			var dict = _ConvertToDictionary(parser);
+
+			if(dict.Count == 0)
 			{
 				return null;
 			}
 
-			return objectType.Name switch
+			return objType.Name switch
 			{
-				nameof(Color) 				=> new Color(_GetFloat(dictionary,"r"),_GetFloat(dictionary,"g"),_GetFloat(dictionary,"b"),_GetFloat(dictionary,"a")),
-				nameof(Color32)				=> new Color32(_GetByte(dictionary,"r"),_GetByte(dictionary,"g"),_GetByte(dictionary,"b"),_GetByte(dictionary,"a")),
+				nameof(Color) 				=> new Color(_GetFloat(dict,"r"),_GetFloat(dict,"g"),_GetFloat(dict,"b"),_GetFloat(dict,"a")),
+				nameof(Color32)				=> new Color32(_GetByte(dict,"r"),_GetByte(dict,"g"),_GetByte(dict,"b"),_GetByte(dict,"a")),
 
-				nameof(Vector2)				=> new Vector2(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y")),
-				nameof(Vector3)				=> new Vector3(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"z")),
-				nameof(Vector4)				=> new Vector4(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"z"),_GetFloat(dictionary,"w")),
+				nameof(Vector2)				=> new Vector2(_GetFloat(dict,"x"),_GetFloat(dict,"y")),
+				nameof(Vector3)				=> new Vector3(_GetFloat(dict,"x"),_GetFloat(dict,"y"),_GetFloat(dict,"z")),
+				nameof(Vector4)				=> new Vector4(_GetFloat(dict,"x"),_GetFloat(dict,"y"),_GetFloat(dict,"z"),_GetFloat(dict,"w")),
 
-				nameof(Vector2Int)			=> new Vector2Int(_GetInt(dictionary,"x"),_GetInt(dictionary,"y")),
-				nameof(Vector3Int)			=> new Vector3Int(_GetInt(dictionary,"x"),_GetInt(dictionary,"y"),_GetInt(dictionary,"z")),
+				nameof(Vector2Int)			=> new Vector2Int(_GetInt(dict,"x"),_GetInt(dict,"y")),
+				nameof(Vector3Int)			=> new Vector3Int(_GetInt(dict,"x"),_GetInt(dict,"y"),_GetInt(dict,"z")),
 
-				nameof(Quaternion)			=> new Quaternion(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"z"),_GetFloat(dictionary,"w")),
+				nameof(Quaternion)			=> new Quaternion(_GetFloat(dict,"x"),_GetFloat(dict,"y"),_GetFloat(dict,"z"),_GetFloat(dict,"w")),
 
-				nameof(Rect)				=> new Rect(_GetFloat(dictionary,"x"),_GetFloat(dictionary,"y"),_GetFloat(dictionary,"width"),_GetFloat(dictionary,"height")),
-				nameof(RectInt)				=> new RectInt(_GetInt(dictionary,"x"),_GetInt(dictionary,"y"),_GetInt(dictionary,"width"),_GetInt(dictionary,"height")),
+				nameof(Rect)				=> new Rect(_GetFloat(dict,"x"),_GetFloat(dict,"y"),_GetFloat(dict,"width"),_GetFloat(dict,"height")),
+				nameof(RectInt)				=> new RectInt(_GetInt(dict,"x"),_GetInt(dict,"y"),_GetInt(dict,"width"),_GetInt(dict,"height")),
 
-				nameof(SoundVolume)			=> new SoundVolume(_GetFloat(dictionary,"level"),_GetBool(dictionary,"mute")),
-				nameof(ScreenResolution)	=> new ScreenResolution(_GetInt(dictionary,"width"),_GetInt(dictionary,"height"),_GetBool(dictionary,"fullscreen")),
+				nameof(SoundVolume)			=> new SoundVolume(_GetFloat(dict,"level"),_GetBool(dict,"mute")),
+				nameof(ScreenResolution)	=> new ScreenResolution(_GetInt(dict,"width"),_GetInt(dict,"height"),_GetBool(dict,"fullscreen")),
 
-				_ => throw new NotSupportedException($"NotSupported type {objectType.Name}"),
+				_ => throw new NotSupportedException($"NotSupported type {objType.Name}"),
 			};
 		}
 
-		public void WriteYaml(IEmitter emitter,object? value,Type objectType,ObjectSerializer serializer)
+		public void WriteYaml(IEmitter emitter,object? val,Type objType,ObjectSerializer serializer)
 		{
-			if(value == null)
+			if(val == null)
 			{
-				throw new NotSupportedException($"Unsupported type {objectType.Name}");
+				throw new NotSupportedException($"Unsupported type {objType.Name}");
 			}
 
 			emitter.Emit(new MappingStart());
 
-			switch(objectType.Name)
+			switch(objType.Name)
 			{
 				case nameof(Color):
 				{
-					var color = (Color) value;
+					var color = (Color) val;
 
 					_EmitValue(emitter,new string[] { "r", "g", "b", "a" },new string[] { $"{color.r}", $"{color.g}", $"{color.b}", $"{color.a}" });
 				}
 				break;
 				case nameof(Color32):
 				{
-					var color = (Color32) value;
+					var color = (Color32) val;
 
 					_EmitValue(emitter,new string[] { "r", "g", "b", "a" },new string[] { $"{color.r}", $"{color.g}", $"{color.b}", $"{color.a}" });
 				}
@@ -100,21 +105,21 @@ namespace KZLib.Utilities
 
 				case nameof(Vector2):
 				{
-					var vector = (Vector2) value;
+					var vector = (Vector2) val;
 
 					_EmitValue(emitter,new string[] { "x", "y" },new string[] { $"{vector.x}", $"{vector.y}" });
 				}
 				break;
 				case nameof(Vector3):
 				{
-					var vector = (Vector3) value;
+					var vector = (Vector3) val;
 
 					_EmitValue(emitter,new string[] { "x", "y", "z" },new string[] { $"{vector.x}", $"{vector.y}", $"{vector.z}" });
 				}
 				break;
 				case nameof(Vector4):
 				{
-					var vector = (Vector4) value;
+					var vector = (Vector4) val;
 
 					_EmitValue(emitter,new string[] { "x", "y", "z", "w" },new string[] { $"{vector.x}", $"{vector.y}", $"{vector.z}", $"{vector.w}" });
 				}
@@ -122,14 +127,14 @@ namespace KZLib.Utilities
 
 				case nameof(Vector2Int):
 				{
-					var vector = (Vector2Int) value;
+					var vector = (Vector2Int) val;
 
 					_EmitValue(emitter,new string[] { "x", "y" },new string[] { $"{vector.x}", $"{vector.y}" });
 				}
 				break;
 				case nameof(Vector3Int):
 				{
-					var vector = (Vector3Int) value;
+					var vector = (Vector3Int) val;
 
 					_EmitValue(emitter,new string[] { "x", "y", "z" },new string[] { $"{vector.x}", $"{vector.y}", $"{vector.z}" });
 				}
@@ -137,7 +142,7 @@ namespace KZLib.Utilities
 
 				case nameof(Quaternion):
 				{
-					var quaternion = (Quaternion) value;
+					var quaternion = (Quaternion) val;
 
 					_EmitValue(emitter,new string[] { "x", "y", "z", "w" },new string[] { $"{quaternion.x}", $"{quaternion.y}", $"{quaternion.z}", $"{quaternion.w}" });
 				}
@@ -145,14 +150,14 @@ namespace KZLib.Utilities
 
 				case nameof(Rect):
 				{
-					var rect = (Rect) value;
+					var rect = (Rect) val;
 
 					_EmitValue(emitter,new string[] { "x", "y", "width", "height" },new string[] { $"{rect.x}", $"{rect.y}", $"{rect.width}", $"{rect.height}" });
 				}
 				break;
 				case nameof(RectInt):
 				{
-					var rect = (RectInt) value;
+					var rect = (RectInt) val;
 
 					_EmitValue(emitter,new string[] { "x", "y", "width", "height" },new string[] { $"{rect.x}", $"{rect.y}", $"{rect.width}", $"{rect.height}" });
 				}
@@ -160,16 +165,25 @@ namespace KZLib.Utilities
 
 				case nameof(SoundVolume):
 				{
-					var volume = (SoundVolume) value;
+					var volume = (SoundVolume) val;
 
 					_EmitValue(emitter,new string[] { "level", "mute" },new string[] { $"{volume.level}", $"{volume.mute}" });
 				}
 				break;
 				case nameof(ScreenResolution):
 				{
-					var resolution = (ScreenResolution) value;
+					var resolution = (ScreenResolution) val;
 
 					_EmitValue(emitter,new string[] { "width", "height", "fullscreen" },new string[] { $"{resolution.width}", $"{resolution.height}", $"{resolution.fullscreen}" });
+				}
+				break;
+				case nameof(SoundProfile):
+				{
+					var profile = (SoundProfile) val;
+
+					_EmitSoundVolumeMapping(emitter,"master",profile.master);
+					_EmitSoundVolumeMapping(emitter,"music",profile.music);
+					_EmitSoundVolumeMapping(emitter,"effect",profile.effect);
 				}
 				break;
 			}
@@ -177,13 +191,83 @@ namespace KZLib.Utilities
 			emitter.Emit(new MappingEnd());
 		}
 
-		private void _EmitValue(IEmitter emitter,string[] keyArray,string[] valueArray)
+		private SoundProfile _ReadSoundProfile(IParser parser)
+		{
+			var nestedDict = _ConvertToNestedDictionary(parser);
+
+			if(nestedDict.Count == 0)
+			{
+				return SoundProfile.DefaultProfile;
+			}
+
+			return new SoundProfile(
+				_ReadChannelVolume(nestedDict,"master"),
+				_ReadChannelVolume(nestedDict,"music"),
+				_ReadChannelVolume(nestedDict,"effect"));
+		}
+
+		private SoundVolume _ReadChannelVolume(Dictionary<string,Dictionary<string,string>> nestedDict,string channel)
+		{
+			if(!nestedDict.TryGetValue(channel,out var channelDict))
+			{
+				return SoundVolume.max;
+			}
+
+			return new SoundVolume(_GetFloat(channelDict,"level"),_GetBoolValue(channelDict,"mute"));
+		}
+
+		private void _EmitSoundVolumeMapping(IEmitter emitter,string channel,SoundVolume volume)
+		{
+			emitter.Emit(new Scalar(channel));
+			emitter.Emit(new MappingStart());
+			emitter.Emit(new Scalar("level"));
+			emitter.Emit(new Scalar($"{volume.level}"));
+			emitter.Emit(new Scalar("mute"));
+			emitter.Emit(new Scalar($"{volume.mute}"));
+			emitter.Emit(new MappingEnd());
+		}
+
+		private void _EmitValue(IEmitter emitter,string[] keyArray,string[] valArray)
 		{
 			for(var i=0;i<keyArray.Length;i++)
 			{
 				emitter.Emit(new Scalar(keyArray[i]));
-				emitter.Emit(new Scalar(valueArray[i]));
+				emitter.Emit(new Scalar(valArray[i]));
 			}
+		}
+
+		private Dictionary<string,Dictionary<string,string>> _ConvertToNestedDictionary(IParser parser)
+		{
+			var dictionary = new Dictionary<string,Dictionary<string,string>>();
+
+			if(parser.TryConsume<MappingStart>(out _))
+			{
+				while(!parser.TryConsume<MappingEnd>(out _))
+				{
+					var key = parser.Consume<Scalar>().Value;
+
+					if(parser.TryConsume<MappingStart>(out _))
+					{
+						var innerDict = new Dictionary<string,string>();
+
+						while(!parser.TryConsume<MappingEnd>(out _))
+						{
+							var innerKey = parser.Consume<Scalar>().Value;
+							var innerVal = parser.Consume<Scalar>().Value;
+
+							innerDict[innerKey] = innerVal;
+						}
+
+						dictionary[key] = innerDict;
+					}
+					else
+					{
+						parser.Consume<Scalar>();
+					}
+				}
+			}
+
+			return dictionary;
 		}
 
 		private Dictionary<string,string> _ConvertToDictionary(IParser parser)
@@ -195,38 +279,43 @@ namespace KZLib.Utilities
 				while(!parser.TryConsume<MappingEnd>(out _))
 				{
 					var key = parser.Consume<Scalar>().Value;
-					var value = parser.Consume<Scalar>().Value;
+					var val = parser.Consume<Scalar>().Value;
 
-					dictionary[key] = value;
+					dictionary[key] = val;
 				}
 			}
 
 			return dictionary;
 		}
 
-		private float _GetFloat(Dictionary<string,string> dictionary,string key)
+		private float _GetFloat(Dictionary<string,string> dict,string key)
 		{
-			return dictionary.TryGetValue(key,out var value) && float.TryParse(value,out var result) ? result : default;
+			return dict.TryGetValue(key,out var val) && float.TryParse(val,out var ret) ? ret : default;
 		}
 
-		private int _GetInt(Dictionary<string,string> dictionary,string key)
+		private int _GetInt(Dictionary<string,string> dict,string key)
 		{
-			return dictionary.TryGetValue(key,out var value) && int.TryParse(value,out var result) ? result : default;
+			return dict.TryGetValue(key,out var val) && int.TryParse(val,out var ret) ? ret : default;
 		}
 
-		private bool _GetBool(Dictionary<string,string> dictionary,string key)
+		private bool _GetBool(Dictionary<string,string> dict,string key)
 		{
-			return dictionary.TryGetValue(key,out var value) && bool.TryParse(value,out var result) && result;
+			return dict.TryGetValue(key,out var val) && bool.TryParse(val,out var ret) && ret;
 		}
 
-		private byte _GetByte(Dictionary<string,string> dictionary,string key)
+		private bool _GetBoolValue(Dictionary<string,string> dict,string key,bool defaultValue = false)
 		{
-			return dictionary.TryGetValue(key,out var value) && byte.TryParse(value,out var result) ? result : default;
+			return dict.TryGetValue(key,out var val) && bool.TryParse(val,out var ret) ? ret : defaultValue;
 		}
 
-		private string _GetString(Dictionary<string,string> dictionary,string key)
+		private byte _GetByte(Dictionary<string,string> dict,string key)
 		{
-			return dictionary.TryGetValue(key,out var value) ? value : string.Empty;
+			return dict.TryGetValue(key,out var val) && byte.TryParse(val,out var ret) ? ret : default;
+		}
+
+		private string _GetString(Dictionary<string,string> dict,string key)
+		{
+			return dict.TryGetValue(key,out var val) ? val : string.Empty;
 		}
 	}
 }

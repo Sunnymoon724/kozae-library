@@ -14,10 +14,10 @@ namespace KZLib.ToolKits
 		public string Title { get; }
 		public int Index { get; }
 
-		public ExcelSchemeInfo(string title,int index)
+		public ExcelSchemeInfo(string title,int idx)
 		{
 			Title = title;
-			Index = index;
+			Index = idx;
 		}
 	}
 
@@ -159,13 +159,13 @@ namespace KZLib.ToolKits
 		/// <summary>
 		/// Get data group in row
 		/// </summary>
-		public string[] FindCellArrayInRow(string sheetName,int index)
+		public string[] FindCellArrayInRow(string sheetName,int idx)
 		{
 			var rowArray = _GetRowArray(sheetName);
 
-			_ValidateRange(sheetName,index,rowArray.Length);
+			_ValidateRange(sheetName,idx,rowArray.Length);
 
-			var cellArray = rowArray[index];
+			var cellArray = rowArray[idx];
 
 			return _IsExistRow(cellArray) ? cellArray : Array.Empty<string>();
 		}
@@ -173,13 +173,13 @@ namespace KZLib.ToolKits
 		/// <summary>
 		/// Get data group in rows
 		/// </summary>
-		public string[][] MergeCellArrayInRows(string sheetName,params int[] indexArray)
+		public string[][] MergeCellArrayInRows(string sheetName,params int[] idxArray)
 		{
-			var jaggedArray = new string[indexArray.Length][];
+			var jaggedArray = new string[idxArray.Length][];
 
-			for(var i=0;i<indexArray.Length;i++)
+			for(var i=0;i<idxArray.Length;i++)
 			{
-				jaggedArray[i] = FindCellArrayInRow(sheetName,indexArray[i]);
+				jaggedArray[i] = FindCellArrayInRow(sheetName,idxArray[i]);
 			}
 
 			return jaggedArray;
@@ -188,18 +188,18 @@ namespace KZLib.ToolKits
 		/// <summary>
 		/// Get data group in column
 		/// </summary>
-		public string[] ExtractCellArrayInColumn(string sheetName,int index)
+		public string[] ExtractCellArrayInColumn(string sheetName,int idx)
 		{
 			var rowArray = _GetRowArray(sheetName);
 
-			_ValidateRange(sheetName,index,rowArray[0].Length);
+			_ValidateRange(sheetName,idx,rowArray[0].Length);
 
 			var length = rowArray.Length;
 			var columnArray = new string[length];
 
 			for(var i=0;i<length;i++)
 			{
-				columnArray[i] = (0 <= index && index < rowArray[i].Length) ? rowArray[i][index] : string.Empty;
+				columnArray[i] = (0 <= idx && idx < rowArray[i].Length) ? rowArray[i][idx] : string.Empty;
 			}
 
 			return columnArray;
@@ -208,13 +208,13 @@ namespace KZLib.ToolKits
 		/// <summary>
 		/// Get data group in columns
 		/// </summary>
-		public string[][] MergeCellArrayInColumns(string sheetName,params int[] indexArray)
+		public string[][] MergeCellArrayInColumns(string sheetName,params int[] idxArray)
 		{
-			var jaggedArray = new string[indexArray.Length][];
+			var jaggedArray = new string[idxArray.Length][];
 
-			for(var i=0;i<indexArray.Length;i++)
+			for(var i=0;i<idxArray.Length;i++)
 			{
-				jaggedArray[i] = ExtractCellArrayInColumn(sheetName,indexArray[i]);
+				jaggedArray[i] = ExtractCellArrayInColumn(sheetName,idxArray[i]);
 			}
 
 			return jaggedArray;
@@ -332,16 +332,16 @@ namespace KZLib.ToolKits
 
 				try
 				{
-					var valueArray = Array.ConvertAll(vectorArray,float.Parse);
+					var valArray = Array.ConvertAll(vectorArray,float.Parse);
 
-					if(targetType == typeof(Vector2) && valueArray.Length == c_vector2ComponentCount)
+					if(targetType == typeof(Vector2) && valArray.Length == c_vector2ComponentCount)
 					{
-						return new Vector2(valueArray[0],valueArray[1]);
+						return new Vector2(valArray[0],valArray[1]);
 					}
 
-					if(targetType == typeof(Vector3) && valueArray.Length == c_vector3ComponentCount)
+					if(targetType == typeof(Vector3) && valArray.Length == c_vector3ComponentCount)
 					{
-						return new Vector3(valueArray[0],valueArray[1],valueArray[2]);
+						return new Vector3(valArray[0],valArray[1],valArray[2]);
 					}
 
 					throw new FormatException(_CreateLog($"{cell} is not a valid {targetType.Name}.",line,targetType));
@@ -406,7 +406,7 @@ namespace KZLib.ToolKits
 		public string[,] ConvertToArray(string sheetName,int x,int y,int width,int height)
 		{
 			var rowArray = _GetRowArray(sheetName);
-			var resultArray = new string[width,height];
+			var retArray = new string[width,height];
 
 			for(var i=x;i<x+width;i++)
 			{
@@ -414,11 +414,11 @@ namespace KZLib.ToolKits
 
 				for(var j=y;j<y+height;j++)
 				{
-					resultArray[i,j] = _IsValidCellArray(cellArray) ? cellArray[j] : string.Empty;
+					retArray[i,j] = _IsValidCellArray(cellArray) ? cellArray[j] : string.Empty;
 				}
 			}
 
-			return resultArray;
+			return retArray;
 		}
 
 		public IEnumerable<ExcelSchemeInfo> FindSchemeInfoGroup(string sheetName)
@@ -469,11 +469,11 @@ namespace KZLib.ToolKits
 			return !header.StartsWith("%") && !string.IsNullOrEmpty(header);
 		}
 
-		private void _ValidateRange(string sheetName,int index,int count)
+		private void _ValidateRange(string sheetName,int idx,int cnt)
 		{
-			if(index < 0 || index >= count)
+			if(idx < 0 || idx >= cnt)
 			{
-				throw new IndexOutOfRangeException($"{index} is out of range in {sheetName}");
+				throw new IndexOutOfRangeException($"{idx} is out of range in {sheetName}");
 			}
 		}
 

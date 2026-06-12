@@ -3,23 +3,27 @@ using System.IO;
 
 public static partial class KZFileKit
 {
-	public static void DeleteEmptyDirectory(string absoluteStartPath,Action? onComplete = null)
+	/// <summary>
+	/// Recursively deletes empty subfolders under <paramref name="absoluteStartPath"/>.
+	/// Ignores .DS_Store when deciding whether a folder is empty. Also removes companion .meta files in Unity projects.
+	/// </summary>
+	public static void DeleteEmptySubdirectories(string absoluteStartPath,Action? onComplete = null)
 	{
 		if(!IsFolderExist(absoluteStartPath))
 		{
 			return;
 		}
 
-		_DeleteEmptyDirectory(absoluteStartPath);
+		_DeleteEmptySubdirectories(absoluteStartPath);
 
 		onComplete?.Invoke();
 	}
 
-	private static void _DeleteEmptyDirectory(string startPath)
+	private static void _DeleteEmptySubdirectories(string startPath)
 	{
 		foreach(var folderPath in GetFolderPathArray(startPath))
 		{
-			_DeleteEmptyDirectory(folderPath);
+			_DeleteEmptySubdirectories(folderPath);
 
 			var innerFolderPathArray = GetFolderPathArray(folderPath);
 
@@ -46,6 +50,9 @@ public static partial class KZFileKit
 		}
 	}
 
+	/// <summary>
+	/// Deletes a file and its Unity .meta companion when present.
+	/// </summary>
 	public static void DeleteFile(string absoluteFilePath,Action? onComplete = null)
 	{
 		if(!IsFileExist(absoluteFilePath))
@@ -67,6 +74,9 @@ public static partial class KZFileKit
 		onComplete?.Invoke();
 	}
 
+	/// <summary>
+	/// Deletes a folder and its Unity .meta companion when present.
+	/// </summary>
 	public static void DeleteFolder(string absoluteFolderPath,bool recursive,Action? onComplete = null)
 	{
 		if(!IsFolderExist(absoluteFolderPath))

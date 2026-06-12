@@ -2,12 +2,19 @@
 
 namespace KZLib.Utilities
 {
+	/// <summary>
+	/// Thread-safe singleton base for plain C# types. Use <see cref="In"/> to access the instance.
+	/// Subclasses should use a private constructor to prevent external instantiation.
+	/// </summary>
 	public abstract class Singleton<TClass> : IDisposable where TClass : class
 	{
 		private static readonly object m_syncRoot = new();
 		private static TClass? s_instance = null;
 		private bool m_disposed = false;
 
+		/// <summary>
+		/// Returns the singleton instance, creating it on first access.
+		/// </summary>
 		public static TClass In
 		{
 			get
@@ -42,10 +49,12 @@ namespace KZLib.Utilities
 				return;
 			}
 
-			if(disposing) { }
-
 			m_disposed = true;
-			s_instance = null;
+
+			if(disposing)
+			{
+				s_instance = null;
+			}
 		}
 
 		public void Dispose()

@@ -17,7 +17,7 @@ The centerpiece is the **Proto pipeline**: Excel spreadsheets are converted into
 KoZaeLibrary/
 ├── Helper/
 │   ├── KZData/          # Shared data types, interfaces, MemoryPack models
-│   ├── KZUtility/       # File I/O, crypto, collections, singletons, Lua manager
+│   ├── KZUtility/       # File I/O, crypto, Collection, Foundation, singletons, Lua manager
 │   └── KZToolKit/       # Excel/MIDI readers, data generators, barcode
 │
 └── Console/
@@ -241,27 +241,163 @@ Preserves the relative directory structure. Non-`.lua` files are skipped.
 
 ### KZData
 
-Shared data layer used by both Unity runtime and console tools.
+Shared data layer used by both Unity runtime and console tools. Covers proto contracts, settings value types, and MemoryPack models.
 
-- Proto interfaces: `IProto`, `IBuffProto`, `IMotionProto`, `IColorProto`, `INetworkErrorProto`
-- Entry types: `BuffEntry`, `MotionEntry`
-- Game constants: `DataConstant`, `ScreenResolution`, `SoundProfile`, `SoundVolume`
-- MemoryPack serialization support
+#### Scripts folder layout
+
+```
+KZData/Scripts/
+├── DataConstant.cs      # Core interfaces and enums
+├── CommonData.cs        # Proto interfaces
+├── BuffEntry.cs         # Buff stat entry
+├── MotionEntry.cs       # Motion effect entry
+├── ScreenResolution.cs  # Resolution + fullscreen value type
+├── SoundVolume.cs       # Channel volume (0.0–1.0) + mute
+├── SoundProfile.cs      # Master / music / effect profile
+└── Global.cs            # IsExternalInit polyfill for netstandard2.1
+```
+
+#### Core interfaces and enums (`DataConstant.cs`)
+
+| Symbol | Description |
+|--------|-------------|
+| `IProto` | Base primary key (`Num`) for all protos |
+| `IConfig` | Marker interface for config data |
+| `IAffix` | Affix initialize/update contract |
+| `ICluster` | Marker interface for cluster data |
+| `EffectType` | `VisualEffect`, `SoundEffect` |
+| `NetworkErrorResultType` | `None`, `Popup`, `Toast`, `Title` |
+
+#### Proto interfaces (`CommonData.cs`)
+
+| Interface | Key members |
+|-----------|-------------|
+| `IBuffProto` | `BuffName`, `Duration`, `MaxStackCount`, `BuffEntryArray` |
+| `IMotionProto` | `StateName`, `MotionEntryArray` |
+| `IColorProto` | `ColorArray` |
+| `INetworkErrorProto` | `Description`, `ResultMainType`, `ResultSubType` |
+
+#### MemoryPack entries
+
+| Type | Fields |
+|------|--------|
+| `BuffEntry` | `Id`, `StatName`, `Value`, `IsPercent` |
+| `MotionEntry` | `Order`, `EffectPath`, `PositionOffset`, `StartBone` |
+
+#### Settings value types
+
+| Type | Description |
+|------|-------------|
+| `ScreenResolution` | `width`, `height`, `fullscreen`. Presets: `sd`, `hd`, `fhd`, `qhd`, `uhd` (default `fullscreen: true`). `ToString` / `Parse` / `TryParse` |
+| `SoundVolume` | `level` (0.0–1.0, clamped), `mute`. Presets: `zero`, `min`, `max`. Preserves `level` while muted. `+`/`-`/`*`/`/` operators, `Toggle()` |
+| `SoundProfile` | `master`, `music`, `effect` channels. `DefaultProfile` preset. `OutputMusic` / `OutputEffect` = master × channel. Immutable updates via `WithMaster` / `WithMusic` / `WithEffect` |
+
+**String format examples**
+
+```
+resolution : 1920x1080, fullscreen : True
+level : 0.80, mute : False
+master : level : 1.00, mute : False, music : level : 0.80, mute : False, effect : level : 1.00, mute : False
+```
+
+`Parse` / `TryParse` expose `ReadOnlySpan<char>` overloads and parse without allocating via `ToString()`.
 
 ### KZUtility
 
 General-purpose utilities for Unity and console environments.
 
+#### Scripts folder layout
+
+```
+KZUtility/Scripts/
+├── Collection/          # Pure containers (queues, heap, trie, set)
+├── Foundation/
+│   ├── Index/           # Handles, spatial lookup, connected groups
+│   ├── Storage/         # Cache, object pool
+│   └── Pattern/         # Design patterns, smart enum, random
+├── Utility/Kit/         # KZFileKit, KZCryptoKit, KZRandomKit
+├── Singleton/
+├── Manager/
+├── Converter/
+└── Log/
+```
+
+#### Kit (`Utility/Kit/`)
+
 | Module | Description |
 |--------|-------------|
 | `KZFileKit` | File/folder create, read, write, copy, move, delete, compress, search |
 | `KZCryptoKit` | AES/RSA encryption, key generation, PEM formatting |
-| `KZRandomKit` | Random number utilities |
-| Collections | `BinaryHeap`, `CircularQueue`, `FastTree`, `Trie` |
-| Patterns | `Singleton`, `SingletonMB`, `SingletonSO`, `ObjectPool`, `LazyRegistry`, `StrategyCatalog`, `TransientStore` |
-| Managers | `LuaManager` (MoonSharp), `TimeManager` |
-| Converters | `YamlConverter` (YamlDotNet) |
-| Diagnostics | `LogBridge` |
+| `KZRandomKit` | Weighted pick, range sampling, and other random helpers (built on `Randomizer`) |
+
+#### Collections (`Collection/`)
+
+| Type | Description |
+|------|-------------|
+| `BinaryHeap` / `MinHeap` / `MaxHeap` | Thread-safe array-backed binary heap for priority queues and top-N extraction |
+| `CircularQueue` | **Fixed-size** ring-buffer FIFO. When full, **overwrites the oldest** entry (keep last N items) |
+| `Deque` | **Growable** double-ended queue. O(1) push/pop at both ends. Includes `Enqueue` / `Dequeue` / `Peek` queue API |
+| `Trie` | String prefix tree. `Contains`, prefix search, autocomplete |
+| `SparseSet` | O(1) add/remove/iterate over live integer indices. Pairs with `SlotMap` slot indices and parallel arrays |
+
+#### Foundation — Index (`Foundation/Index/`)
+
+| Type | Description |
+|------|-------------|
+| `SlotMap` | Generational handle allocator + value storage. Packs slot index (lower 16 bits) and generation (upper 16 bits) |
+| `FastTree` | Uniform 2D grid spatial index. Register points and query by region |
+| `UnionFind` | Disjoint-set with `TryFind` / `Union` / `Connected` for tracking connected index groups |
+
+#### Foundation — Storage (`Foundation/Storage/`)
+
+| Type | Description |
+|------|-------------|
+| `ObjectPool` | Queue-backed object pool. Reuse instances via `GetOrCreate` / `Put` |
+| `LazyRegistry` | Per-key lazy resolve. First `Fetch` invokes a provider; later calls return the cached value |
+| `CacheResolver` | **TTL (time-based)** string-key cache. FIFO entries per key, background expiry purge |
+| `TransientStore` | Process-wide **single slot** handoff. `Set` then one-shot `Consume` |
+
+#### Foundation — Pattern (`Foundation/Pattern/`)
+
+| Type | Description |
+|------|-------------|
+| `StrategyCatalog` | Enum-keyed map of strategy implementations. Strategy pattern base |
+| `CustomTag` | **Smart enum** base using static fields instead of C# `enum`. Extend tags via derived types |
+| `Randomizer` | Thread-safe `Random` wrapper. Int/float ranges, weighted pick, unique group sampling |
+
+#### Singleton · Manager · Converter · Log
+
+| Module | Description |
+|--------|-------------|
+| `Singleton` / `SingletonMB` / `SingletonSO` | Singleton bases for plain class, `MonoBehaviour`, and `ScriptableObject` |
+| `LuaManager` | MoonSharp Lua script execution |
+| `TimeManager` | Time and schedule management |
+| `YamlConverter` | YAML serialize/deserialize via YamlDotNet. Supports `SoundVolume`, `ScreenResolution`, `SoundProfile` (nested channels), and more |
+| `LogBridge` | `OnInfo` / `OnWarning` / `OnError` delegates for Unity and console log wiring |
+
+**KZData YAML examples (`YamlConverter`)**
+
+```yaml
+# ScreenResolution
+width: 1920
+height: 1080
+fullscreen: true
+
+# SoundVolume
+level: 0.8
+mute: false
+
+# SoundProfile
+master:
+  level: 1.0
+  mute: false
+music:
+  level: 0.8
+  mute: false
+effect:
+  level: 1.0
+  mute: false
+```
 
 ### KZToolKit
 

@@ -1,6 +1,4 @@
 ﻿
-using System;
-
 namespace KZLib.Data
 {
 	public interface IColorProto : IProto

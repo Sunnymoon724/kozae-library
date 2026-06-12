@@ -1,16 +1,23 @@
 ﻿using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using MemoryPack;
 
 namespace KZLib.Data
 {
+	/// <summary>
+	/// Value type representing screen resolution and fullscreen mode.
+	/// </summary>
 	[MemoryPackable]
 	public partial struct ScreenResolution : IEquatable<ScreenResolution>,IFormattable
 	{
+		/// <summary>Width in pixels.</summary>
 		public int width;
+
+		/// <summary>Height in pixels.</summary>
 		public int height;
+
+		/// <summary>Whether fullscreen mode is enabled.</summary>
 		public bool fullscreen;
 
 		private static readonly ScreenResolution sdScreenResolution		= new(720,480,true);
@@ -19,22 +26,42 @@ namespace KZLib.Data
 		private static readonly ScreenResolution qhdScreenResolution	= new(2560,1440,true);
 		private static readonly ScreenResolution uhdScreenResolution	= new(3840,2160,true);
 
+		/// <summary>SD (720x480) fullscreen preset.</summary>
 		public static ScreenResolution sd	=> sdScreenResolution;
+
+		/// <summary>HD (1280x720) fullscreen preset.</summary>
 		public static ScreenResolution hd	=> hdScreenResolution;
+
+		/// <summary>Full HD (1920x1080) fullscreen preset.</summary>
 		public static ScreenResolution fhd	=> fhdScreenResolution;
+
+		/// <summary>QHD (2560x1440) fullscreen preset.</summary>
 		public static ScreenResolution qhd	=> qhdScreenResolution;
+
+		/// <summary>UHD (3840x2160) fullscreen preset.</summary>
 		public static ScreenResolution uhd	=> uhdScreenResolution;
 
+		/// <summary>
+		/// Creates an instance with the given resolution and fullscreen flag.
+		/// width and height must be greater than zero.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ScreenResolution(int width,int height,bool fullscreen)
 		{
+			_ValidateDimension(width,nameof(width));
+			_ValidateDimension(height,nameof(height));
+
 			this.width = width;
 			this.height = height;
 			this.fullscreen = fullscreen;
 		}
 
+		/// <summary>Updates resolution and fullscreen flag.</summary>
 		public void Set(int newWidth,int newHeight,bool newFullscreen)
 		{
+			_ValidateDimension(newWidth,nameof(newWidth));
+			_ValidateDimension(newHeight,nameof(newHeight));
+
 			width = newWidth;
 			height = newHeight;
 			fullscreen = newFullscreen;
@@ -50,6 +77,9 @@ namespace KZLib.Data
 			return ToString(format,CultureInfo.InvariantCulture);
 		}
 
+		/// <summary>
+		/// Returns a string in the format <c>resolution : {width}x{height}, fullscreen : {fullscreen}</c>.
+		/// </summary>
 		public string ToString(string? format,IFormatProvider? formatProvider)
 		{
 			formatProvider ??= CultureInfo.InvariantCulture;
@@ -92,7 +122,12 @@ namespace KZLib.Data
 
 		public static ScreenResolution Parse(ReadOnlySpan<char> value,IFormatProvider provider)
 		{
-			return Parse(value.ToString(),provider);
+			if(!_TryParseCore(value,provider,out var resolution))
+			{
+				throw new FormatException($"Invalid ScreenResolution format in '{value.ToString()}'");
+			}
+
+			return resolution;
 		}
 
 		public static ScreenResolution Parse(string value)
@@ -100,25 +135,17 @@ namespace KZLib.Data
 			return Parse(value,CultureInfo.InvariantCulture);
 		}
 
+		/// <summary>
+		/// Parses a string produced by <see cref="ToString()"/> into a <see cref="ScreenResolution"/>.
+		/// </summary>
 		public static ScreenResolution Parse(string value,IFormatProvider provider)
 		{
-			var resolutionRegex = new Regex(@"resolution\s*:\s*(\d+)x(\d+)");
-			var resolutionMatch = resolutionRegex.Match(value);
-
-			if(!resolutionMatch.Success || !int.TryParse(resolutionMatch.Groups[1].Value,NumberStyles.Integer,provider,out var width) || !int.TryParse(resolutionMatch.Groups[2].Value,NumberStyles.Integer,provider,out var height))
+			if(!_TryParseCore(value.AsSpan(),provider,out var resolution))
 			{
-				throw new FormatException($"Invalid resolution format in {resolutionMatch}");
+				throw new FormatException($"Invalid ScreenResolution format in '{value}'");
 			}
 
-			var fullscreenRegex = new Regex(@"fullscreen\s*:\s*(true|false)",RegexOptions.IgnoreCase);
-			var fullscreenMatch = fullscreenRegex.Match(value);
-
-			if(!fullscreenMatch.Success || !bool.TryParse(fullscreenMatch.Groups[1].Value,out var fullscreen))
-			{
-				throw new FormatException($"Invalid fullscreen format in {fullscreenMatch}");
-			}
-
-			return new ScreenResolution(width,height,fullscreen);
+			return resolution;
 		}
 
 		public static bool TryParse(ReadOnlySpan<char> value,out ScreenResolution resolution)
@@ -128,7 +155,7 @@ namespace KZLib.Data
 
 		public static bool TryParse(ReadOnlySpan<char> value,IFormatProvider provider,out ScreenResolution resolution)
 		{
-			return TryParse(value.ToString(),provider,out resolution);
+			return _TryParseCore(value,provider,out resolution);
 		}
 
 		public static bool TryParse(string value,out ScreenResolution resolution)
@@ -138,18 +165,130 @@ namespace KZLib.Data
 
 		public static bool TryParse(string value,IFormatProvider provider,out ScreenResolution resolution)
 		{
-			try
+			return _TryParseCore(value.AsSpan(),provider,out resolution);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void _ValidateDimension(int dimension,string paramName)
+		{
+			if(dimension <= 0)
 			{
-				resolution = Parse(value,provider);
+				throw new ArgumentOutOfRangeException(paramName,dimension,"Resolution dimensions must be greater than zero.");
+			}
+		}
+
+		private static bool _TryParseCore(ReadOnlySpan<char> value,IFormatProvider provider,out ScreenResolution resolution)
+		{
+			resolution = default;
+
+			var span = value.Trim();
+
+			if(span.IsEmpty)
+			{
+				return false;
+			}
+
+			if(!_TryFindToken(ref span,"resolution"))
+			{
+				return false;
+			}
+
+			if(!_TryConsumeSeparator(ref span))
+			{
+				return false;
+			}
+
+			var xIndex = span.IndexOf('x');
+
+			if(xIndex <= 0)
+			{
+				return false;
+			}
+
+			var widthSpan = span[..xIndex].Trim();
+
+			span = span[(xIndex+1)..];
+
+			var commaIndex = span.IndexOf(',');
+
+			if(commaIndex <= 0)
+			{
+				return false;
+			}
+
+			var heightSpan = span[..commaIndex].Trim();
+			span = span[(commaIndex+1)..].TrimStart();
+
+			if(!int.TryParse(widthSpan,NumberStyles.Integer,provider,out var width) || !int.TryParse(heightSpan,NumberStyles.Integer,provider,out var height) || width <= 0 || height <= 0)
+			{
+				return false;
+			}
+
+			if(!_TryFindToken(ref span,"fullscreen"))
+			{
+				return false;
+			}
+
+			if(!_TryConsumeSeparator(ref span))
+			{
+				return false;
+			}
+
+			if(!_TryParseBool(span.Trim(),out var fullscreen))
+			{
+				return false;
+			}
+
+			resolution = new ScreenResolution(width,height,fullscreen);
+
+			return true;
+		}
+
+		private static bool _TryFindToken(ref ReadOnlySpan<char> span,ReadOnlySpan<char> token)
+		{
+			var index = span.IndexOf(token,StringComparison.OrdinalIgnoreCase);
+
+			if(index < 0)
+			{
+				return false;
+			}
+
+			span = span[(index+token.Length)..].TrimStart();
+
+			return true;
+		}
+
+		private static bool _TryConsumeSeparator(ref ReadOnlySpan<char> span)
+		{
+			if(span.IsEmpty || span[0] != ':')
+			{
+				return false;
+			}
+
+			span = span[1..].TrimStart();
+
+			return true;
+		}
+
+		private static bool _TryParseBool(ReadOnlySpan<char> span,out bool value)
+		{
+			if(span.Equals("true",StringComparison.OrdinalIgnoreCase))
+			{
+				value = true;
 
 				return true;
 			}
-			catch
-			{
-				resolution = default;
 
-				return false;
+			if(span.Equals("false",StringComparison.OrdinalIgnoreCase))
+			{
+				value = false;
+
+				return true;
 			}
+
+			value = default;
+
+			return false;
 		}
 	}
 }

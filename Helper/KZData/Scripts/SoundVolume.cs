@@ -1,28 +1,43 @@
 ﻿using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using MemoryPack;
 
 namespace KZLib.Data
 {
 	/// <summary>
-	/// level -> 0.0 - 1.0
+	/// Value type representing volume level (0.0 - 1.0) and mute state.
+	/// When muted, level is preserved and restored on unMute.
 	/// </summary>
 	[MemoryPackable]
 	public partial struct SoundVolume : IEquatable<SoundVolume>,IFormattable
 	{
+		private const float LevelTolerance = 0.005f;
+		private const NumberStyles LevelNumberStyles = NumberStyles.Float | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent;
+
+		/// <summary>Volume level (0.0 - 1.0, clamped on construction).</summary>
 		public float level;
+
+		/// <summary>Whether the channel is muted.</summary>
 		public bool mute;
 
 		private static readonly SoundVolume zeroSoundVolume	= new(0.0f,true);
 		private static readonly SoundVolume minSoundVolume	= new(0.1f,false);
 		private static readonly SoundVolume maxSoundVolume	= new(1.0f,false);
 
+		/// <summary>Level 0 with mute enabled (fully silent preset).</summary>
 		public static SoundVolume zero	=> zeroSoundVolume;
+
+		/// <summary>Minimum audible level (0.1).</summary>
 		public static SoundVolume min	=> minSoundVolume;
+
+		/// <summary>Maximum level (1.0).</summary>
 		public static SoundVolume max	=> maxSoundVolume;
 
+		/// <summary>
+		/// Creates an instance with the given level and mute state.
+		/// level is clamped to the 0.0 - 1.0 range.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SoundVolume(float level,bool mute)
 		{
@@ -30,6 +45,7 @@ namespace KZLib.Data
 			this.mute = mute;
 		}
 
+		/// <summary>Updates level and mute state. level is clamped to the 0.0 - 1.0 range.</summary>
 		public void Set(float newLevel,bool newMute)
 		{
 			level = Math.Clamp(newLevel,0.0f,1.0f);
@@ -46,6 +62,9 @@ namespace KZLib.Data
 			return ToString(format,CultureInfo.InvariantCulture);
 		}
 
+		/// <summary>
+		/// Returns a string in the format <c>level : {level}, mute : {mute}</c>. Default level format is F2.
+		/// </summary>
 		public string ToString(string? format,IFormatProvider? formatProvider)
 		{
 			if(string.IsNullOrEmpty(format))
@@ -60,7 +79,7 @@ namespace KZLib.Data
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(level,mute);
+			return HashCode.Combine(MathF.Round(level,2),mute);
 		}
 
 		public override bool Equals(object? other)
@@ -68,38 +87,49 @@ namespace KZLib.Data
 			return other is SoundVolume volume && Equals(volume);
 		}
 
+		/// <summary>Returns true when both level and mute match.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(SoundVolume volume)
 		{
-			return level == volume.level && mute == volume.mute;
+			return MathF.Abs(level-volume.level) < LevelTolerance && mute == volume.mute;
 		}
 
+		/// <summary>Toggles mute state without changing level.</summary>
 		public void Toggle()
 		{
 			mute = !mute;
 		}
 
+		/// <summary>Adds to level while preserving mute state.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SoundVolume operator +(SoundVolume lhs,float rhs)
 		{
 			return new SoundVolume(lhs.level+rhs,lhs.mute);
 		}
 
+		/// <summary>Subtracts from level while preserving mute state.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SoundVolume operator -(SoundVolume lhs,float rhs)
 		{
 			return new SoundVolume(lhs.level-rhs,lhs.mute);
 		}
 
+		/// <summary>Multiplies level while preserving mute state.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SoundVolume operator *(SoundVolume lhs,float rhs)
 		{
 			return new SoundVolume(lhs.level*rhs,lhs.mute);
 		}
 
+		/// <summary>Divides level while preserving mute state. Throws if rhs is zero.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SoundVolume operator /(SoundVolume lhs,float rhs)
 		{
+			if(rhs == 0.0f)
+			{
+				throw new DivideByZeroException("Cannot divide SoundVolume level by zero.");
+			}
+
 			return new SoundVolume(lhs.level/rhs,lhs.mute);
 		}
 
@@ -122,7 +152,12 @@ namespace KZLib.Data
 
 		public static SoundVolume Parse(ReadOnlySpan<char> value,IFormatProvider provider)
 		{
-			return Parse(value.ToString(),provider);
+			if(!_TryParseCore(value,provider,out var soundVolume))
+			{
+				throw new FormatException($"Invalid SoundVolume format in '{value.ToString()}'");
+			}
+
+			return soundVolume;
 		}
 
 		public static SoundVolume Parse(string value)
@@ -130,27 +165,19 @@ namespace KZLib.Data
 			return Parse(value,CultureInfo.InvariantCulture);
 		}
 
+		/// <summary>
+		/// Parses a string produced by <see cref="ToString()"/> into a <see cref="SoundVolume"/>.
+		/// Negative levels are clamped to 0.0 via construction.
+		/// </summary>
 		public static SoundVolume Parse(string value,IFormatProvider provider)
 		{
-			var levelRegex = new Regex(@"level\s*:\s*(\d+(\.\d+)?)");
-			var levelMatch = levelRegex.Match(value);
-
-			if(!levelMatch.Success || !float.TryParse(levelMatch.Groups[1].Value,NumberStyles.AllowDecimalPoint,provider,out var level))
+			if(!_TryParseCore(value.AsSpan(),provider,out var soundVolume))
 			{
-				throw new FormatException($"Invalid level format in '{value}'");
+				throw new FormatException($"Invalid SoundVolume format in '{value}'");
 			}
 
-			var muteRegex = new Regex(@"mute\s*:\s*(true|false)",RegexOptions.IgnoreCase);
-			var muteMatch = muteRegex.Match(value);
-
-			if(!muteMatch.Success || !bool.TryParse(muteMatch.Groups[1].Value,out var mute))
-			{
-				throw new FormatException($"Invalid mute format in '{value}'");
-			}
-
-			return new SoundVolume(level,mute);
+			return soundVolume;
 		}
-
 
 		public static bool TryParse(ReadOnlySpan<char> value,out SoundVolume soundVolume)
 		{
@@ -159,7 +186,7 @@ namespace KZLib.Data
 
 		public static bool TryParse(ReadOnlySpan<char> value,IFormatProvider provider,out SoundVolume soundVolume)
 		{
-			return TryParse(value.ToString(),provider,out soundVolume);
+			return _TryParseCore(value,provider,out soundVolume);
 		}
 
 		public static bool TryParse(string value,out SoundVolume soundVolume)
@@ -169,18 +196,111 @@ namespace KZLib.Data
 
 		public static bool TryParse(string value,IFormatProvider provider,out SoundVolume soundVolume)
 		{
-			try
+			return _TryParseCore(value.AsSpan(),provider,out soundVolume);
+		}
+
+		private static bool _TryParseCore(ReadOnlySpan<char> value,IFormatProvider provider,out SoundVolume soundVolume)
+		{
+			soundVolume = default;
+
+			var span = value.Trim();
+
+			if(span.IsEmpty)
 			{
-				soundVolume = Parse(value,provider);
+				return false;
+			}
+
+			if(!_TryFindToken(ref span,"level"))
+			{
+				return false;
+			}
+
+			if(!_TryConsumeSeparator(ref span))
+			{
+				return false;
+			}
+
+			var commaIndex = span.IndexOf(',');
+
+			if(commaIndex <= 0)
+			{
+				return false;
+			}
+
+			var levelSpan = span[..commaIndex].Trim();
+
+			if(!float.TryParse(levelSpan,LevelNumberStyles,provider,out var level))
+			{
+				return false;
+			}
+
+			span = span[(commaIndex+1)..].TrimStart();
+
+			if(!_TryFindToken(ref span,"mute"))
+			{
+				return false;
+			}
+
+			if(!_TryConsumeSeparator(ref span))
+			{
+				return false;
+			}
+
+			if(!_TryParseBool(span.Trim(),out var mute))
+			{
+				return false;
+			}
+
+			soundVolume = new SoundVolume(level,mute);
+
+			return true;
+		}
+
+		private static bool _TryFindToken(ref ReadOnlySpan<char> span,ReadOnlySpan<char> token)
+		{
+			var index = span.IndexOf(token,StringComparison.OrdinalIgnoreCase);
+
+			if(index < 0)
+			{
+				return false;
+			}
+
+			span = span[(index+token.Length)..].TrimStart();
+
+			return true;
+		}
+
+		private static bool _TryConsumeSeparator(ref ReadOnlySpan<char> span)
+		{
+			if(span.IsEmpty || span[0] != ':')
+			{
+				return false;
+			}
+
+			span = span[1..].TrimStart();
+
+			return true;
+		}
+
+		private static bool _TryParseBool(ReadOnlySpan<char> span,out bool value)
+		{
+			if(span.Equals("true",StringComparison.OrdinalIgnoreCase))
+			{
+				value = true;
 
 				return true;
 			}
-			catch
-			{
-				soundVolume = default;
 
-				return false;
+			if(span.Equals("false",StringComparison.OrdinalIgnoreCase))
+			{
+				value = false;
+
+				return true;
 			}
+
+			value = default;
+
+			return false;
 		}
 	}
 }

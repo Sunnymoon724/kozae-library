@@ -70,7 +70,7 @@ namespace KZLib.Collections.Generic
 		/// <summary>
 		/// Appends a value at the rear, dropping the front element when the buffer is full.
 		/// </summary>
-		public void Enqueue(TValue value)
+		public void Enqueue(TValue val)
 		{
 			lock(m_syncRoot)
 			{
@@ -84,7 +84,7 @@ namespace KZLib.Collections.Generic
 				}
 
 				m_rear = (m_rear+1)%m_capacity;
-				m_valueArray[m_rear] = value;
+				m_valueArray[m_rear] = val;
 			}
 		}
 
@@ -190,12 +190,12 @@ namespace KZLib.Collections.Generic
 				var count = Count;
 				snapshotArray = new TValue[count];
 
-				var index = m_front;
+				var idx = m_front;
 
 				for(var i=0;i<count;i++)
 				{
-					snapshotArray[i] = m_valueArray[index];
-					index = (index+1)%m_capacity;
+					snapshotArray[i] = m_valueArray[idx];
+					idx = (idx+1)%m_capacity;
 				}
 			}
 
@@ -211,46 +211,46 @@ namespace KZLib.Collections.Generic
 		}
 
 		/// <summary>Scans the logical queue order for an equal element.</summary>
-		public bool Contains(TValue value)
+		public bool Contains(TValue val)
 		{
 			lock(m_syncRoot)
 			{
-				var index = m_front;
+				var idx = m_front;
 				var comparer = EqualityComparer<TValue>.Default;
 				var count = Count;
 
 				for(var i=0;i<count;i++)
 				{
-					if(comparer.Equals(m_valueArray[index],value))
+					if(comparer.Equals(m_valueArray[idx],val))
 					{
 						return true;
 					}
 
-					index = (index+1)%m_capacity;
+					idx = (idx+1)%m_capacity;
 				}
 			}
 
 			return false;
 		}
 
-		/// <summary>Copies elements in FIFO order into <paramref name="array"/> starting at <paramref name="index"/>.</summary>
-		public void CopyTo(Array array,int index)
+		/// <summary>Copies elements in FIFO order into <paramref name="array"/> starting at <paramref name="idx"/>.</summary>
+		public void CopyTo(Array array,int idx)
 		{
 			if(array == null)
 			{
 				throw new ArgumentNullException(nameof(array));
 			}
 
-			if(index < 0 || index > array.Length)
+			if(idx < 0 || idx > array.Length)
 			{
-				throw new ArgumentOutOfRangeException(nameof(index));
+				throw new ArgumentOutOfRangeException(nameof(idx));
 			}
 
 			lock(m_syncRoot)
 			{
 				var count = Count;
 
-				if(index+count > array.Length)
+				if(idx+count > array.Length)
 				{
 					throw new ArgumentException("Destination array is too small.");
 				}
@@ -264,7 +264,7 @@ namespace KZLib.Collections.Generic
 
 				for(var i=0;i<count;i++)
 				{
-					array.SetValue(m_valueArray[front],index+i);
+					array.SetValue(m_valueArray[front],idx+i);
 					front = (front+1)%m_capacity;
 				}
 			}
@@ -288,16 +288,16 @@ namespace KZLib.Collections.Generic
 					return Array.Empty<TValue>();
 				}
 
-				var resultArray = new TValue[count];
-				var index = m_front;
+				var retArray = new TValue[count];
+				var idx = m_front;
 
 				for(var i=0;i<count;i++)
 				{
-					resultArray[i] = m_valueArray[index];
-					index = (index+1)%m_capacity;
+					retArray[i] = m_valueArray[idx];
+					idx = (idx+1)%m_capacity;
 				}
 
-				return resultArray;
+				return retArray;
 			}
 		}
 	}

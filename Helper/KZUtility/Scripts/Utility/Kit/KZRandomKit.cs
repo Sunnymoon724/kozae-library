@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using KZLib.Utilities;
 
+/// <summary>
+/// Static random helpers backed by a shared <see cref="Randomizer"/> instance.
+/// </summary>
 public static class KZRandomKit
 {
 	private static readonly Randomizer s_randomizer = new();
 
 	/// <summary>
-	/// min <= n <= max
+	/// Returns a random integer in [<paramref name="minValue"/>, <paramref name="maxValue"/>] (inclusive).
 	/// </summary>
 	public static int PickInteger(int minValue,int maxValue)
 	{
@@ -15,7 +18,7 @@ public static class KZRandomKit
 	}
 
 	/// <summary>
-	/// 0<= n < 1
+	/// Returns a random float in [0, 1).
 	/// </summary>
 	public static float PickSingle()
 	{
@@ -23,7 +26,7 @@ public static class KZRandomKit
 	}
 
 	/// <summary>
-	/// -value <= n <= +value
+	/// Returns a random float in [-<paramref name="value"/>, +<paramref name="value"/>].
 	/// </summary>
 	public static float PickSingle(float value)
 	{
@@ -31,7 +34,7 @@ public static class KZRandomKit
 	}
 
 	/// <summary>
-	/// min <= n <= max
+	/// Returns a random float in [<paramref name="minValue"/>, <paramref name="maxValue"/>].
 	/// </summary>
 	public static float PickSingle(float minValue,float maxValue)
 	{
@@ -39,7 +42,7 @@ public static class KZRandomKit
 	}
 
 	/// <summary>
-	/// 0<= n < 1
+	/// Returns a random double in [0, 1).
 	/// </summary>
 	public static double PickDouble()
 	{
@@ -47,7 +50,7 @@ public static class KZRandomKit
 	}
 
 	/// <summary>
-	/// -value <= n <= +value
+	/// Returns a random double in [-<paramref name="value"/>, +<paramref name="value"/>].
 	/// </summary>
 	public static double PickDouble(double value)
 	{
@@ -55,7 +58,7 @@ public static class KZRandomKit
 	}
 
 	/// <summary>
-	/// min <= n <= max
+	/// Returns a random double in [<paramref name="minValue"/>, <paramref name="maxValue"/>].
 	/// </summary>
 	public static double PickDouble(double minValue,double maxValue)
 	{
@@ -63,7 +66,7 @@ public static class KZRandomKit
 	}
 
 	/// <summary>
-	/// true or false
+	/// Returns true or false with equal probability.
 	/// </summary>
 	public static bool PickBoolean()
 	{
@@ -71,6 +74,9 @@ public static class KZRandomKit
 	}
 
 	#region Gaussian
+	/// <summary>
+	/// Returns a random value from a normal distribution with <paramref name="mean"/> and <paramref name="deviation"/>.
+	/// </summary>
 	public static int GenerateGaussian(int mean,int deviation)
 	{
 		var gaussian = GenerateGaussian();
@@ -78,6 +84,9 @@ public static class KZRandomKit
 		return mean+Convert.ToInt32(gaussian*deviation);
 	}
 
+	/// <summary>
+	/// Returns a random value from a normal distribution with <paramref name="mean"/> and <paramref name="deviation"/>.
+	/// </summary>
 	public static float GenerateGaussian(float mean,float deviation)
 	{
 		var gaussian = GenerateGaussian();
@@ -85,6 +94,9 @@ public static class KZRandomKit
 		return mean+Convert.ToSingle(gaussian*deviation);
 	}
 
+	/// <summary>
+	/// Returns a random value from a normal distribution with <paramref name="mean"/> and <paramref name="deviation"/>.
+	/// </summary>
 	public static double GenerateGaussian(double mean,double deviation)
 	{
 		var gaussian = GenerateGaussian();
@@ -92,6 +104,9 @@ public static class KZRandomKit
 		return mean+gaussian*deviation;
 	}
 
+	/// <summary>
+	/// Returns a standard normal sample (mean 0, standard deviation 1) using the Box-Muller transform.
+	/// </summary>
 	private static double GenerateGaussian()
 	{
 		double radiusSquared;
@@ -111,15 +126,21 @@ public static class KZRandomKit
 	}
 	#endregion Gaussian
 
+	/// <summary>
+	/// Returns a uniformly random element from <paramref name="list"/>.
+	/// </summary>
 	public static TValue GetRandomValue<TValue>(IList<TValue> list)
 	{
 		_IsValidList(list);
 
-		var index = s_randomizer.PickInteger(0,list.Count-1);
+		var idx = s_randomizer.PickInteger(0,list.Count-1);
 
-		return list[index];
+		return list[idx];
 	}
 
+	/// <summary>
+	/// Returns a random element from <paramref name="list"/> using <paramref name="weightedArray"/> as per-index weights.
+	/// </summary>
 	public static TValue GetWeightedRandomValue<TValue>(IList<TValue> list,float[] weightedArray)
 	{
 		_IsValidList(list);
@@ -129,23 +150,27 @@ public static class KZRandomKit
 			throw new ArgumentException("Weighted array length must match list count.",nameof(weightedArray));
 		}
 
-		var index = s_randomizer.PickWeightedInteger(weightedArray);
+		var idx = s_randomizer.PickWeightedInteger(weightedArray);
 
-		return list[index];
+		return list[idx];
 	}
 
-	public static IEnumerable<TValue> GetRandomValueGroup<TValue>(IList<TValue> list,int count,bool allowDuplicate = true)
+	/// <summary>
+	/// Yields <paramref name="cnt"/> random elements from <paramref name="list"/>.
+	/// When <paramref name="allowDuplicate"/> is false, yields up to <paramref name="cnt"/> unique elements without replacement.
+	/// </summary>
+	public static IEnumerable<TValue> GetRandomValueGroup<TValue>(IList<TValue> list,int cnt,bool allowDuplicate = true)
 	{
 		_IsValidList(list);
 
-		if(count < 0)
+		if(cnt < 0)
 		{
-			throw new ArgumentOutOfRangeException(nameof(count),count,"Count must be zero or greater.");
+			throw new ArgumentOutOfRangeException(nameof(cnt),cnt,"Count must be zero or greater.");
 		}
 
 		if(allowDuplicate)
 		{
-			for(var i=0;i<count;i++)
+			for(var i=0;i<cnt;i++)
 			{
 				yield return GetRandomValue(list);
 			}
@@ -154,15 +179,18 @@ public static class KZRandomKit
 		{
 			Randomize(list);
 
-			var maxCount = Math.Min(count,list.Count);
+			var maxCnt = Math.Min(cnt,list.Count);
 
-			for(var i=0;i<maxCount;i++)
+			for(var i=0;i<maxCnt;i++)
 			{
 				yield return list[i];
 			}
 		}
 	}
 
+	/// <summary>
+	/// Shuffles <paramref name="list"/> in place using the Fisher-Yates algorithm.
+	/// </summary>
 	public static void Randomize<TValue>(IList<TValue> list)
 	{
 		_IsValidList(list);
@@ -174,14 +202,18 @@ public static class KZRandomKit
 
 		for(var i=list.Count-1;i>0;i--)
 		{
-			int index0 = s_randomizer.PickInteger(0,i);
-			int index1 = i;
+			int idx0 = s_randomizer.PickInteger(0,i);
+			int idx1 = i;
 
-			(list[index0],list[index1]) = (list[index1],list[index0]);
+			(list[idx0],list[idx1]) = (list[idx1],list[idx0]);
 		}
 	}
 
-	public static bool RemoveRandomValue<TValue>(IList<TValue> list,out TValue value)
+	/// <summary>
+	/// Picks a random element from <paramref name="list"/>, removes it, and returns true.
+	/// When the list has one element, returns it without removing.
+	/// </summary>
+	public static bool RemoveRandomValue<TValue>(IList<TValue> list,out TValue val)
 	{
 		_IsValidList(list);
 
@@ -189,19 +221,22 @@ public static class KZRandomKit
 
 		if(count == 1)
 		{
-			value = list[0];
+			val = list[0];
 
 			return true;
 		}
 
-		value = GetRandomValue(list);
+		val = GetRandomValue(list);
 
-		list.Remove(value);
+		list.Remove(val);
 
 		return true;
 	}
 
 	#region String
+	/// <summary>
+	/// Generates a random lowercase alphabetic string of <paramref name="length"/> characters.
+	/// </summary>
 	public static string GenerateRandomString(int length,bool allowDuplicate = true)
 	{
 		var textList = new List<char>("abcdefghijklmnopqrstuvwxyz");
@@ -215,7 +250,7 @@ public static class KZRandomKit
 	#endregion String
 
 	/// <summary>
-	/// Check value in [0,1].
+	/// Returns true with probability <paramref name="percent"/> in [0, 1].
 	/// </summary>
 	public static bool HitRate(float percent)
 	{
@@ -223,15 +258,15 @@ public static class KZRandomKit
 	}
 
 	/// <summary>
-	/// Check value in [minValue,maxValue].
+	/// Returns true when a random value in [0, 1] falls within [<paramref name="minVal"/>, <paramref name="maxVal"/>].
 	/// </summary>
-	public static bool HitRateInRange(float minValue,float maxValue)
+	public static bool HitRateInRange(float minVal,float maxVal)
 	{
-		return s_randomizer.HitRateInRange(minValue,maxValue);
+		return s_randomizer.HitRateInRange(minVal,maxVal);
 	}
 	
 	/// <summary>
-	/// Check value in [0,1].
+	/// Returns true with probability <paramref name="percent"/> in [0, 1].
 	/// </summary>
 	public static bool HitRate(double percent)
 	{
@@ -239,13 +274,16 @@ public static class KZRandomKit
 	}
 
 	/// <summary>
-	/// Check value in [minValue,maxValue].
+	/// Returns true when a random value in [0, 1] falls within [<paramref name="minVal"/>, <paramref name="maxVal"/>].
 	/// </summary>
-	public static bool HitRateInRange(double minValue,double maxValue)
+	public static bool HitRateInRange(double minVal,double maxVal)
 	{
-		return s_randomizer.HitRateInRange(minValue,maxValue);
+		return s_randomizer.HitRateInRange(minVal,maxVal);
 	}
 
+	/// <summary>
+	/// Returns -1, 0, or +1. When <paramref name="includeZero"/> is false, returns only -1 or +1.
+	/// </summary>
 	public static int GetRandomSign(bool includeZero = true)
 	{
 		return includeZero ? s_randomizer.PickInteger(0,2)-1 : s_randomizer.PickDouble() < 0.5d ? -1 : +1;
