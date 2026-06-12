@@ -4,17 +4,33 @@ using System.Collections.Generic;
 
 namespace KZLib.Collections.Generic
 {
+	/// <summary>
+	/// Fixed-capacity, thread-safe circular queue backed by a ring buffer.
+	/// </summary>
+	/// <typeparam name="TValue">Element type stored in the queue.</typeparam>
+	/// <remarks>
+	/// When full, <see cref="Enqueue"/> overwrites the oldest element by advancing the front index.
+	/// Empty state is represented by <c>m_front == -1</c>.
+	/// </remarks>
 	public sealed class CircularQueue<TValue> : IEnumerable<TValue>,IEnumerable,IReadOnlyCollection<TValue>,ICollection
 	{
 		private readonly TValue[] m_valueArray = Array.Empty<TValue>();
 		private readonly int m_capacity = 0;
 		private readonly object m_syncRoot = new();
 
+		/// <summary>Index of the oldest element, or -1 when empty.</summary>
 		private int m_front = -1;
+
+		/// <summary>Index of the most recently enqueued element, or -1 when empty.</summary>
 		private int m_rear = -1;
 
+		/// <summary>Maximum number of elements the buffer can hold before overwriting.</summary>
 		public int Capacity => m_capacity;
 
+		/// <summary>
+		/// Creates an empty queue with the given fixed capacity.
+		/// </summary>
+		/// <param name="capacity">Buffer size; must be positive.</param>
 		public CircularQueue(int capacity)
 		{
 			if(capacity <= 0)
@@ -26,6 +42,10 @@ namespace KZLib.Collections.Generic
 			m_valueArray = new TValue[capacity];
 		}
 
+		/// <summary>
+		/// Creates a queue pre-filled with every element from <paramref name="collection"/>.
+		/// </summary>
+		/// <param name="collection">Non-empty source whose count becomes the queue capacity.</param>
 		public CircularQueue(ICollection<TValue> collection)
 		{
 			if(collection == null)
@@ -47,6 +67,9 @@ namespace KZLib.Collections.Generic
 			m_rear = m_capacity-1;
 		}
 
+		/// <summary>
+		/// Appends a value at the rear, dropping the front element when the buffer is full.
+		/// </summary>
 		public void Enqueue(TValue value)
 		{
 			lock(m_syncRoot)
@@ -65,6 +88,8 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>Returns the front element without removing it.</summary>
+		/// <exception cref="InvalidOperationException">Thrown when the queue is empty.</exception>
 		public TValue Peek()
 		{
 			lock(m_syncRoot)
@@ -78,6 +103,8 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>Removes and returns the front element.</summary>
+		/// <exception cref="InvalidOperationException">Thrown when the queue is empty.</exception>
 		public TValue Dequeue()
 		{
 			lock(m_syncRoot)
@@ -105,6 +132,7 @@ namespace KZLib.Collections.Generic
 
 		int ICollection.Count => Count;
 
+		/// <summary>Number of elements currently stored.</summary>
 		public int Count
 		{
 			get
@@ -116,6 +144,7 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>Whether the queue holds no elements.</summary>
 		public bool IsEmpty
 		{
 			get
@@ -127,6 +156,7 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>Whether the next enqueue would overwrite the oldest element.</summary>
 		public bool IsFull
 		{
 			get
@@ -138,6 +168,7 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>Removes all elements and resets front/rear indices.</summary>
 		public void Clear()
 		{
 			lock(m_syncRoot)
@@ -149,6 +180,7 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>Returns elements from front to rear as a snapshot (FIFO order).</summary>
 		public IEnumerator<TValue> GetEnumerator()
 		{
 			TValue[] snapshotArray;
@@ -178,6 +210,7 @@ namespace KZLib.Collections.Generic
 			return GetEnumerator();
 		}
 
+		/// <summary>Scans the logical queue order for an equal element.</summary>
 		public bool Contains(TValue value)
 		{
 			lock(m_syncRoot)
@@ -200,6 +233,7 @@ namespace KZLib.Collections.Generic
 			return false;
 		}
 
+		/// <summary>Copies elements in FIFO order into <paramref name="array"/> starting at <paramref name="index"/>.</summary>
 		public void CopyTo(Array array,int index)
 		{
 			if(array == null)
@@ -236,9 +270,13 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <inheritdoc />
 		public bool IsSynchronized => false;
+
+		/// <inheritdoc />
 		public object SyncRoot => m_syncRoot;
 
+		/// <summary>Materializes the current queue contents into a new array in FIFO order.</summary>
 		public TValue[] ToArray()
 		{
 			lock(m_syncRoot)

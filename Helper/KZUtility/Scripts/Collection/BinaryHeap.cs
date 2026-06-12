@@ -4,13 +4,28 @@ using System.Collections.Generic;
 
 namespace KZLib.Collections.Generic
 {
+	/// <summary>
+	/// Thread-safe array-backed binary heap with configurable min/max ordering.
+	/// </summary>
+	/// <typeparam name="TValue">Element type that supports comparison.</typeparam>
+	/// <remarks>
+	/// Public mutating methods synchronize on an internal lock. Enumeration copies the
+	/// backing list before yielding so callers never iterate a live, mutating buffer.
+	/// </remarks>
 	public abstract class BinaryHeap<TValue> : IEnumerable<TValue>,IEnumerable,IReadOnlyCollection<TValue>,ICollection where TValue : IComparable<TValue>
 	{
 		private readonly List<TValue> m_valueList;
 		private readonly object m_syncRoot = new();
 
+		/// <summary>
+		/// Compares two elements using heap ordering (negative when <paramref name="first"/> has higher priority).
+		/// </summary>
 		protected abstract int Compare(TValue first,TValue second);
 
+		/// <summary>
+		/// Creates an empty heap with optional initial list capacity.
+		/// </summary>
+		/// <param name="capacity">Initial capacity of the internal list.</param>
 		public BinaryHeap(int capacity = 0)
 		{
 			if(capacity < 0)
@@ -21,6 +36,10 @@ namespace KZLib.Collections.Generic
 			m_valueList = new List<TValue>(capacity);
 		}
 
+		/// <summary>
+		/// Builds a heap from an existing collection in O(n) via bottom-up heapify.
+		/// </summary>
+		/// <param name="collection">Source values; copied into the heap.</param>
 		public BinaryHeap(ICollection<TValue> collection)
 		{
 			if(collection == null)
@@ -30,6 +49,7 @@ namespace KZLib.Collections.Generic
 
 			m_valueList = new List<TValue>(collection);
 
+			// Last non-leaf index down to root.
 			for(var i=m_valueList.Count/2-1;i>=0;i--)
 			{
 				_HeapifyDown(i);
@@ -37,6 +57,9 @@ namespace KZLib.Collections.Generic
 		}
 
 
+		/// <summary>
+		/// Inserts a value and restores the heap property by sifting up.
+		/// </summary>
 		public void Insert(TValue value)
 		{
 			lock(m_syncRoot)
@@ -46,21 +69,26 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>
+		/// Removes and returns the top-priority element.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">Thrown when the heap is empty.</exception>
 		public TValue ExtractTop()
 		{
 			lock(m_syncRoot)
 			{
-				if(IsEmpty)
+				if(m_valueList.Count == 0)
 				{
 					throw new InvalidOperationException("Heap is empty.");
 				}
 
 				var top = m_valueList[0];
 
+				// Move the last leaf to the root, then sift down.
 				m_valueList[0] = m_valueList[^1];
 				m_valueList.RemoveAt(m_valueList.Count-1);
 
-				if(!IsEmpty)
+				if(m_valueList.Count > 0)
 				{
 					_HeapifyDown(0);
 				}
@@ -69,11 +97,15 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>
+		/// Returns the top-priority element without removing it.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">Thrown when the heap is empty.</exception>
 		public TValue Peek()
 		{
 			lock(m_syncRoot)
 			{
-				if(IsEmpty)
+				if(m_valueList.Count == 0)
 				{
 					throw new InvalidOperationException("Heap is empty.");
 				}
@@ -82,6 +114,11 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>
+		/// Removes the first equal occurrence of <paramref name="value"/> if present.
+		/// </summary>
+		/// <returns><see langword="true"/> when a matching element was removed.</returns>
+		/// <remarks>Locates the element with a linear scan; both sift directions may run after replacement.</remarks>
 		public bool Remove(TValue value)
 		{
 			lock(m_syncRoot)
@@ -106,6 +143,7 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>Sifts the element at <paramref name="index"/> toward the root while it outranks its parent.</summary>
 		private void _HeapifyUp(int index)
 		{
 			while(index > 0)
@@ -123,6 +161,7 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>Sifts the element at <paramref name="index"/> toward the leaves while a child outranks it.</summary>
 		private void _HeapifyDown(int index)
 		{
 			var last = m_valueList.Count-1;
@@ -159,6 +198,7 @@ namespace KZLib.Collections.Generic
 			(m_valueList[rhs],m_valueList[lhs]) = (m_valueList[lhs],m_valueList[rhs]);
 		}
 
+		/// <summary>Returns a snapshot enumeration of all heap elements (order is not priority order).</summary>
 		public IEnumerator<TValue> GetEnumerator()
 		{
 			TValue[] snapshotArray;
@@ -179,6 +219,7 @@ namespace KZLib.Collections.Generic
 			return GetEnumerator();
 		}
 
+		/// <summary>Copies heap elements into a strongly typed array segment.</summary>
 		public void CopyTo(Array array,int index)
 		{
 			if(array == null)
@@ -216,6 +257,7 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
+		/// <summary>Performs a linear scan for <paramref name="value"/>.</summary>
 		public bool Contains(TValue value)
 		{
 			lock(m_syncRoot)
@@ -224,14 +266,40 @@ namespace KZLib.Collections.Generic
 			}
 		}
 
-		public bool IsEmpty => Count == 0;
+		/// <summary>Whether the heap contains no elements.</summary>
+		public bool IsEmpty
+		{
+			get
+			{
+				lock(m_syncRoot)
+				{
+					return m_valueList.Count == 0;
+				}
+			}
+		}
 
-		public int Count => m_valueList.Count;
+		/// <summary>Number of elements currently stored.</summary>
+		public int Count
+		{
+			get
+			{
+				lock(m_syncRoot)
+				{
+					return m_valueList.Count;
+				}
+			}
+		}
 
-		public bool IsSynchronized => false;
+		int ICollection.Count => Count;
+
+		/// <summary>Individual public methods lock internally; external composite operations should use <see cref="SyncRoot"/>.</summary>
+		public bool IsSynchronized => true;
+
+		/// <inheritdoc />
 		public object SyncRoot => m_syncRoot;
 	}
 
+	/// <summary>Binary heap whose root holds the smallest element.</summary>
 	public sealed class MinHeap<TValue> : BinaryHeap<TValue> where TValue : IComparable<TValue>
 	{
 		protected override int Compare(TValue first,TValue second)
@@ -240,6 +308,7 @@ namespace KZLib.Collections.Generic
 		}
 	}
 
+	/// <summary>Binary heap whose root holds the largest element.</summary>
 	public sealed class MaxHeap<TValue> : BinaryHeap<TValue> where TValue : IComparable<TValue>
 	{
 		protected override int Compare(TValue first,TValue second)

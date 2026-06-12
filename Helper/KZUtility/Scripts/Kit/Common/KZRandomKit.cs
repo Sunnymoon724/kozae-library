@@ -94,18 +94,20 @@ public static class KZRandomKit
 
 	private static double GenerateGaussian()
 	{
-		double radiusSquared, randomX, randomY;
+		double radiusSquared;
+		double randomX;
+		double randomY;
 
 		do
 		{
 			randomX = s_randomizer.PickDouble(-1.0d,+1.0d);
 			randomY = s_randomizer.PickDouble(-1.0d,+1.0d);
 
-			radiusSquared = randomX * randomX + randomY * randomY;
+			radiusSquared = randomX*randomX+randomY*randomY;
 		}
-		while (radiusSquared >= 1.0f || Math.Abs(radiusSquared) <= 1e-15d);
+		while(radiusSquared >= 1.0d || radiusSquared <= 1e-15d);
 
-		return randomX*Math.Sqrt(-2.0f*Math.Log(radiusSquared)/radiusSquared);
+		return randomX*Math.Sqrt(-2.0d*Math.Log(radiusSquared)/radiusSquared);
 	}
 	#endregion Gaussian
 
@@ -122,6 +124,11 @@ public static class KZRandomKit
 	{
 		_IsValidList(list);
 
+		if(weightedArray == null || weightedArray.Length != list.Count)
+		{
+			throw new ArgumentException("Weighted array length must match list count.",nameof(weightedArray));
+		}
+
 		var index = s_randomizer.PickWeightedInteger(weightedArray);
 
 		return list[index];
@@ -130,6 +137,11 @@ public static class KZRandomKit
 	public static IEnumerable<TValue> GetRandomValueGroup<TValue>(IList<TValue> list,int count,bool allowDuplicate = true)
 	{
 		_IsValidList(list);
+
+		if(count < 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(count),count,"Count must be zero or greater.");
+		}
 
 		if(allowDuplicate)
 		{
