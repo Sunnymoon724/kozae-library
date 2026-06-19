@@ -353,9 +353,42 @@ KZUtility/Scripts/
 | Type | Description |
 |------|-------------|
 | `ObjectPool` | Queue-backed object pool. Reuse instances via `GetOrCreate` / `Put` |
+| `LanePool` | Concurrent execution lane pool. `TryAcquire` / `ReleaseLane` / `Tick`. Reclaims the oldest active lane when full |
 | `LazyRegistry` | Per-key lazy resolve. First `Fetch` invokes a provider; later calls return the cached value |
 | `CacheResolver` | **TTL (time-based)** string-key cache. FIFO entries per key, background expiry purge |
 | `TransientStore` | Process-wide **single slot** handoff. `Set` then one-shot `Consume` |
+
+##### LanePool
+
+Manages a bounded number of **concurrently active lanes**. Unlike `ObjectPool`, which recycles idle instances, multiple lanes may be active at once; at `maxCount` the pool reclaims the front-of-list (oldest) active lane.
+
+| API | Description |
+|-----|-------------|
+| `Prepare()` | Pre-creates lanes up to `prepareCount` |
+| `TryAcquire(out lane)` | Borrows a lane: idle → grow → steal |
+| `Tick()` | Calls `Tick` on active lanes; auto-releases when `!IsPlaying` |
+| `ReleaseLane(lane)` | Explicit release |
+| `ReleaseAll()` / `Clear()` | Release all / destroy and empty (`Prepare` again after `Clear`) |
+
+**`ILane` contract**
+
+- `IsActive` — pool sets `true` on acquire; `Release()` must set `false`
+- `IsPlaying` — `true` while running; **start immediately after acquire**
+- `Tick()` / `Release()` / `Destroy()` — may run outside the pool lock
+
+```csharp
+var pool = new LanePool<MyLane>(index => new MyLane(index), prepareCount: 8, maxCount: 32);
+pool.Prepare();
+
+if (pool.TryAcquire(out var lane))
+{
+    lane.StartWork(); // IsPlaying = true
+}
+
+pool.Tick(); // each frame/tick
+```
+
+**Notes:** Failing to start right after acquire may auto-release (`IsActive && !IsPlaying`). Avoid acquiring on other threads during `Clear()`.
 
 #### Foundation — Pattern (`Foundation/Pattern/`)
 

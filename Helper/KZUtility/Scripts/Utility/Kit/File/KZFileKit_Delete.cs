@@ -4,26 +4,26 @@ using System.IO;
 public static partial class KZFileKit
 {
 	/// <summary>
-	/// Recursively deletes empty subfolders under <paramref name="absoluteStartPath"/>.
+	/// Recursively deletes empty subFolders under <paramref name="absoluteStartPath"/>.
 	/// Ignores .DS_Store when deciding whether a folder is empty. Also removes companion .meta files in Unity projects.
 	/// </summary>
-	public static void DeleteEmptySubdirectories(string absoluteStartPath,Action? onComplete = null)
+	public static void DeleteEmptyFolders(string absoluteStartPath,Action? onComplete = null)
 	{
 		if(!IsFolderExist(absoluteStartPath))
 		{
 			return;
 		}
 
-		_DeleteEmptySubdirectories(absoluteStartPath);
+		_DeleteEmptyFolders(absoluteStartPath);
 
 		onComplete?.Invoke();
 	}
 
-	private static void _DeleteEmptySubdirectories(string startPath)
+	private static void _DeleteEmptyFolders(string startPath)
 	{
 		foreach(var folderPath in GetFolderPathArray(startPath))
 		{
-			_DeleteEmptySubdirectories(folderPath);
+			_DeleteEmptyFolders(folderPath);
 
 			var innerFolderPathArray = GetFolderPathArray(folderPath);
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using KZConsole.Utilities;
 using KZLib.ToolKits;
 
@@ -178,15 +177,14 @@ namespace KZConsole
 				throw new InvalidOperationException($"Generate failed in {sheetName}. [{filePath}]");
 			}
 
-			var classBuilder = new StringBuilder();
-
-			classBuilder.Append($"\t[MemoryPackable]{m_newLine}");
-			classBuilder.Append($"\tpublic partial class {className}{m_newLine}");
-			classBuilder.Append($"\t{{{m_newLine}");
-			classBuilder.Append($"{propertyCode}{m_newLine}");
-			classBuilder.Append($"\t}}");
-
-			return classBuilder.ToString();
+			return string.Join(m_newLine,new List<string>
+			{
+				"\t[MemoryPackable]",
+				$"\tpublic partial class {className}",
+				"\t{",
+				propertyCode,
+				"\t}"
+			});
 		}
 
 		private string _GeneratePropertyCode(ExcelReader excelReader,string sheetName)

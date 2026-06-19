@@ -353,9 +353,42 @@ KZUtility/Scripts/
 | 타입 | 설명 |
 |------|------|
 | `ObjectPool` | `Queue` 기반 객체 풀. `GetOrCreate` / `Put`으로 인스턴스 재사용 |
+| `LanePool` | 동시 실행 슬롯(레인) 풀. `TryAcquire` / `ReleaseLane` / `Tick`. 꽉 차면 가장 오래된 active 레인 reclaim |
 | `LazyRegistry` | key별 lazy resolve. 첫 `Fetch`에서 provider 호출, 이후 캐시된 값 반환 |
 | `CacheResolver` | **TTL(시간)** 기반 string key 캐시. key당 FIFO entry, 백그라운드 만료 purge |
 | `TransientStore` | 프로세스 전역 **1칸** handoff. `Set` → `Consume` 1회 소비 |
+
+##### LanePool
+
+제한된 수의 **동시 active 슬롯**을 관리합니다. `ObjectPool`이 idle 인스턴스를 재활용하는 것과 달리, 여러 레인이 동시에 실행 중일 수 있고 `maxCount`에 도달하면 리스트 앞(가장 오래됨)의 active 레인을 끊고 재사용합니다.
+
+| API | 설명 |
+|-----|------|
+| `Prepare()` | `prepareCount`까지 레인 미리 생성 |
+| `TryAcquire(out lane)` | 레인 빌림. idle → 신규 생성 → steal 순 |
+| `Tick()` | active 레인 `Tick` 후 `!IsPlaying`이면 자동 반납 |
+| `ReleaseLane(lane)` | 명시적 반납 |
+| `ReleaseAll()` / `Clear()` | 전부 반납 / 파괴 후 비우기 (`Clear` 후 `Prepare` 필요) |
+
+**`ILane` 계약**
+
+- `IsActive` — 풀이 acquire 시 `true`, `Release()`에서 `false`
+- `IsPlaying` — 실행 중 `true`; **acquire 직후 바로 시작**해야 함
+- `Tick()` / `Release()` / `Destroy()` — 풀 lock 밖에서 호출될 수 있음
+
+```csharp
+var pool = new LanePool<MyLane>(index => new MyLane(index), prepareCount: 8, maxCount: 32);
+pool.Prepare();
+
+if (pool.TryAcquire(out var lane))
+{
+    lane.StartWork(); // IsPlaying = true
+}
+
+pool.Tick(); // 매 프레임/틱
+```
+
+**주의:** acquire 후 즉시 시작하지 않으면 `IsActive && !IsPlaying` 상태로 자동 반납될 수 있음 (호출자 책임). `Clear()` 중 다른 스레드 acquire는 피할 것.
 
 #### Foundation — Pattern (`Foundation/Pattern/`)
 

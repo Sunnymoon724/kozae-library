@@ -2,13 +2,12 @@
 {
 	public interface IConfig { }
 
-	public interface IAffix
+	public interface IFacet
 	{
 		public void Initialize();
 		public void Release();
-		
-		public void Set(IAffix newAfx);
-		public void Update(IAffix newAfx);
+
+		public void Apply(IFacet newFct);
 	}
 
 	public interface IProto
