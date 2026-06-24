@@ -13,6 +13,7 @@ namespace KZLib.Utilities
 	/// <see cref="TryGetCache"/> is consumptive: it dequeues the oldest non-expired entry and does not peek or retain it.
 	/// <see cref="StoreCache"/> appends a new entry. When <c>isUpdate</c> is true, every pending entry for the same key receives a new expiration before the new one is enqueued.
 	/// Expired payloads are removed from this cache only; tearing down <typeparamref name="TCache"/> itself is the caller's responsibility.
+	/// <see cref="Clear"/> removes all cached entries while keeping the purge timer active and the resolver reusable.
 	/// <see cref="Dispose"/> stops the purge timer, waits for any in-flight callback, clears all queues, and marks the resolver as disposed.
 	/// This type is <c>sealed</c>, so cleanup uses a private <see cref="_Dispose"/> rather than a <c>protected virtual</c> hook.
 	/// </remarks>
@@ -121,14 +122,28 @@ namespace KZLib.Utilities
 					m_timer = null;
 				}
 
-				lock(m_syncRoot)
-				{
-					m_cacheQueueDict.Clear();
-					m_removeList.Clear();
-				}
+				_Clear();
 			}
 
 			m_disposed = true;
+		}
+
+		/// <summary>Removes all cached entries. The purge timer stays active and the resolver remains usable.</summary>
+		public void Clear()
+		{
+			_EnsureNotDisposed();
+
+			_Clear();
+		}
+
+		/// <summary>Clears all queues under <see cref="m_syncRoot"/>.</summary>
+		private void _Clear()
+		{
+			lock(m_syncRoot)
+			{
+				m_cacheQueueDict.Clear();
+				m_removeList.Clear();
+			}
 		}
 
 		/// <summary>
