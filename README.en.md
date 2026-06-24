@@ -352,47 +352,76 @@ KZUtility/Scripts/
 
 | Type | Description |
 |------|-------------|
-| `PawnPool` | Queue-backed pawn pool. Reuse idle pawns via `GetOrCreate` / `Put`. Checked-out pawns are not tracked |
+| `PawnPool` | Queue-backed pawn pool. Reuse idle pawns via `GetOrCreate` / `Put`. No checkout cap; checked-out pawns are not tracked |
 | `LanePool` | Concurrent execution lane pool. `TryAcquire` / `Return` / `Tick`. Returns `false` when full; finished active lanes are auto-returned via `Return` in `Tick` |
 | `LazyRegistry` | Per-key lazy resolve. First `Fetch` invokes a provider; later calls return the cached value |
-| `CacheResolver` | **TTL (time-based)** string-key cache. FIFO entries per key, background expiry purge |
+| `CacheResolver` | Per-key **FIFO TTL queue**. `TryGetCache` is a consumptive dequeue. `updatePeriod == 0` disables the timer (purge on access only) |
 | `TransientStore` | Process-wide **single slot** handoff. `Set` then one-shot `Consume` |
 
 ##### PawnPool
 
-Stores **idle pawns only** in a queue. Unlike `LanePool`, it does not track checked-out instances—return them with `Put` before `Clear`/`Dispose`, or tear them down yourself. `capacity` is the **idle limit**; when the queue is empty, `GetOrCreate` may still spawn via `Create`.
+Stores **idle pawns only** in a queue. Unlike `LanePool`, it does not track checked-out instances—return them with `Put` before `Clear`/`Dispose`, or tear them down yourself. There is no checkout cap; when the queue is empty, `GetOrCreate` copies a new pawn from the constructor pivot via `onCopy`. `capacity` is the number of idle pawns to pre-fill when `autoFill` is true, the minimum idle count kept after purge, and when `capacity > 1` the constructor verifies that `onCopy` returns distinct instances.
 
 | API | Description |
 |-----|-------------|
-| `GetOrCreate()` | Dequeue idle pawn → `Initialize` → or spawn a new payload via the factory pawn's `Create` when empty |
-| `Put(pawn)` | `Release` then enqueue. Excess pawns beyond capacity are not stored but are still released |
-| `Clear()` | `Destroy` idle pawns in the queue (pool remains reusable) |
+| `GetOrCreate()` | Dequeue an idle pawn, or copy a new one via `onCopy(pivot)` when empty |
+| `Put(pawn)` | Enqueue the pawn into the idle queue |
+| `PurgeForce()` | Immediately tear down idle pawns above `capacity` via `onDestroy` |
+| `Clear()` | Tear down idle pawns in the queue via `onDestroy` (pool remains reusable) |
 | `Dispose()` | Runs `_Clear` and marks the pool disposed |
 
-**`IPawn<TPayload>` / `Pawn<TPayload>` contract**
+**`IPawn`**
 
-- `Payload` — payload bound to the pawn; assigned by the pool via `_Spawn`/`Bind`
-- `Create(pivot)` — spawn a new payload from the pivot template (`capacity > 1` requires distinct instances)
-- `Initialize()` — called on checkout
-- `_Release()` / `_Destroy()` — override in consumer assemblies; the pool invokes internal `Release`/`Destroy`
+- Marker interface for pooled pawns (no members)
+
+**Constructor callbacks**
+
+- `pivot` — copy template; the pool does not destroy it
+- `onCopy` — copy a new pawn from the pivot (`capacity > 1` requires distinct instances)
+- `onDestroy` — invoked when a pawn is removed from the idle queue (`Clear` / `PurgeForce` / `Dispose`)
+
+**Extension (optional, consumer / UMP)**
+
+- Subclass `PawnPool` — pass `onCopy`/`onDestroy` as private static method groups, or override `GetOrCreate` / `Put` for checkout/return lifecycle
 
 ```csharp
-public sealed class ComponentPawn : Pawn<Component>
+public sealed class ComponentPawn : IPawn
 {
-    public override Component Create(Component pivot) => pivot.CopyObject() as Component;
-    public override void Initialize() => /* arm */;
-    protected override void _Release() => /* reset */;
-    protected override void _Destroy()
-    {
-        if (Payload && Payload.gameObject)
-            Payload.DestroyObject();
-    }
+    public ComponentPawn(Component component) => Component = component;
+    public Component Component { get; }
 }
 
-var pool = new PawnPool<ComponentPawn, Component>(templateComponent, capacity: 16);
+var pool = new PawnPool<ComponentPawn>(
+    new ComponentPawn(templateComponent),
+    capacity: 16,
+    onCopy: pivot => new ComponentPawn(pivot.Component.CopyObject() as Component),
+    onDestroy: pawn =>
+    {
+        if (pawn.Component && pawn.Component.gameObject)
+            pawn.Component.DestroyObject();
+    });
+
 var pawn = pool.GetOrCreate();
-// pawn.Payload ...
+// pawn.Component ...
 pool.Put(pawn);
+```
+
+```csharp
+// UMP: keep copy/destroy inside a pool subclass
+public sealed class ComponentPawnPool : PawnPool<ComponentPawn>
+{
+    public ComponentPawnPool(ComponentPawn pivot, int capacity)
+        : base(pivot, capacity, _Copy, _Destroy) { }
+
+    private static ComponentPawn _Copy(ComponentPawn pivot)
+        => new ComponentPawn(pivot.Component.CopyObject() as Component);
+
+    private static void _Destroy(ComponentPawn pawn)
+    {
+        if (pawn.Component && pawn.Component.gameObject)
+            pawn.Component.DestroyObject();
+    }
+}
 ```
 
 ##### LanePool
@@ -432,6 +461,36 @@ pool.Return(lane); // explicit return
 ```
 
 **Notes:** Failing to start in `Initialize` may auto-return on the next `Tick` (`IsActive && !IsPlaying`). Finished lanes are reclaimed only in `Tick`—call it regularly. Avoid acquiring on other threads during `Clear()`/`Dispose()`.
+
+##### CacheResolver
+
+Stores TTL entries in a **FIFO queue per string key**. Unlike `LanePool`/`PawnPool`, there is no checkout tracking—`TryGetCache` is a **consumptive dequeue** that removes the oldest non-expired entry rather than peeking. Expired entries are dropped on dequeue or timer purge; tearing down `TCache` resources is the caller's responsibility.
+
+| API | Description |
+|-----|-------------|
+| `CacheResolver(deleteTime, updatePeriod)` | Entry TTL in seconds (default 60) and background purge interval (default 30). `updatePeriod == 0` disables the timer |
+| `StoreCache(key, cache, isUpdate)` | Enqueue an entry. When `isUpdate: true`, **refreshes the expiration of every pending entry** for the same key before enqueueing the new one |
+| `TryGetCache(key, out cache)` | Skip expired entries at the front, then dequeue the oldest valid entry. Returns `false` when the key is missing or all entries are expired |
+| `Dispose()` | Stops the purge timer, waits for any in-flight callback, and clears all queues |
+
+**Notes**
+
+- `key` must not be null. Negative `deleteTime` or `updatePeriod` throws from the constructor
+- The type is `sealed`; extend via wrapper/composition (no `protected virtual _Dispose`)
+
+```csharp
+using var cache = new CacheResolver<DownloadResult>(deleteTime: 60f, updatePeriod: 30f);
+
+cache.StoreCache("asset:logo", result, isUpdate: false);
+
+// Store again on the same key and extend pending TTL
+cache.StoreCache("asset:logo", newerResult, isUpdate: true);
+
+if (cache.TryGetCache("asset:logo", out var item))
+{
+    // item is removed from the cache (not available for a second get)
+}
+```
 
 #### Foundation — Pattern (`Foundation/Pattern/`)
 

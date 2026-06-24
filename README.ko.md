@@ -352,47 +352,76 @@ KZUtility/Scripts/
 
 | 타입 | 설명 |
 |------|------|
-| `PawnPool` | `Queue` 기반 폰 풀. `GetOrCreate` / `Put`으로 idle 폰 재사용. checkout 중인 폰은 추적하지 않음 |
+| `PawnPool` | `Queue` 기반 폰 풀. `GetOrCreate` / `Put`으로 idle 폰 재사용. checkout 상한 없음, checkout 중인 폰은 추적하지 않음 |
 | `LanePool` | 동시 실행 슬롯(레인) 풀. `TryAcquire` / `Return` / `Tick`. 꽉 차면 `false`; finished active 레인은 `Tick`에서 `Return`으로 자동 반납 |
 | `LazyRegistry` | key별 lazy resolve. 첫 `Fetch`에서 provider 호출, 이후 캐시된 값 반환 |
-| `CacheResolver` | **TTL(시간)** 기반 string key 캐시. key당 FIFO entry, 백그라운드 만료 purge |
+| `CacheResolver` | string key당 **FIFO TTL 큐**. `TryGetCache`는 소비형 dequeue. `updatePeriod == 0`이면 타이머 없이 접근 시 purge만 |
 | `TransientStore` | 프로세스 전역 **1칸** handoff. `Set` → `Consume` 1회 소비 |
 
 ##### PawnPool
 
-**idle 폰만** 큐에 보관합니다. `LanePool`처럼 active 인스턴스를 추적하지 않으므로, `Clear`/`Dispose` 전에 사용 중인 폰은 `Put`으로 반환하거나 호출자가 직접 정리해야 합니다. `capacity`는 **idle 상한**이며, 큐가 비어 있으면 `GetOrCreate`는 `Create`로 새 폰을 만들 수 있습니다.
+**idle 폰만** 큐에 보관합니다. `LanePool`처럼 active 인스턴스를 추적하지 않으므로, `Clear`/`Dispose` 전에 사용 중인 폰은 `Put`으로 반환하거나 호출자가 직접 정리해야 합니다. checkout 상한은 없으며, 큐가 비어 있으면 `GetOrCreate`는 ctor에 넘긴 `onCopy`로 pivot에서 새 폰을 복제합니다. `capacity`는 `autoFill` 시 미리 채울 idle 개수, purge 후 유지할 최소 idle 개수이며, `capacity > 1`이면 ctor에서 `onCopy`가 서로 다른 인스턴스를 반환하는지 검증합니다.
 
 | API | 설명 |
 |-----|------|
-| `GetOrCreate()` | idle 폰 dequeue → `Initialize` → 없으면 factory pawn의 `Create`로 신규 payload 생성 |
-| `Put(pawn)` | `Release` 후 enqueue. capacity 초과분은 저장하지 않지만 `Release`는 수행 |
-| `Clear()` | 큐에 있는 idle 폰만 `Destroy` (풀은 재사용 가능) |
+| `GetOrCreate()` | idle 폰 dequeue → 없으면 `onCopy(pivot)`으로 복제 |
+| `Put(pawn)` | idle 큐에 enqueue |
+| `PurgeForce()` | idle 폰이 `capacity` 초과분이면 `onDestroy`로 즉시 정리 |
+| `Clear()` | 큐에 있는 idle 폰만 `onDestroy` (풀은 재사용 가능) |
 | `Dispose()` | `_Clear` 후 disposed 표시 |
 
-**`IPawn<TPayload>` / `Pawn<TPayload>` 계약**
+**`IPawn`**
 
-- `Payload` — pawn에 바인딩된 payload. 풀이 `_Spawn`/`Bind`로 할당
-- `Create(pivot)` — pivot payload에서 새 payload 생성 (`capacity > 1`이면 매번 서로 다른 인스턴스)
-- `Initialize()` — checkout 시 호출
-- `_Release()` / `_Destroy()` — consumer assembly에서 override. 풀이 `Release`/`Destroy`를 internal로 호출
+- 풀 대상 pawn **마커** 인터페이스 (멤버 없음)
+
+**ctor 콜백**
+
+- `pivot` — 복제 템플릿. 풀이 destroy하지 않음
+- `onCopy` — pivot에서 새 pawn 복제 (`capacity > 1`이면 매번 서로 다른 인스턴스)
+- `onDestroy` — idle 큐에서 제거될 때 호출 (`Clear` / `PurgeForce` / `Dispose`)
+
+**확장 (선택, consumer / UMP)**
+
+- `PawnPool` 서브클래스 — `onCopy`/`onDestroy`를 private static 메서드 method group으로 넘기거나, `GetOrCreate` / `Put` override로 checkout·반환 lifecycle 추가
 
 ```csharp
-public sealed class ComponentPawn : Pawn<Component>
+public sealed class ComponentPawn : IPawn
 {
-    public override Component Create(Component pivot) => pivot.CopyObject() as Component;
-    public override void Initialize() => /* arm */;
-    protected override void _Release() => /* reset */;
-    protected override void _Destroy()
-    {
-        if (Payload && Payload.gameObject)
-            Payload.DestroyObject();
-    }
+    public ComponentPawn(Component component) => Component = component;
+    public Component Component { get; }
 }
 
-var pool = new PawnPool<ComponentPawn, Component>(templateComponent, capacity: 16);
+var pool = new PawnPool<ComponentPawn>(
+    new ComponentPawn(templateComponent),
+    capacity: 16,
+    onCopy: pivot => new ComponentPawn(pivot.Component.CopyObject() as Component),
+    onDestroy: pawn =>
+    {
+        if (pawn.Component && pawn.Component.gameObject)
+            pawn.Component.DestroyObject();
+    });
+
 var pawn = pool.GetOrCreate();
-// pawn.Payload ...
+// pawn.Component ...
 pool.Put(pawn);
+```
+
+```csharp
+// UMP: copy/destroy를 서브클래스에 두는 경우
+public sealed class ComponentPawnPool : PawnPool<ComponentPawn>
+{
+    public ComponentPawnPool(ComponentPawn pivot, int capacity)
+        : base(pivot, capacity, _Copy, _Destroy) { }
+
+    private static ComponentPawn _Copy(ComponentPawn pivot)
+        => new ComponentPawn(pivot.Component.CopyObject() as Component);
+
+    private static void _Destroy(ComponentPawn pawn)
+    {
+        if (pawn.Component && pawn.Component.gameObject)
+            pawn.Component.DestroyObject();
+    }
+}
 ```
 
 ##### LanePool
@@ -432,6 +461,36 @@ pool.Return(lane); // 명시적 반납
 ```
 
 **주의:** `Initialize`에서 즉시 시작하지 않으면 다음 `Tick`에서 `IsActive && !IsPlaying` 상태로 자동 반납될 수 있음. finished 레인 회수는 `Tick`에만 의존하므로 주기적으로 호출할 것. `Clear()`/`Dispose()` 중 다른 스레드 acquire는 피할 것.
+
+##### CacheResolver
+
+string key마다 **FIFO 큐**로 TTL entry를 보관합니다. `LanePool`/`PawnPool`과 달리 checkout 추적은 없고, `TryGetCache`는 peek이 아니라 **소비형 dequeue** — 가장 오래된 유효 entry를 꺼낸 뒤 큐에서 제거합니다. 만료된 entry는 dequeue·타이머 purge 시 버려지며, `TCache` 리소스 정리는 호출자 책임입니다.
+
+| API | 설명 |
+|-----|------|
+| `CacheResolver(deleteTime, updatePeriod)` | entry TTL(초, 기본 60)과 백그라운드 purge 주기(초, 기본 30). `updatePeriod == 0`이면 타이머 비활성 |
+| `StoreCache(key, cache, isUpdate)` | entry enqueue. `isUpdate: true`이면 같은 key의 **pending entry TTL을 모두 연장**한 뒤 신규 entry 추가 |
+| `TryGetCache(key, out cache)` | 큐 앞에서 만료분을 건너뛰고, 가장 오래된 유효 entry dequeue. key 없음·전부 만료면 `false` |
+| `Dispose()` | purge 타이머 정지 → in-flight 콜백 대기 → 전체 큐 비우기 |
+
+**주의**
+
+- `key`는 null 불가. `deleteTime` / `updatePeriod` 음수는 ctor에서 예외
+- `sealed` 타입이라 확장은 래퍼/컴포지션으로 처리 (`protected virtual _Dispose` 없음)
+
+```csharp
+using var cache = new CacheResolver<DownloadResult>(deleteTime: 60f, updatePeriod: 30f);
+
+cache.StoreCache("asset:logo", result, isUpdate: false);
+
+// 같은 key에 연속 저장 + pending TTL 연장
+cache.StoreCache("asset:logo", newerResult, isUpdate: true);
+
+if (cache.TryGetCache("asset:logo", out var item))
+{
+    // item은 캐시에서 제거됨 (재조회 불가)
+}
+```
 
 #### Foundation — Pattern (`Foundation/Pattern/`)
 
