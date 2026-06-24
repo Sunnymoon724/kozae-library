@@ -108,7 +108,7 @@ namespace KZLib.Utilities
 		/// <returns>True when a valid cache was returned; false when the key is missing or all entries are expired.</returns>
 		public bool TryGetCache(string key,out TCache cache)
 		{
-			_ThrowIfDisposed();
+			_EnsureNotDisposed();
 
 			lock(m_syncRoot)
 			{
@@ -152,7 +152,7 @@ namespace KZLib.Utilities
 		/// </summary>
 		public void StoreCache(string key,TCache cache,bool isUpdate)
 		{
-			_ThrowIfDisposed();
+			_EnsureNotDisposed();
 
 			lock(m_syncRoot)
 			{
@@ -177,11 +177,11 @@ namespace KZLib.Utilities
 			}
 		}
 
-		private void _ThrowIfDisposed()
+		private void _EnsureNotDisposed()
 		{
 			if(m_disposed)
 			{
-				throw new ObjectDisposedException($"{GetType().Name} is already disposed.");
+				throw new ObjectDisposedException(GetType().Name);
 			}
 		}
 

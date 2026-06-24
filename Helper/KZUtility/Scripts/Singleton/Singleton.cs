@@ -63,7 +63,7 @@ namespace KZLib.Utilities
 			GC.SuppressFinalize(this);
 		}
 
-		protected void _ThrowIfDisposed()
+		protected void _EnsureNotDisposed()
 		{
 			if(m_disposed)
 			{

@@ -313,7 +313,7 @@ KZUtility/Scripts/
 ├── Collection/          # Pure containers (queues, heap, trie, set)
 ├── Foundation/
 │   ├── Index/           # Handles, spatial lookup, connected groups
-│   ├── Storage/         # Cache, object pool
+│   ├── Storage/         # Cache, pawn/lane pools
 │   └── Pattern/         # Design patterns, smart enum, random
 ├── Utility/Kit/         # KZFileKit, KZCryptoKit, KZRandomKit
 ├── Singleton/
@@ -352,43 +352,86 @@ KZUtility/Scripts/
 
 | Type | Description |
 |------|-------------|
-| `ObjectPool` | Queue-backed object pool. Reuse instances via `GetOrCreate` / `Put` |
-| `LanePool` | Concurrent execution lane pool. `TryAcquire` / `ReleaseLane` / `Tick`. Reclaims the oldest active lane when full |
+| `PawnPool` | Queue-backed pawn pool. Reuse idle pawns via `GetOrCreate` / `Put`. Checked-out pawns are not tracked |
+| `LanePool` | Concurrent execution lane pool. `TryAcquire` / `Return` / `Tick`. Returns `false` when full; finished active lanes are auto-returned via `Return` in `Tick` |
 | `LazyRegistry` | Per-key lazy resolve. First `Fetch` invokes a provider; later calls return the cached value |
 | `CacheResolver` | **TTL (time-based)** string-key cache. FIFO entries per key, background expiry purge |
 | `TransientStore` | Process-wide **single slot** handoff. `Set` then one-shot `Consume` |
 
+##### PawnPool
+
+Stores **idle pawns only** in a queue. Unlike `LanePool`, it does not track checked-out instances—return them with `Put` before `Clear`/`Dispose`, or tear them down yourself. `capacity` is the **idle limit**; when the queue is empty, `GetOrCreate` may still spawn via `Create`.
+
+| API | Description |
+|-----|-------------|
+| `GetOrCreate()` | Dequeue idle pawn → `Initialize` → or spawn a new payload via the factory pawn's `Create` when empty |
+| `Put(pawn)` | `Release` then enqueue. Excess pawns beyond capacity are not stored but are still released |
+| `Clear()` | `Destroy` idle pawns in the queue (pool remains reusable) |
+| `Dispose()` | Runs `_Clear` and marks the pool disposed |
+
+**`IPawn<TPayload>` / `Pawn<TPayload>` contract**
+
+- `Payload` — payload bound to the pawn; assigned by the pool via `_Spawn`/`Bind`
+- `Create(pivot)` — spawn a new payload from the pivot template (`capacity > 1` requires distinct instances)
+- `Initialize()` — called on checkout
+- `_Release()` / `_Destroy()` — override in consumer assemblies; the pool invokes internal `Release`/`Destroy`
+
+```csharp
+public sealed class ComponentPawn : Pawn<Component>
+{
+    public override Component Create(Component pivot) => pivot.CopyObject() as Component;
+    public override void Initialize() => /* arm */;
+    protected override void _Release() => /* reset */;
+    protected override void _Destroy()
+    {
+        if (Payload && Payload.gameObject)
+            Payload.DestroyObject();
+    }
+}
+
+var pool = new PawnPool<ComponentPawn, Component>(templateComponent, capacity: 16);
+var pawn = pool.GetOrCreate();
+// pawn.Payload ...
+pool.Put(pawn);
+```
+
 ##### LanePool
 
-Manages a bounded number of **concurrently active lanes**. Unlike `ObjectPool`, which recycles idle instances, multiple lanes may be active at once; at `maxCount` the pool reclaims the front-of-list (oldest) active lane.
+Manages a bounded number of **concurrently active lanes**. Unlike `PawnPool`, which recycles idle instances only, it owns every created lane in a list. When at `maxCount` and every lane is active, `TryAcquire` returns `false`.
 
 | API | Description |
 |-----|-------------|
 | `Prepare()` | Pre-creates lanes up to `prepareCount` |
-| `TryAcquire(out lane)` | Borrows a lane: idle → grow → steal |
-| `Tick()` | Calls `Tick` on active lanes; auto-releases when `!IsPlaying` |
-| `ReleaseLane(lane)` | Explicit release |
-| `ReleaseAll()` / `Clear()` | Release all / destroy and empty (`Prepare` again after `Clear`) |
+| `TryAcquire(param, out lane)` | Borrows idle lane → `Initialize` → grow if needed → `false` when full |
+| `Tick()` | Auto-`Return` active lanes where `IsActive && !IsPlaying` |
+| `Return(lane)` | Checks `IsActive` under the lock, then calls `ILane.Release` (preferred entry point) |
+| `TryFind` / `TryFindActive` / `ForEachActive` | Snapshot-based lookup/iteration (predicates/actions run outside the lock) |
+| `TryReleaseActive` / `TryReleaseAllActive` | `Return` active lanes matching a predicate |
+| `ReleaseAll()` | `Return` every currently active lane |
+| `Clear()` / `Dispose()` | `Return` active lanes → `Destroy` all → empty (`Prepare` optional after `Clear`) |
 
-**`ILane` contract**
+**`ILane<TPayload>` contract**
 
-- `IsActive` — pool sets `true` on acquire; `Release()` must set `false`
-- `IsPlaying` — `true` while running; **start immediately after acquire**
-- `Tick()` / `Release()` / `Destroy()` — may run outside the pool lock
+- `Create(payload, storage)` — bind the lane to its payload and parent transform (typically in a `_Create` override)
+- `Initialize(param)` — on acquire: set `IsActive = true` and start work (`IsPlaying = true`)
+- `IsPlaying` — property reflecting execution state (e.g. `AudioSource.isPlaying`); read by the pool in `Tick`
+- `Release()` — set `IsActive = false`; **idempotent**. Invoked by `Return` or callable directly
+- `Destroy()` — invoked by the pool during `Clear`/`Dispose`
 
 ```csharp
-var pool = new LanePool<MyLane>(index => new MyLane(index), prepareCount: 8, maxCount: 32);
+var pool = new LanePool<MyAudioLane, AudioSource>(storageTransform, prepareCount: 8, maxCount: 32);
 pool.Prepare();
 
-if (pool.TryAcquire(out var lane))
+if (pool.TryAcquire(myParam, out var lane))
 {
-    lane.StartWork(); // IsPlaying = true
+    // Initialize starts playback → IsPlaying = true
 }
 
-pool.Tick(); // each frame/tick
+pool.Tick(); // each frame/tick: finished lanes → Return → ILane.Release
+pool.Return(lane); // explicit return
 ```
 
-**Notes:** Failing to start right after acquire may auto-release (`IsActive && !IsPlaying`). Avoid acquiring on other threads during `Clear()`.
+**Notes:** Failing to start in `Initialize` may auto-return on the next `Tick` (`IsActive && !IsPlaying`). Finished lanes are reclaimed only in `Tick`—call it regularly. Avoid acquiring on other threads during `Clear()`/`Dispose()`.
 
 #### Foundation — Pattern (`Foundation/Pattern/`)
 

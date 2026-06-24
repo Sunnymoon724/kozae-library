@@ -313,7 +313,7 @@ KZUtility/Scripts/
 ├── Collection/          # 순수 컨테이너 (큐, 힙, 트리, 집합)
 ├── Foundation/
 │   ├── Index/           # handle, 공간, 연결 그룹 추적
-│   ├── Storage/         # 캐시, 객체 풀
+│   ├── Storage/         # 캐시, 폰/레인 풀
 │   └── Pattern/         # 설계 패턴, smart enum, 난수
 ├── Utility/Kit/         # KZFileKit, KZCryptoKit, KZRandomKit
 ├── Singleton/
@@ -352,43 +352,86 @@ KZUtility/Scripts/
 
 | 타입 | 설명 |
 |------|------|
-| `ObjectPool` | `Queue` 기반 객체 풀. `GetOrCreate` / `Put`으로 인스턴스 재사용 |
-| `LanePool` | 동시 실행 슬롯(레인) 풀. `TryAcquire` / `ReleaseLane` / `Tick`. 꽉 차면 가장 오래된 active 레인 reclaim |
+| `PawnPool` | `Queue` 기반 폰 풀. `GetOrCreate` / `Put`으로 idle 폰 재사용. checkout 중인 폰은 추적하지 않음 |
+| `LanePool` | 동시 실행 슬롯(레인) 풀. `TryAcquire` / `Return` / `Tick`. 꽉 차면 `false`; finished active 레인은 `Tick`에서 `Return`으로 자동 반납 |
 | `LazyRegistry` | key별 lazy resolve. 첫 `Fetch`에서 provider 호출, 이후 캐시된 값 반환 |
 | `CacheResolver` | **TTL(시간)** 기반 string key 캐시. key당 FIFO entry, 백그라운드 만료 purge |
 | `TransientStore` | 프로세스 전역 **1칸** handoff. `Set` → `Consume` 1회 소비 |
 
+##### PawnPool
+
+**idle 폰만** 큐에 보관합니다. `LanePool`처럼 active 인스턴스를 추적하지 않으므로, `Clear`/`Dispose` 전에 사용 중인 폰은 `Put`으로 반환하거나 호출자가 직접 정리해야 합니다. `capacity`는 **idle 상한**이며, 큐가 비어 있으면 `GetOrCreate`는 `Create`로 새 폰을 만들 수 있습니다.
+
+| API | 설명 |
+|-----|------|
+| `GetOrCreate()` | idle 폰 dequeue → `Initialize` → 없으면 factory pawn의 `Create`로 신규 payload 생성 |
+| `Put(pawn)` | `Release` 후 enqueue. capacity 초과분은 저장하지 않지만 `Release`는 수행 |
+| `Clear()` | 큐에 있는 idle 폰만 `Destroy` (풀은 재사용 가능) |
+| `Dispose()` | `_Clear` 후 disposed 표시 |
+
+**`IPawn<TPayload>` / `Pawn<TPayload>` 계약**
+
+- `Payload` — pawn에 바인딩된 payload. 풀이 `_Spawn`/`Bind`로 할당
+- `Create(pivot)` — pivot payload에서 새 payload 생성 (`capacity > 1`이면 매번 서로 다른 인스턴스)
+- `Initialize()` — checkout 시 호출
+- `_Release()` / `_Destroy()` — consumer assembly에서 override. 풀이 `Release`/`Destroy`를 internal로 호출
+
+```csharp
+public sealed class ComponentPawn : Pawn<Component>
+{
+    public override Component Create(Component pivot) => pivot.CopyObject() as Component;
+    public override void Initialize() => /* arm */;
+    protected override void _Release() => /* reset */;
+    protected override void _Destroy()
+    {
+        if (Payload && Payload.gameObject)
+            Payload.DestroyObject();
+    }
+}
+
+var pool = new PawnPool<ComponentPawn, Component>(templateComponent, capacity: 16);
+var pawn = pool.GetOrCreate();
+// pawn.Payload ...
+pool.Put(pawn);
+```
+
 ##### LanePool
 
-제한된 수의 **동시 active 슬롯**을 관리합니다. `ObjectPool`이 idle 인스턴스를 재활용하는 것과 달리, 여러 레인이 동시에 실행 중일 수 있고 `maxCount`에 도달하면 리스트 앞(가장 오래됨)의 active 레인을 끊고 재사용합니다.
+제한된 수의 **동시 active 슬롯**을 관리합니다. `PawnPool`이 idle 인스턴스만 재활용하는 것과 달리, 생성된 모든 레인을 리스트로 소유합니다. `maxCount`에 도달하고 전부 active이면 `TryAcquire`는 `false`를 반환합니다.
 
 | API | 설명 |
 |-----|------|
 | `Prepare()` | `prepareCount`까지 레인 미리 생성 |
-| `TryAcquire(out lane)` | 레인 빌림. idle → 신규 생성 → steal 순 |
-| `Tick()` | active 레인 `Tick` 후 `!IsPlaying`이면 자동 반납 |
-| `ReleaseLane(lane)` | 명시적 반납 |
-| `ReleaseAll()` / `Clear()` | 전부 반납 / 파괴 후 비우기 (`Clear` 후 `Prepare` 필요) |
+| `TryAcquire(param, out lane)` | idle 레인 빌림 → `Initialize` → 없으면 신규 생성 → 꽉 차면 `false` |
+| `Tick()` | active 레인 중 `IsActive && !IsPlaying`이면 `Return`으로 자동 반납 |
+| `Return(lane)` | 락 안에서 `IsActive` 확인 후 `ILane.Release` 호출 (권장 진입점) |
+| `TryFind` / `TryFindActive` / `ForEachActive` | 스냅샷 기반 조회·순회 (lock 밖에서 predicate/action 실행) |
+| `TryReleaseActive` / `TryReleaseAllActive` | 조건에 맞는 active 레인을 `Return` |
+| `ReleaseAll()` | 현재 active 레인 전부 `Return` |
+| `Clear()` / `Dispose()` | active 레인 `Return` → 전체 `Destroy` 후 비우기 (`Clear` 후 `Prepare` 선택) |
 
-**`ILane` 계약**
+**`ILane<TPayload>` 계약**
 
-- `IsActive` — 풀이 acquire 시 `true`, `Release()`에서 `false`
-- `IsPlaying` — 실행 중 `true`; **acquire 직후 바로 시작**해야 함
-- `Tick()` / `Release()` / `Destroy()` — 풀 lock 밖에서 호출될 수 있음
+- `Create(payload, storage)` — 레인을 payload·부모 Transform에 바인딩 (보통 `_Create` override에서 호출)
+- `Initialize(param)` — acquire 시 `IsActive = true`, 작업 시작 (`IsPlaying = true`)
+- `IsPlaying` — 실행 중 여부를 반영하는 속성 (예: `AudioSource.isPlaying`). 풀이 `Tick`에서 읽음
+- `Release()` — `IsActive = false`, **멱등**. `Return`이 호출하거나 외부에서 직접 호출 가능
+- `Destroy()` — `Clear`/`Dispose` 시 풀이 호출
 
 ```csharp
-var pool = new LanePool<MyLane>(index => new MyLane(index), prepareCount: 8, maxCount: 32);
+var pool = new LanePool<MyAudioLane, AudioSource>(storageTransform, prepareCount: 8, maxCount: 32);
 pool.Prepare();
 
-if (pool.TryAcquire(out var lane))
+if (pool.TryAcquire(myParam, out var lane))
 {
-    lane.StartWork(); // IsPlaying = true
+    // Initialize에서 재생 시작 → IsPlaying = true
 }
 
-pool.Tick(); // 매 프레임/틱
+pool.Tick(); // 매 프레임/틱: finished면 Return → ILane.Release
+pool.Return(lane); // 명시적 반납
 ```
 
-**주의:** acquire 후 즉시 시작하지 않으면 `IsActive && !IsPlaying` 상태로 자동 반납될 수 있음 (호출자 책임). `Clear()` 중 다른 스레드 acquire는 피할 것.
+**주의:** `Initialize`에서 즉시 시작하지 않으면 다음 `Tick`에서 `IsActive && !IsPlaying` 상태로 자동 반납될 수 있음. finished 레인 회수는 `Tick`에만 의존하므로 주기적으로 호출할 것. `Clear()`/`Dispose()` 중 다른 스레드 acquire는 피할 것.
 
 #### Foundation — Pattern (`Foundation/Pattern/`)
 

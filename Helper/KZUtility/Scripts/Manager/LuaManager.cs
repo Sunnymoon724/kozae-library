@@ -36,7 +36,7 @@ namespace KZLib.Utilities
 		/// </summary>
 		public void LoadLuaScript(string[] luaTextArray)
 		{
-			_ThrowIfDisposed();
+			_EnsureNotDisposed();
 
 			if(luaTextArray == null)
 			{
@@ -147,7 +147,7 @@ namespace KZLib.Utilities
 		/// </summary>
 		private void _EnsureReady()
 		{
-			_ThrowIfDisposed();
+			_EnsureNotDisposed();
 
 			if(!m_initialized || m_luaScript == null)
 			{
