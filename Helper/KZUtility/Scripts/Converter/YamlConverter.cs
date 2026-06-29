@@ -197,7 +197,7 @@ namespace KZLib.Utilities
 
 			if(nestedDict.Count == 0)
 			{
-				return SoundProfile.DefaultProfile;
+				return SoundProfile.maxSoundProfile;
 			}
 
 			return new SoundProfile(

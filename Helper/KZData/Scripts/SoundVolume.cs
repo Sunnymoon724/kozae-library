@@ -12,8 +12,8 @@ namespace KZLib.Data
 	[MemoryPackable]
 	public partial struct SoundVolume : IEquatable<SoundVolume>,IFormattable
 	{
-		private const float LevelTolerance = 0.005f;
-		private const NumberStyles LevelNumberStyles = NumberStyles.Float | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent;
+		private const float c_levelTolerance = 0.005f;
+		private const NumberStyles c_levelNumberStyles = NumberStyles.Float | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent;
 
 		/// <summary>Volume level (0.0 - 1.0, clamped on construction).</summary>
 		public float level;
@@ -91,7 +91,7 @@ namespace KZLib.Data
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(SoundVolume volume)
 		{
-			return MathF.Abs(level-volume.level) < LevelTolerance && mute == volume.mute;
+			return MathF.Abs(level-volume.level) < c_levelTolerance && mute == volume.mute;
 		}
 
 		/// <summary>Toggles mute state without changing level.</summary>
@@ -229,7 +229,7 @@ namespace KZLib.Data
 
 			var levelSpan = span[..commaIndex].Trim();
 
-			if(!float.TryParse(levelSpan,LevelNumberStyles,provider,out var level))
+			if(!float.TryParse(levelSpan,c_levelNumberStyles,provider,out var level))
 			{
 				return false;
 			}

@@ -290,7 +290,7 @@ KZData/Scripts/
 |------|-------------|
 | `ScreenResolution` | `width`, `height`, `fullscreen`. Presets: `sd`, `hd`, `fhd`, `qhd`, `uhd` (default `fullscreen: true`). `ToString` / `Parse` / `TryParse` |
 | `SoundVolume` | `level` (0.0–1.0, clamped), `mute`. Presets: `zero`, `min`, `max`. Preserves `level` while muted. `+`/`-`/`*`/`/` operators, `Toggle()` |
-| `SoundProfile` | `master`, `music`, `effect` channels. `DefaultProfile` preset. `OutputMusic` / `OutputEffect` = master × channel. Immutable updates via `WithMaster` / `WithMusic` / `WithEffect` |
+| `SoundProfile` | `master`, `music`, `effect` channels. `maxSoundProfile` preset. `outputMusic` / `outputEffect` = master × channel. Immutable updates via `WithMaster` / `WithMusic` / `WithEffect` |
 
 **String format examples**
 
@@ -504,7 +504,7 @@ if (cache.TryGetCache("asset:logo", out var item))
 
 | Module | Description |
 |--------|-------------|
-| `Singleton` / `SingletonMB` / `SingletonSO` | Singleton bases for plain class, `MonoBehaviour`, and `ScriptableObject` |
+| `Singleton` / `SingletonMB` | Singleton bases for plain class and `MonoBehaviour`. `SingletonMB` supports `SingletonMBConfigAttribute` for auto-create, DontDestroy, and prefab path |
 | `LuaManager` | MoonSharp Lua script execution |
 | `TimeManager` | Time and schedule management |
 | `YamlConverter` | YAML serialize/deserialize via YamlDotNet. Supports `SoundVolume`, `ScreenResolution`, `SoundProfile` (nested channels), and more |

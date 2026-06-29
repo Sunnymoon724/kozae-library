@@ -7,7 +7,7 @@ namespace KZLib.Utilities
 	/// Optional configuration for <see cref="SingletonMB{TBehaviour}"/>.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class)]
-	public class SingletonConfigAttribute : Attribute
+	public class SingletonMBConfigAttribute : Attribute
 	{
 		public bool AutoCreate { get; set; } = false;
 		public bool DontDestroy { get; set; } = false;
@@ -22,22 +22,22 @@ namespace KZLib.Utilities
 	{
 		private static readonly object s_syncRoot = new();
 		private static TBehaviour? s_instance = null;
-		private static SingletonConfigAttribute? s_config = null;
+		private static SingletonMBConfigAttribute? s_config = null;
 
-		private static SingletonConfigAttribute SingletonConfig
+		private static SingletonMBConfigAttribute SingletonConfig
 		{
 			get
 			{
 				if(s_config == null)
 				{
-					var attribute = Attribute.GetCustomAttribute(typeof(TBehaviour),typeof(SingletonConfigAttribute));
+					var attribute = Attribute.GetCustomAttribute(typeof(TBehaviour),typeof(SingletonMBConfigAttribute));
 
 					if(attribute != null)
 					{
-						s_config = attribute as SingletonConfigAttribute;
+						s_config = attribute as SingletonMBConfigAttribute;
 					}
 
-					s_config ??= new SingletonConfigAttribute();
+					s_config ??= new SingletonMBConfigAttribute();
 				}
 
 				return s_config;

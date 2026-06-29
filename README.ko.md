@@ -290,7 +290,7 @@ KZData/Scripts/
 |------|------|
 | `ScreenResolution` | `width`, `height`, `fullscreen`. 프리셋: `sd`, `hd`, `fhd`, `qhd`, `uhd` (기본 `fullscreen: true`). `ToString` / `Parse` / `TryParse` 지원 |
 | `SoundVolume` | `level` (0.0–1.0, 클램프), `mute`. 프리셋: `zero`, `min`, `max`. 음소거 시 `level` 유지. `+`/`-`/`*`/`/` 연산자, `Toggle()` |
-| `SoundProfile` | `master`, `music`, `effect` 채널. `DefaultProfile` 프리셋. `OutputMusic` / `OutputEffect` = 마스터 × 채널. `WithMaster` / `WithMusic` / `WithEffect` 불변 업데이트 |
+| `SoundProfile` | `master`, `music`, `effect` 채널. `maxSoundProfile` 프리셋. `outputMusic` / `outputEffect` = 마스터 × 채널. `WithMaster` / `WithMusic` / `WithEffect` 불변 업데이트 |
 
 **문자열 형식 예시**
 
@@ -504,7 +504,7 @@ if (cache.TryGetCache("asset:logo", out var item))
 
 | 모듈 | 설명 |
 |------|------|
-| `Singleton` / `SingletonMB` / `SingletonSO` | 일반 클래스 / `MonoBehaviour` / `ScriptableObject` 싱글톤 베이스 |
+| `Singleton` / `SingletonMB` | 일반 클래스 / `MonoBehaviour` 싱글톤 베이스. `SingletonMB`는 `SingletonMBConfigAttribute`로 자동 생성·DontDestroy·프리팹 경로 설정 |
 | `LuaManager` | MoonSharp Lua 스크립트 실행 |
 | `TimeManager` | 시간·스케줄 관리 |
 | `YamlConverter` | YamlDotNet 기반 YAML 직렬화/역직렬화. `SoundVolume`, `ScreenResolution`, `SoundProfile`(중첩 채널) 등 지원 |

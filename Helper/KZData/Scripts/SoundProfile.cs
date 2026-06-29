@@ -6,15 +6,15 @@ namespace KZLib.Data
 {
 	/// <summary>
 	/// Sound profile grouping master, music, and effect channel volumes.
-	/// <see cref="OutputMusic"/> and <see cref="OutputEffect"/> multiply master and channel levels for final output.
+	/// <see cref="outputMusic"/> and <see cref="outputEffect"/> multiply master and channel levels for final output.
 	/// </summary>
 	[MemoryPackable]
 	public partial record SoundProfile
 	{
-		private static readonly SoundProfile defaultProfile = new(SoundVolume.max,SoundVolume.max,SoundVolume.max);
+		private static readonly SoundProfile s_maxSoundProfile = new(SoundVolume.max,SoundVolume.max,SoundVolume.max);
 
 		/// <summary>Default profile with all channels at maximum volume.</summary>
-		public static SoundProfile DefaultProfile => defaultProfile;
+		public static SoundProfile maxSoundProfile => s_maxSoundProfile;
 
 		/// <summary>Master channel volume (global scale).</summary>
 		public SoundVolume master { get; init; }
@@ -34,10 +34,10 @@ namespace KZLib.Data
 		}
 
 		/// <summary>Final music output volume (master x music).</summary>
-		public SoundVolume OutputMusic => _CalculateOutputVolume(music);
+		public SoundVolume outputMusic => _CalculateOutputVolume(music);
 
 		/// <summary>Final effect output volume (master x effect).</summary>
-		public SoundVolume OutputEffect => _CalculateOutputVolume(effect);
+		public SoundVolume outputEffect => _CalculateOutputVolume(effect);
 
 		/// <summary>Returns a copy with an updated master channel.</summary>
 		public SoundProfile WithMaster(SoundVolume master) => this with { master = master };
@@ -122,7 +122,7 @@ namespace KZLib.Data
 
 		private static bool _TryParseCore(ReadOnlySpan<char> value,IFormatProvider provider,out SoundProfile profile)
 		{
-			profile = DefaultProfile;
+			profile = maxSoundProfile;
 
 			var span = value.Trim();
 
